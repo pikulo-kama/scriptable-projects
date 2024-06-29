@@ -19,16 +19,16 @@ const root = {
     getRequest: async (config, url) => {
     
         let data = null
+        let rawData = null
       
         try {
-            
-            let rawData = await new Request(url).loadJSON()
+            rawData = await new Request(url).loadJSON()
+
             data = await root.formatData(config, rawData)
-            
-            root.cacheData(data, url)
-        
+            await root.cacheData(data, url)
+
         } catch (error) {
-            console.error(error)
+            console.log("Getting data from cache")
             data = root.getFromCache(url)
         }
         
@@ -118,7 +118,7 @@ const root = {
     
     
     cacheData: async (data, key) => {
-        let cache = JSON.parse(fileImport.getConfiguration(cacheFileName, "[]"))
+        let cache = JSON.parse(fileImport.getConfiguration(root.cacheFileName, "[]"))
         
         cache = cache.filter(e => e.id != key)
         cache.push({
@@ -126,12 +126,12 @@ const root = {
             value: data
         })
         
-        fileImport.updateConfiguration(cacheFileName, JSON.stringify(cache))
+        fileImport.updateConfiguration(root.cacheFileName, JSON.stringify(cache))
     },
     
     
     getFromCache: key => {
-        let cache = JSON.parse(fileImport.getConfiguration(cacheModule.cacheFileName, "[]"))
+        let cache = JSON.parse(fileImport.getConfiguration(root.cacheFileName, "[]"))
         return cache.find(e => e.id == key).value
     }
 }
