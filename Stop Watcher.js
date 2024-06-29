@@ -70,7 +70,7 @@ if (config.runsInWidget) {
                 }]
             }
         }, {
-            label: "🆔",
+            label: r => !!r.serieId ? "🆔" : "❓",
             weight: 20,
             handlers: {
                 type: crud.inputs.form,
