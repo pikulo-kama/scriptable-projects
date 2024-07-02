@@ -449,15 +449,7 @@ const root = {
         return false
     },
     
-    
-    updateRow: async (newRowData, row) => {
-        
-//         if (row != undefined) {
-//             root.table.removeRow(row)
-//         }
-// 
-//         await root.addEntryRow(newRowData)
-        
+    updateRow: async (newRowData, row) => {      
         root.saveData()
         await root.syncTable()
         root.table.reload()
@@ -481,4 +473,3 @@ const root = {
 
 module.exports.inputs = root.inputs
 module.exports.buildTable = root.buildTable
-

@@ -28,7 +28,7 @@ const root = {
             await root.cacheData(data, url)
 
         } catch (error) {
-            console.error(error)
+            console.log(error)
             console.log("Getting data from cache")
             data = root.getFromCache(url)
         }

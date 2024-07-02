@@ -32,7 +32,7 @@ const root = {
         return root.doGetConfiguration(fileName, defaultValue, Script.name())
     },
     
-    getExternalConfiguration: (fileName, defaultValue, scriptName) => {
+    getExtConfiguration: (fileName, defaultValue, scriptName) => {
         return root.doGetConfiguration(fileName, defaultValue, scriptName)
     },
     
@@ -61,7 +61,6 @@ const root = {
     }
 }
 
-
 module.exports.updateConfiguration = root.updateConfiguration
 module.exports.getConfiguration = root.getConfiguration
-module.exports.getExtConfiguration = root.getExternalConfiguration
+module.exports.getExtConfiguration = root.getExtConfiguration
