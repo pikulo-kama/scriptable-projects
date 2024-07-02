@@ -74,15 +74,10 @@ function buildTable(seriesData) {
         }
     
         let serieRow = new UITableRow()
-
-        let episodeCountPrefix = " ep"
-
-        if (serie.episodeCount > 1) {
-            episodeCountPrefix += "s"
-        }
+        let episodeCountLabel = getEpisodeCountLabel(serie.episodeCount)
         
         let nameCell = serieRow.addText(serie.name)
-        let episodeCountCell = serieRow.addText(serie.episodeCount + episodeCountPrefix)
+        let episodeCountCell = serieRow.addText(episodeCountLabel)
 
         nameCell.widthWeight = 90
         episodeCountCell.widthWeight = 15
@@ -111,31 +106,28 @@ function buildTable(seriesData) {
 
 function buildWidget(seriesData) {
 
-    let unwatchedEpisodes = seriesData.reduce((sum, serie) => sum + serie.episodeCount, 0)
-    let episodeCountLabel = "" + unwatchedEpisodes;
-
-    if (unwatchedEpisodes > 99) {
-        episodeCountLabel = "99+"
-    }
-
-    episodeCountLabel += " ep"
-
-    if (unwatchedEpisodes > 1) {
-        episodeCountLabel += "s"
-    }
-
+    let unwatchedEpisodes = seriesData
+        .filter(serie => serie.showInSummary)
+        .reduce((sum, serie) => sum + serie.episodeCount, 0)
+        
+    let episodeCountLabel = getEpisodeCountLabel(unwatchedEpisodes)
+    
     const widget = new ListWidget()
     const stack = widget.addStack()
     const countStack = stack.addStack()
+    const headerStack = stack.addStack()
 
     stack.centerAlignContent()
     stack.layoutVertically()
 
+    headerStack.layoutHorizontally()
+    
     countStack.centerAlignContent()
     countStack.layoutHorizontally()
 
-    const headerWidget = stack.addText("in Watchlist")
     stack.addSpacer(20)
+    
+    const headerWidget = headerStack.addText("to be Watched")
 
     countStack.addSpacer(10)
     const episodeCountWidget = countStack.addText(episodeCountLabel)
@@ -153,6 +145,17 @@ function buildWidget(seriesData) {
     QuickLook.present(widget)
     Script.setWidget(widget)
     Script.complete()
+}
+
+function getEpisodeCountLabel(episodeCount) {
+    
+    let label = episodeCount + " ep"
+    
+    if (episodeCount > 1) {
+        label += "s"
+    }
+    
+    return label
 }
 
 function getListOfSeries() {
@@ -178,7 +181,8 @@ function getListOfSeries() {
             return {
                 id: info.serieId,
                 season,
-                episode
+                episode,
+                showInSummary: info.showInSummary
             }
         })
 }
@@ -187,18 +191,21 @@ async function getSerieApiInfo(serieInfo) {
     
     const now = Date.now()
     let showApiData = await cacheUtil.getRequest(cacheConf, conf.api + serieInfo.id)
-    let episodeQualifier = serieInfo.season * 1000 + serieInfo.episode
-
-    let unwatchedEpisodes = showApiData.episodes
-        .map(ep => ({...ep, qualifier: ep.season * 1000 + ep.episode}))
-
-    unwatchedEpisodes = unwatchedEpisodes.filter(episode => 
-            episode.qualifier > episodeQualifier &&
+    let episodeQualifier = getEpQualifier(serieInfo)
+    
+    let unwatchedEpisodes = showApiData.episodes.filter(episode => 
+            getEpQualifier(episode) > episodeQualifier &&
             now > new Date(episode.airDate)
         )
 
     return {
+        id: serieInfo.id,
         name: showApiData.name,
-        episodeCount: unwatchedEpisodes.length
+        episodeCount: unwatchedEpisodes.length,
+        showInSummary: serieInfo.showInSummary
     }
+}
+
+function getEpQualifier(info) {
+    return info.season * 1000 + info.episode
 }

@@ -38,6 +38,9 @@ if (config.runsInWidget) {
             var: "serieId",
             default: null,
         }, {
+            var: "showInSummary",
+            default: false
+        }, {
             var: "serieName",
             default: "..."
         }, {
@@ -78,8 +81,15 @@ if (config.runsInWidget) {
                     var: "serieId",
                     label: "New Serie ID"
                 }],
-                defaultAction: "Update",
-                title: "Update Serie ID"
+                actions: [{
+                    name: "Toggle Summary View",
+                    onChoose: {
+                        callback: r => !r.showInSummary,
+                        var: "showInSummary"
+                    }
+                }],
+                defaultAction: "Update ID",
+                title: r => (r.showInSummary ? "✅" : "⛔️") + " Watchlist Integration"
             }
         }, {
             label: (r) => r.serieName,
