@@ -2,7 +2,12 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-archive;
 const alertUtil = importModule("Alert Util")
+const locale = importModule("Locale")
 
+await locale.registerLabels({
+    "select_script_to_bundle": "Select Script to Bundle",
+    "bundle_prefix": " (Bundled)"
+})
 
 const NOT_BUNDLEABLE_TAG = "Not Bundleable"
 const IMPORT_SCRIPTS_REGEXP = /\s*(?:const|var|let)\s+\w+\s+=\s+importModule\((?:"|')(?<name>.+)(?:"|')\)/g
@@ -32,7 +37,7 @@ async function selectScript() {
         .sort()
         
     let result = await alertUtil.createCancelableAlert({
-        title: "Select Script to Bundle",
+        title: locale.getLabel("select_script_to_bundle"),
         actions: scriptList
     })
     
@@ -112,7 +117,7 @@ function getModuleName(script, caller) {
     caller = caller.trim().replace(/\s+/g, "")
     script = script.trim().replace(/\s+/g, "")
     
-    return  caller + "_" + script
+    return  caller + "_" + script + "_" + Math.floor(Math.random() * 10_000)
 }
 
 function readScript(scriptName) {
@@ -126,7 +131,7 @@ function readScript(scriptName) {
 
 function saveScript(scriptName, content) {
     
-    let newFileName = scriptName + " (Bundled).js"
+    let newFileName = scriptName + locale.getLabel("select_script_to_bundle") + ".js"
     let newFilePath = fm.joinPath(
         fm.documentsDirectory(),
         newFileName
