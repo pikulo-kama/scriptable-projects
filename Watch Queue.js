@@ -3,6 +3,7 @@
 // icon-color: pink; icon-glyph: bars;
 const fileUtil = importModule("File Util")
 const cacheUtil = importModule("Cache")
+const locale = importModule("Localization")
 
 
 const conf = {
@@ -33,6 +34,18 @@ const cacheConf = [
     }
 ]
 
+await locale.registerLabels({
+    "t_header": "⚪️ Watchlist",
+    "w_nothing": "Nothing",
+    "w_to_be_watched": "to be Watched",
+    "t_watchlist_no_data_header": "Watchlist is empty",
+    "t_watchlist_no_data_subheader": "Add new series in 'Stop Watcher' and make sure that ID is set",
+    "t_watchlist_empty_header": "Nothing to watch 😔",
+    "t_watchlist_empty_subheader": "Looks like you need to wait a little longer...",
+    "episode": " ep",
+    "episode_plural_ending": "s"
+})
+
 let series = getListOfSeries()
 
 if (conf.debug) {
@@ -54,6 +67,49 @@ if (config.runsInWidget) {
     buildTable(seriesApiData)
 }
 
+Script.complete()
+
+
+function buildWidget(seriesData) {
+    
+    let unwatchedEpisodes = seriesData
+        .filter(serie => serie.showInSummary)
+        .reduce((sum, serie) => sum + serie.episodeCount, 0)
+        
+    let episodeCountLabel
+    
+    if (unwatchedEpisodes === 0) {
+        episodeCountLabel = locale.getLabel("w_nothing")
+        
+    } else {
+        episodeCountLabel = getEpisodeCountLabel(unwatchedEpisodes)
+    }
+    
+    const widget = new ListWidget()
+    
+    const episodeCountWidget = widget.addText(episodeCountLabel)
+    widget.addSpacer(10)
+    const headerWidget = widget.addText(locale.getLabel("w_to_be_watched"))
+
+    headerWidget.centerAlignText()
+    headerWidget.font = Font.blackMonospacedSystemFont(18)
+    headerWidget.textOpacity = .8
+
+    episodeCountWidget.centerAlignText()
+    episodeCountWidget.font = Font.blackMonospacedSystemFont(24)
+    episodeCountWidget.textOpacity = 1
+
+    QuickLook.present(widget)
+    Script.setWidget(widget)
+}
+
+function addMessageRow(header, subheader, table) {
+    let row = new UITableRow()
+    row.height = 44 * 3
+
+    row.addText(header, subheader)
+    table.addRow(row)
+}
 
 function buildTable(seriesData) {
 
@@ -64,15 +120,14 @@ function buildTable(seriesData) {
     headerRow.backgroundColor = Color.darkGray()
     headerRow.cellSpacing = 100
 
-    headerRow.addText("⚪️ Watchlist")
+    headerRow.addText(locale.getLabel("t_header"))
     table.addRow(headerRow)
-
-    for (let serie of seriesData) {
-
-        if (!serie.name || serie.episodeCount === 0) {
-            continue
-        }
     
+    let activeData = seriesData
+        .filter(serie => serie.name && serie.episodeCount > 0)
+
+    for (let serie of activeData) {
+        
         let serieRow = new UITableRow()
         let episodeCountLabel = getEpisodeCountLabel(serie.episodeCount)
         
@@ -88,71 +143,33 @@ function buildTable(seriesData) {
         table.addRow(serieRow)
     }
 
-    if (seriesData.length == 0) {
+    if (seriesData.length === 0) {
 
-        let placeholderRow = new UITableRow()
-        placeholderRow.height = 44 * 3
-
-        placeholderRow.addText(
-            "Watchlist is empty", 
-            "Add new series in 'Stop Watcher' and make sure that ID is set"
+        addMessageRow(
+            locale.getLabel("t_watchlist_no_data_header"), 
+            locale.getLabel("t_watchlist_no_data_subheader"),
+            table
         )
-
-        table.addRow(placeholderRow)
+        
+    } else if (activeData.length === 0) {
+        
+        addMessageRow(
+            locale.getLabel("t_watchlist_empty_header"),
+            locale.getLabel("t_watchlist_empty_subheader"),
+            table
+        )
     }
 
     table.present()
 }
 
-function buildWidget(seriesData) {
-
-    let unwatchedEpisodes = seriesData
-        .filter(serie => serie.showInSummary)
-        .reduce((sum, serie) => sum + serie.episodeCount, 0)
-        
-    let episodeCountLabel = getEpisodeCountLabel(unwatchedEpisodes)
-    
-    const widget = new ListWidget()
-    const stack = widget.addStack()
-    const countStack = stack.addStack()
-    const headerStack = stack.addStack()
-
-    stack.centerAlignContent()
-    stack.layoutVertically()
-
-    headerStack.layoutHorizontally()
-    
-    countStack.centerAlignContent()
-    countStack.layoutHorizontally()
-
-    stack.addSpacer(20)
-    
-    const headerWidget = headerStack.addText("to be Watched")
-
-    countStack.addSpacer(10)
-    const episodeCountWidget = countStack.addText(episodeCountLabel)
-    countStack.addSpacer(10)
-
-    headerWidget.centerAlignText()
-    headerWidget.font = Font.blackMonospacedSystemFont(18)
-    headerWidget.textOpacity = .8
-
-    episodeCountWidget.rightAlignText()
-    episodeCountWidget.padding = 10
-    episodeCountWidget.font = Font.blackMonospacedSystemFont(24)
-    episodeCountWidget.textOpacity = 1
-
-    QuickLook.present(widget)
-    Script.setWidget(widget)
-    Script.complete()
-}
-
 function getEpisodeCountLabel(episodeCount) {
     
-    let label = episodeCount + " ep"
+    let label = episodeCount + locale.getLabel("episode")
+    let pluralEnding = locale.getLabel("episode_plural_ending")
     
     if (episodeCount > 1) {
-        label += "s"
+        label += pluralEnding
     }
     
     return label
