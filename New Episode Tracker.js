@@ -3,6 +3,15 @@
 // icon-color: orange; icon-glyph: film;
 const cacheUtil = importModule("Cache")
 const circle = importModule("Circle")
+const locale = importModule("Localization")
+
+await locale.registerLabels({
+    "w_season_episode_tag": "s%{season}e%{episode} ➟ ",
+    "w_series_ended_placeholder_pt1": "Series ",
+    "w_series_ended_placeholder_pt2": "Ended",
+    "w_series_ongoing_placeholder_pt1": "Awaiting ",
+    "w_series_ongoing_placeholder_pt2": "Next Season",
+})
 
 
 const conf = {
@@ -165,8 +174,10 @@ function getEpisodes(serie) {
         let previousEpisode = i == 0 ? null : episodes[i - 1]
         episodes.push({
             previousEpisode: previousEpisode,
-            tag: `s${episode.season}e${episode.episode} ➟ `,
-            airDate: new Date(episode.airDate)
+            airDate: new Date(episode.airDate),
+            tag: locale.getLabel("w_season_episode_tag")
+                .replace("%{season}", episode.season)
+                .replace("%{episode}", episode.episode)
         })
     }
     return episodes
@@ -198,11 +209,11 @@ async function getCountdown(serie) {
     } else {
 
         if (serie.status == "Ended") {
-            countdown.next = "Series "
-            countdown.timer = "Ended"
+            countdown.next = locale.getLabel("w_series_ended_placeholder_pt1")
+            countdown.timer = locale.getLabel("w_series_ended_placeholder_pt2")
         } else {
-            countdown.next = "Awaiting "
-            countdown.timer = "Next Season"
+            countdown.next = locale.getLabel("w_series_ongoing_placeholder_pt1")
+            countdown.timer = locale.getLabel("w_series_ongoing_placeholder_pt2")
         }
     }
 

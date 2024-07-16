@@ -3,6 +3,23 @@
 // icon-color: cyan; icon-glyph: users;
 const chart = importModule("Linear Chart")
 const conf = importModule("Config Util")
+const locale = importModule("Localization")
+
+await locale.registerLabels({
+  "timezone": "Europe/Kiev",
+  "month_january": "Січ",
+  "month_february": "Лют",
+  "month_march": "Бер",
+  "month_april": "Кві",
+  "month_may": "Тра",
+  "month_june": "Чер",
+  "month_july": "Лип",
+  "month_august": "Сер",
+  "month_september": "Вер",
+  "month_october": "Жов",
+  "month_november": "Лис",
+  "month_december": "Гру",
+})
 
 let arguments = JSON.parse(args.widgetParameter)
 
@@ -20,12 +37,20 @@ const CALENDAR_NAME = arguments.calendar
 const COLOR_MODE = arguments.mode
 const TRIM_BLANK = arguments.trimBlank ?? false
 
-const TIMEZONE = "Europe/Kiev"
+const TIMEZONE = locale.getLabel("timezone")
 const MONTHS = [
-  "Січ", "Лют", "Бер",
-  "Кві", "Тра", "Чер",
-  "Лип", "Сер", "Вер",
-  "Жов", "Лис", "Гру"
+  locale.getLabel("month_january"),
+  locale.getLabel("month_february"),
+  locale.getLabel("month_march"),
+  locale.getLabel("month_april"),
+  locale.getLabel("month_may"),
+  locale.getLabel("month_june"),
+  locale.getLabel("month_july"),
+  locale.getLabel("month_august"),
+  locale.getLabel("month_september"),
+  locale.getLabel("month_october"),
+  locale.getLabel("month_november"),
+  locale.getLabel("month_december")
 ]
 
 const chartWidget = chart.generateChartWidget({
@@ -51,8 +76,7 @@ async function getChartData(skipBlank) {
   
   const calendar = await Calendar.forEventsByTitle(CALENDAR_NAME)
   
-  for (let i = 0; 
-       i + 1 < dateRange.length; i++) {
+  for (let i = 0; i + 1 < dateRange.length; i++) {
         
     let startDate = dateRange[i]
     let endDate = dateRange[i + 1]

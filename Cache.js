@@ -1,10 +1,11 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: hdd;
-const fileImport = importModule("File Util")
 
 const root = {
-
+    
+    fileImport: importModule("File Util"),
+    
     fm: FileManager.local(),
     cacheDir: () => root.fm.cacheDirectory(),
     cacheFileName: "cache.json",
@@ -129,7 +130,7 @@ const root = {
 
 
     cacheData: async (data, key) => {
-        let cache = JSON.parse(fileImport.getConfiguration(root.cacheFileName, "[]"))
+        let cache = JSON.parse(root.fileImport.getConfiguration(root.cacheFileName, "[]"))
 
         cache = cache.filter(e => e.id != key)
         cache.push({
@@ -137,12 +138,12 @@ const root = {
             value: data
         })
 
-        fileImport.updateConfiguration(root.cacheFileName, JSON.stringify(cache))
+        root.fileImport.updateConfiguration(root.cacheFileName, JSON.stringify(cache))
     },
 
 
     getFromCache: key => {
-        let cache = JSON.parse(fileImport.getConfiguration(root.cacheFileName, "[]"))
+        let cache = JSON.parse(root.fileImport.getConfiguration(root.cacheFileName, "[]"))
         return cache.find(e => e.id == key).value
     }
 }

@@ -4,16 +4,17 @@
 
 const root = {
     
+    locale: importModule("Localization"),
+    
     rules: {
         notEmpty: {
-            message: field => `Field '${field.label}' cannot be empty`,
+            message: field => root.locale.getLabel("err_field_cant_be_empty").replace("%field_name", field.label),
             rule: value => {
-                return ![null, undefined].includes(value) &&
-                    String(value).length !== 0
+                return !!value && String(value).length !== 0
             }
         },
         number: {
-            message: field => `Field '${field.label}' should be a number`,
+            message: field => root.locale.getLabel("err_field_should_be_number").replace("%field_name", field.label),
             rule: value => String(value).match("^[0-9]+$")
         }
     },
@@ -32,7 +33,7 @@ const root = {
             actions: configIn.actions ?? [],
             title: configIn.title ?? "",
             fields: configIn.fields ?? [],
-            cancelLabel: configIn.cancelLabel ?? "Cancel"
+            cancelLabel: configIn.cancelLabel ?? root.locale.getLabel("default_cancel_action")
         }
         
         if (typeof config.actions == "string") {
@@ -70,7 +71,7 @@ const root = {
             res.data[field.var] = 
                 value === "" ? undefined : value
                 
-            if (!field.validations || res.choice === "Cancel") {
+            if (!field.validations || res.isCancelled) {
                 continue
             }
             
@@ -94,14 +95,22 @@ const root = {
     createErrorModal: (message) => {
         let errorAlert = new Alert()
         
-        errorAlert.addAction("OK")
+        errorAlert.addAction(root.locale.getLabel("error_modal_action"))
                     
-        errorAlert.title = "⛔️ Error"
+        errorAlert.title = root.locale.getLabel("error_modal_title")
         errorAlert.message = message
         
         return errorAlert
     }
 }
+
+root.locale.registerLabels({
+    "err_field_cant_be_empty": "Field '%field_name' cannot be empty",
+    "err_field_should_be_number": "Field '%field_name' should be a number",
+    "default_cancel_action": "Cancel",
+    "error_modal_action": "OK",
+    "error_modal_title": "⛔️ Error"
+})
 
 module.exports.createCancelableAlert = root.createCancelableAlert
 module.exports.rules = root.rules

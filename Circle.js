@@ -1,9 +1,10 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: circle-notch;
-const configImport = importModule("Config Util")
 
 const root = {
+    
+    configImport: importModule("Config Util"),
     
     defaultConfig: {
         size: 400,
@@ -21,21 +22,21 @@ const root = {
     
     generateCircleImage: configIn => {
     
-        configImport.store.config = root.defaultConfig
-        configImport.store.userConfig = configIn
+        root.configImport.store.config = root.defaultConfig
+        root.configImport.store.userConfig = configIn
         
         const context = new DrawContext()
         context.opaque = false
         
-        const size = configImport.conf("size")
+        const size = root.configImport.conf("size")
         context.size = new Size(size, size)
         
-        context.setLineWidth(configImport.conf("circleLineWidth"))
+        context.setLineWidth(root.configImport.conf("circleLineWidth"))
         
         let circleData = [{
             color: null,
             percentage: 0
-        }].concat(configImport.conf("data"))
+        }].concat(root.configImport.conf("data"))
         
         for (let i = 0; i + 1 < circleData.length; i++) {
             let from = circleData[i]
@@ -50,7 +51,7 @@ const root = {
             context.setStrokeColor(to.color)
             context.addPath(segment)
             
-            if (configImport.conf("fill")) {
+            if (root.configImport.conf("fill")) {
                 context.fillPath()
             } else {
                 context.strokePath()
@@ -62,15 +63,15 @@ const root = {
     
     getSegment: (from, to) => {
 
-        let step = Math.PI * 2 / configImport.conf("steps")
+        let step = Math.PI * 2 / root.configImport.conf("steps")
         let points = []
         
-        const size = configImport.conf("size") + 1
+        const size = root.configImport.conf("size") + 1
         const origin = size / 2
         
-        let radius = configImport.conf("diameter") / 2
+        let radius = root.configImport.conf("diameter") / 2
         
-        if (configImport.conf("fill")) {
+        if (root.configImport.conf("fill")) {
             points.push(new Point(origin, origin))
         }
         

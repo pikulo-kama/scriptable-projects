@@ -1,7 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: chart-line;
-const configImport = importModule("Config Util")
 
 // In order to use script just write
 // importModule("Linear Chart")
@@ -15,7 +14,9 @@ const configImport = importModule("Config Util")
 
 const root = {
   
-  defaultConfig: {
+  configImport: importModule("Config Util"),
+  
+  defaultConfig: () => ({
     // Fields related to canvas size
     widget: {
       height: 500,
@@ -26,7 +27,7 @@ const root = {
       }
     },
     chart: {
-      bgColor: configImport.get(new Color("1C1C1E"), new Color("FFF")),
+      bgColor: root.configImport.get(new Color("1C1C1E"), new Color("FFF")),
       // Tells whether tooltips should
       // be shown on each chart point    
       showTooltips: false,
@@ -37,21 +38,21 @@ const root = {
       // Font size of tolltip 
       tooltipFontSize: 15,
       // Tooltip color
-      tooltipColor: configImport.get(new Color("5D5D5D"), new Color("858585")),
+      tooltipColor: root.configImport.get(new Color("5D5D5D"), new Color("858585")),
       lineWidth: 6,
       lineColor: new Color("5777A5"),
       showDots: true,
       dotColor: new Color("5777A580"),
       showGrid: true,
-      gridColor: configImport.get(new Color("1A1A1B"), new Color("EFEFEF40")),
+      gridColor: root.configImport.get(new Color("1A1A1B"), new Color("EFEFEF40")),
       gridLineWidth: 4,
       pointSize: 15,
       yMax: 3,
       showLegend: true,
-      legendColor: configImport.get(new Color("5D5D5D"), new Color("858585")),
+      legendColor: root.configImport.get(new Color("5D5D5D"), new Color("858585")),
       legendFontSize: 26
     }
-  },
+  }),
   
   
   /**
@@ -75,7 +76,7 @@ const root = {
     const imageWidget = chartWidget.addImage(chartImage)
     imageWidget.centerAlignImage()
     
-    chartWidget.backgroundColor = configImport.conf("chart.bgColor")
+    chartWidget.backgroundColor = root.configImport.conf("chart.bgColor")
     
     QuickLook.present(chartImage)
     
@@ -108,19 +109,19 @@ const root = {
   * @return rendered graph
   */
   generateChartImage: (configIn, modeIn) => {
-    configImport.store.userConfig = configIn
-    configImport.store.config = root.defaultConfig
-    configImport.store.colorMode = modeIn
+    root.configImport.store.userConfig = configIn
+    root.configImport.store.config = root.defaultConfig()
+    root.configImport.store.colorMode = modeIn
     
     const context = new DrawContext()
     context.opaque = false
     context.size = new Size(
-        configImport.conf("widget.width"), 
-        configImport.conf("widget.height")
+        root.configImport.conf("widget.width"), 
+        root.configImport.conf("widget.height")
     )
     
     const bgRectangle = root.getBackground()
-    context.setFillColor(configImport.conf("chart.bgColor"))
+    context.setFillColor(root.configImport.conf("chart.bgColor"))
     context.fill(bgRectangle)
     
     const chartPoints = root.getDataLocations()
@@ -128,30 +129,30 @@ const root = {
     const gridPath = root.getGridPath(context, chartPoints)
     const linesPath = new Path()
     
-    if (configImport.conf("chart.showTooltips")) {
+    if (root.configImport.conf("chart.showTooltips")) {
       root.drawTooltips(context, chartPoints)
     }
   
-    if (configImport.conf("chart.showGrid")) {
+    if (root.configImport.conf("chart.showGrid")) {
       
-      context.setStrokeColor(configImport.conf("chart.gridColor"))
-      context.setLineWidth(configImport.conf("chart.gridLineWidth"))
+      context.setStrokeColor(root.configImport.conf("chart.gridColor"))
+      context.setLineWidth(root.configImport.conf("chart.gridLineWidth"))
       
       context.addPath(gridPath)
       context.strokePath()
     }
     
-    if (configImport.conf("chart.showDots")) {
+    if (root.configImport.conf("chart.showDots")) {
       const dotsPath = root.getDotsPath(chartPoints)
       
-      context.setFillColor(configImport.conf("chart.dotColor"))
+      context.setFillColor(root.configImport.conf("chart.dotColor"))
       
       context.addPath(dotsPath)
       context.fillPath()
     }
     
-    context.setStrokeColor(configImport.conf("chart.lineColor"))
-    context.setLineWidth(configImport.conf("chart.lineWidth"))
+    context.setStrokeColor(root.configImport.conf("chart.lineColor"))
+    context.setLineWidth(root.configImport.conf("chart.lineWidth"))
   
     linesPath.addLines(chartPoints)
     context.addPath(linesPath)
@@ -167,8 +168,8 @@ const root = {
   * @return rectangle
   */
   getBackground: () => new Rect(0, 0, 
-      configImport.conf("widget.width"), 
-      configImport.conf("widget.height")),
+      root.configImport.conf("widget.width"), 
+      root.configImport.conf("widget.height")),
   
   
   /*
@@ -187,42 +188,42 @@ const root = {
   getGridPath: (context, chartPoints) => {
     let path = new Path()
     
-    const showLegend = configImport.conf("chart.showLegend")
+    const showLegend = root.configImport.conf("chart.showLegend")
     
-    const yAxisValues = root.getYAxisValues(configImport.conf("chart.data"))
-    const yStep = (configImport.conf("widget.height") - 
-                configImport.conf("widget.padding.vertical")) / configImport.conf("chart.yMax")
+    const yAxisValues = root.getYAxisValues(root.configImport.conf("chart.data"))
+    const yStep = (root.configImport.conf("widget.height") - 
+                root.configImport.conf("widget.padding.vertical")) / root.configImport.conf("chart.yMax")
     
-    let step = configImport.conf("widget.padding.vertical") / 2
+    let step = root.configImport.conf("widget.padding.vertical") / 2
     
-    context.setTextColor(configImport.conf("chart.legendColor"))
+    context.setTextColor(root.configImport.conf("chart.legendColor"))
     context.setFont(Font.heavyMonospacedSystemFont(
-      configImport.conf("chart.legendFontSize")
+        root.configImport.conf("chart.legendFontSize")
     ))
     context.setTextAlignedCenter()
     
     for (let i = 0; i < chartPoints.length; i++) {
       
-      let startPoint = new Point(chartPoints[i].x, configImport.conf("widget.padding.vertical") / 2)
-      let endPoint = new Point(chartPoints[i].x, (configImport.conf("widget.height") - 
-        configImport.conf("widget.padding.vertical") / 2))
+      let startPoint = new Point(chartPoints[i].x, root.configImport.conf("widget.padding.vertical") / 2)
+      let endPoint = new Point(chartPoints[i].x, (root.configImport.conf("widget.height") - 
+          root.configImport.conf("widget.padding.vertical") / 2))
       
       path.addLines([
         startPoint, endPoint
       ])
       
       endPoint.x -= 10
-      endPoint.y += configImport.conf("chart.legendFontSize")
+      endPoint.y += root.configImport.conf("chart.legendFontSize")
       
       if (showLegend) {
-        context.drawText(configImport.conf("chart.data")[i][configImport.conf("chart.xField")], endPoint)
+        context.drawText(root.configImport.conf("chart.data")[i][root.configImport.conf("chart.xField")], endPoint)
       }
     }
     
-    for (let i = 0; i <= configImport.conf("chart.yMax"); i++, step += yStep) {
-      let startPoint = new Point(configImport.conf("widget.padding.horizontal") / 2, step)
-      let endPoint = new Point(configImport.conf("widget.width") - 
-        configImport.conf("widget.padding.horizontal") / 2, step)
+    for (let i = 0; i <= root.configImport.conf("chart.yMax"); i++, step += yStep) {
+      let startPoint = new Point(root.configImport.conf("widget.padding.horizontal") / 2, step)
+      let endPoint = new Point(root.configImport.conf("widget.width") - 
+        root.configImport.conf("widget.padding.horizontal") / 2, step)
       
       path.addLines([
         startPoint, endPoint
@@ -230,7 +231,7 @@ const root = {
       
       const value = yAxisValues[i]
       
-      startPoint.x -= value.length * configImport.conf("chart.legendFontSize")
+      startPoint.x -= value.length * root.configImport.conf("chart.legendFontSize")
       startPoint.y -= 10
       
       if (showLegend) {
@@ -257,10 +258,10 @@ const root = {
     let path = new Path()
     
     chartPoints.forEach(point => {
-      path.addEllipse(new Rect(point.x - (configImport.conf("chart.pointSize") / 2), 
-                          point.y - (configImport.conf("chart.pointSize") / 2), 
-                          configImport.conf("chart.pointSize"), 
-                          configImport.conf("chart.pointSize")))
+      path.addEllipse(new Rect(point.x - (root.configImport.conf("chart.pointSize") / 2), 
+                          point.y - (root.configImport.conf("chart.pointSize") / 2), 
+                          root.configImport.conf("chart.pointSize"), 
+                          root.configImport.conf("chart.pointSize")))
     
     })
     
@@ -285,23 +286,23 @@ const root = {
   * used as orienters when adding tooltips)
   */
   drawTooltips: (context, chartPoints) => {
-    context.setTextColor(configImport.conf("chart.tooltipColor"))
+    context.setTextColor(root.configImport.conf("chart.tooltipColor"))
       context.setFont(Font.heavyMonospacedSystemFont(
-        configImport.conf("chart.tooltipFontSize")
+        root.configImport.conf("chart.tooltipFontSize")
       ))
       
-      const data = configImport.conf("chart.data")
+      const data = root.configImport.conf("chart.data")
       const axisValues = root.getYAxisValues(data)
       
       for (let i = 0; i < chartPoints.length; i++) {
         let point = chartPoints[i]
         let pointCopy = new Point(point.x, point.y)
         
-        pointCopy.y -= configImport.conf("chart.tooltipFontSize") * 1.5
+        pointCopy.y -= root.configImport.conf("chart.tooltipFontSize") * 1.5
         pointCopy.x -= 10
-        yFieldValue = String(data[i][configImport.conf("chart.yField")])
+        yFieldValue = String(data[i][root.configImport.conf("chart.yField")])
         
-        if (configImport.conf("chart.hideAxisPlacedTooltips")
+        if (root.configImport.conf("chart.hideAxisPlacedTooltips")
           && axisValues.includes(yFieldValue)) {
             continue
         }
@@ -318,24 +319,24 @@ const root = {
   */
   getDataLocations: () => {
     const points = []
-    const data = configImport.conf("chart.data")
+    const data = root.configImport.conf("chart.data")
   
-    const xStep = (configImport.conf("widget.width") 
-                   - configImport.conf("widget.padding.horizontal"))
+    const xStep = (root.configImport.conf("widget.width") 
+                   - root.configImport.conf("widget.padding.horizontal"))
                         / (data.length - 1)
-    let currentStep = configImport.conf("widget.padding.horizontal") / 2
+    let currentStep = root.configImport.conf("widget.padding.horizontal") / 2
     
-    const maxCustomersInMonth = root.getMaxProperty(data, configImport.conf("chart.yField"))
+    const maxCustomersInMonth = root.getMaxProperty(data, root.configImport.conf("chart.yField"))
     
-    const chartPercent = (configImport.conf("widget.height") - 
-                          configImport.conf("widget.padding.vertical")) 
+    const chartPercent = (root.configImport.conf("widget.height") - 
+                          root.configImport.conf("widget.padding.vertical")) 
                             / maxCustomersInMonth
   
     const getDataPoint = (i, x) => {
       return new Point(x, 
-        configImport.conf("widget.height") - 
-        (configImport.conf("widget.padding.vertical") / 2)- 
-        (data[i][configImport.conf("chart.yField")] * chartPercent))
+        root.configImport.conf("widget.height") - 
+        (root.configImport.conf("widget.padding.vertical") / 2)- 
+        (data[i][root.configImport.conf("chart.yField")] * chartPercent))
     }
   
     for (let i = 0; i < data.length; i++, currentStep += xStep) {
@@ -357,12 +358,12 @@ const root = {
   */
   getYAxisValues: (data) => {
     const axisValues = []
-    const iteration = root.getMaxProperty(data, configImport.conf("chart.yField")) 
-      / configImport.conf("chart.yMax")
+    const iteration = root.getMaxProperty(data, root.configImport.conf("chart.yField")) 
+      / root.configImport.conf("chart.yMax")
       
     const fixed = !Number.isInteger(iteration) ? 1 : 0
     
-    for (let i = configImport.conf("chart.yMax"); i > 0; i--) {
+    for (let i = root.configImport.conf("chart.yMax"); i > 0; i--) {
       axisValues.push(Number(i * iteration).toFixed(fixed))
     }
     axisValues.push(String(0))

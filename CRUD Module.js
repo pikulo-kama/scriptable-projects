@@ -1,11 +1,12 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: database;
-const fileImport = importModule("File Util")
-const alertImport = importModule("Alert Util")
-const configImport = importModule("Config Util")
 
 const root = {
+    
+    fileImport: importModule("File Util"),
+    alertImport: importModule("Alert Util"),
+    configImport: importModule("Config Util"),
     
     inputs: {
         datePicker: "datePicker",
@@ -16,6 +17,7 @@ const root = {
     
     defaultConfig: {
         storageFile: "storage.json",
+        storageScript: Script.name(),
         showSeparators: false,
         header: {
             title: "Table",
@@ -41,16 +43,16 @@ const root = {
     
     buildTable: async configIn => {
         
-        configImport.store.config = root.defaultConfig
+        root.configImport.store.config = root.defaultConfig
         
         if (configIn != undefined) {
-            configImport.store.userConfig = configIn
+            root.configImport.store.userConfig = configIn
         }
         
-        root.table.showSeparators = configImport.conf("showSeparators")
+        root.table.showSeparators = root.configImport.conf("showSeparators")
         root.tableData = root.getData()
         
-        let sortFunction = configImport.conf("sort")
+        let sortFunction = root.configImport.conf("sort")
         
         if (sortFunction) {
             root.tableData = root.tableData.sort(sortFunction)
@@ -76,13 +78,13 @@ const root = {
         
         adminRow.isHeader = true
         adminRow.cellSpacing = 0.1
-        adminRow.backgroundColor = configImport.conf("header.backgroundColor")
+        adminRow.backgroundColor = root.configImport.conf("header.backgroundColor")
         
-        const label = adminRow.addText(configImport.conf("header.title"))
+        const label = adminRow.addText(root.configImport.conf("header.title"))
         label.widthWeight = 410
-        label.titleColor = configImport.conf("header.titleColor")
+        label.titleColor = root.configImport.conf("header.titleColor")
         
-        const addNewCell = adminRow.addButton(configImport.conf("header.addNewBtnName"))
+        const addNewCell = adminRow.addButton(root.configImport.conf("header.addNewBtnName"))
         addNewCell.widthWeight = 40
         addNewCell.onTap = async () => {
             const record = await root.createNewRecord()
@@ -100,7 +102,7 @@ const root = {
     addEntryRow: async (rowData) => {
         let row = new UITableRow()
         
-        let fields = configImport.conf("fields")
+        let fields = root.configImport.conf("fields")
         
         for (let field of fields) {
             let btnLabel = field.label
@@ -136,8 +138,8 @@ const root = {
     
     addDeleteField: async (row, rowData) => {
         
-        let deleteBtn = row.addButton(configImport.conf("deleteField.label"))
-        deleteBtn.widthWeight = configImport.conf("deleteField.weight")
+        let deleteBtn = row.addButton(root.configImport.conf("deleteField.label"))
+        deleteBtn.widthWeight = root.configImport.conf("deleteField.weight")
         deleteBtn.onTap = async () => {
             let res = await root.deleteRecord(row, rowData)
             
@@ -195,7 +197,7 @@ const root = {
             fields[i].initial = rowData[fields[i].var]
         }
         
-        const result = await alertImport.createCancelableAlert({
+        const result = await root.alertImport.createCancelableAlert({
             fields: fields,
             actions: actions,
             title: title
@@ -205,7 +207,7 @@ const root = {
             return -1
         }
         
-        let onChangeCallback = configImport.conf("onChange")
+        let onChangeCallback = root.configImport.conf("onChange")
         
         if (handler.defaultAction == result.choice) {
             
@@ -254,7 +256,7 @@ const root = {
     
     handleDatePicker: async (field, rowData, handler) => {
         
-        const onChangeCallback = configImport.conf("onChange")
+        const onChangeCallback = root.configImport.conf("onChange")
         const datePicker = new DatePicker()
         
         let updatedData = {}
@@ -303,7 +305,7 @@ const root = {
         let lastChoice = ""
         
         do {
-            let res = await alertImport.createCancelableAlert({
+            let res = await root.alertImport.createCancelableAlert({
                 actions: ["Add", "Done"],
                 title: field.title,
                 fields: [{
@@ -332,8 +334,8 @@ const root = {
             id: await root.getAndIncreaseSequence()
         }
         
-        const dataDefaults = configImport.conf("dataDefaults")
-        const creationFields = configImport.conf("creationFields")
+        const dataDefaults = root.configImport.conf("dataDefaults")
+        const creationFields = root.configImport.conf("creationFields")
         
         for (let rec of dataDefaults) {
             data[rec.var] = rec.default
@@ -364,9 +366,6 @@ const root = {
         let handlers = field.handlers
         let handler = undefined
         
-        console.log(handlers)
-        console.log(handlers instanceof Array)
-        
         if (Array.isArray(handlers)) {
             
             if (handlers.length != 0 &&
@@ -374,7 +373,6 @@ const root = {
                 
                 for (let handlerObj of handlers) {
                     
-                    console.log(handlerObj.useWhen(rowData))
                     if (handlerObj.useWhen(rowData)) {
                         handler = handlerObj
                     }
@@ -401,15 +399,16 @@ const root = {
     },
     
     getData: () => {
-        let file = fileImport.getConfiguration(
-            configImport.conf("storageFile"), 
-            "[]"
+        let file = root.fileImport.getExtConfiguration(
+            root.configImport.conf("storageFile"), 
+            "[]",
+            root.configImport.conf("storageScript")
         )
         return JSON.parse(file)
     },
     
     getAndIncreaseSequence: async () => {
-        let file = fileImport.getConfiguration(
+        let file = root.fileImport.getConfiguration(
             "sequence.json", JSON.stringify({
                 next: 0
             })
@@ -420,7 +419,7 @@ const root = {
         
         sequence.next += 1
         
-        await fileImport.updateConfiguration(
+        await root.fileImport.updateConfiguration(
             "sequence.json", JSON.stringify(sequence)
         )
         
@@ -429,17 +428,17 @@ const root = {
     
     
     saveData: async () => {
-        await fileImport.updateConfiguration(
-            configImport.conf("storageFile"), 
+        await root.fileImport.updateConfiguration(
+            root.configImport.conf("storageFile"), 
             JSON.stringify(root.tableData))
     },
     
     
     deleteRecord: async (rowData, row) => {
         
-        const result = await alertImport.createCancelableAlert({
-            title: configImport.conf("deleteField.message"),
-            actions: configImport.conf("deleteField.confirmLabel")
+        const result = await root.alertImport.createCancelableAlert({
+            title: root.configImport.conf("deleteField.message"),
+            actions: root.configImport.conf("deleteField.confirmLabel")
         })
         
         if (!result.isCancelled) {

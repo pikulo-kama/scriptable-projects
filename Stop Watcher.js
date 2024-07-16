@@ -4,7 +4,43 @@
 const fileUtil = importModule("File Util")
 const alertUtil = importModule("Alert Util")
 const crud = importModule("CRUD Module")
+const locale = importModule("Localization")
 
+await locale.registerLabels({
+    "t_header_title": "📺 Shows&Movies",
+    "t_add_new_row_btn": "➕",
+    "t_serie_name_placeholder": "...",
+    "t_completion_status_label_done": "Mark as in-progress?",
+    "t_completion_status_label_undone": "Have you completed it?",
+    "t_completion_status_toggle_action": "Yes",
+    "t_api_integration_serie_set": "🆔",
+    "t_api_integration_serie_unset": "❓",
+    "t_new_serie_id_label": "New Serie ID",
+    "t_toggle_summary_view_action": "Toggle Summary View",
+    "t_update_serie_id_action": "Update ID",
+    "t_show_in_summary_label": "✅ Watchlist Integration",
+    "t_dont_show_in_summary_label": "⛔️ Watchlist Integration",
+    "t_serie_name_label": "New Serie Name",
+    "t_serie_name_update_action": "Update",
+    "t_serie_name_update_title": "Update Serie Name",
+    "t_season_label": "Season",
+    "t_episode_label": "Episode",
+    "t_next_episode_action": "Next Episode",
+    "t_season_episode_update_action": "Update",
+    "t_season_episode_update_title": "Update Series Data",
+    "t_completion_status_completed": "✅",
+    "t_completion_status_uncompleted": "🎬",
+    "t_season_episode_tag_uncompleted": "s%{season}e%{episode}",
+    "t_field_completed": "➖",
+    "t_timecode_watched": "%{hour}:%{minute}",
+    "t_timecode_unwatched": "TBW",
+    "w_season_label": "S",
+    "w_episode_label": "E",
+    "w_timecode_label": "T",
+    "w_completed_label_pt1": "✓",
+    "w_completed_label_pt2": "Done",
+    "w_label_value_separator": "|"
+})
 
 // debug
 if (false) {
@@ -18,10 +54,10 @@ if (config.runsInWidget) {
     await crud.buildTable({
         storageFile: "watchlist.json",
         header: {
-            title: "📺 Shows&Movies",
+            title: locale.getLabel("t_header_title"),
             titleColor: new Color("#364b4d"),
             backgroundColor: new Color("#c5d0d1"),
-            addNewBtnName: "➕"
+            addNewBtnName: locale.getLabel("t_add_new_row_btn")
         },
         onChange: (row, field, oldVal, newVal) => {
             
@@ -42,7 +78,7 @@ if (config.runsInWidget) {
             default: false
         }, {
             var: "serieName",
-            default: "..."
+            default: locale.getLabel("t_serie_name_placeholder")
         }, {
             var: "season",
             default: "1"
@@ -62,10 +98,10 @@ if (config.runsInWidget) {
             handlers: {
                 type: crud.inputs.form,
                 title: (r) => r.isDone ?  
-                        "Mark as in-progress?" :
-                        "Have you completed it?",
+                        locale.getLabel("t_completion_status_label_done") :
+                        locale.getLabel("t_completion_status_label_undone"),
                 actions: [{
-                    name: "Yes",
+                    name: locale.getLabel("t_completion_status_toggle_action"),
                     onChoose: {
                         callback: r => !r.isDone,
                         var: "isDone"
@@ -73,23 +109,25 @@ if (config.runsInWidget) {
                 }]
             }
         }, {
-            label: r => !!r.serieId ? "🆔" : "❓",
+            label: r => !!r.serieId ? locale.getLabel("t_api_integration_serie_set") : 
+                                      locale.getLabel("t_api_integration_serie_unset"),
             weight: 20,
             handlers: {
                 type: crud.inputs.form,
                 fields: [{
                     var: "serieId",
-                    label: "New Serie ID"
+                    label: locale.getLabel("t_new_serie_id_label")
                 }],
                 actions: [{
-                    name: "Toggle Summary View",
+                    name: locale.getLabel("t_toggle_summary_view_action"),
                     onChoose: {
                         callback: r => !r.showInSummary,
                         var: "showInSummary"
                     }
                 }],
-                defaultAction: "Update ID",
-                title: r => (r.showInSummary ? "✅" : "⛔️") + " Watchlist Integration"
+                defaultAction: locale.getLabel("t_update_serie_id_action"),
+                title: r => r.showInSummary ? locale.getLabel("t_show_in_summary_label") : 
+                                              locale.getLabel("t_dont_show_in_summary_label")
             }
         }, {
             label: (r) => r.serieName,
@@ -98,10 +136,10 @@ if (config.runsInWidget) {
                 type: crud.inputs.form,
                 fields: [{
                     var: "serieName",
-                    label: "New Serie Name",
+                    label: locale.getLabel("t_serie_name_label"),
                 }],
-                defaultAction: "Update", 
-                title: "Update Serie Name"
+                defaultAction: locale.getLabel("t_serie_name_update_action"), 
+                title: locale.getLabel("t_serie_name_update_title")
             }
         }, {
             label: getTag,
@@ -110,20 +148,20 @@ if (config.runsInWidget) {
                 type: crud.inputs.form,
                 fields: [{
                     var: "season",
-                    label: "Season",
+                    label: locale.getLabel("t_season_label"),
                 }, {
                     var: "episode",
-                    label: "Episode",
+                    label: locale.getLabel("t_episode_label"),
                 }],
                 actions: [{
-                    name: "Next Episode",
+                    name: locale.getLabel("t_next_episode_action"),
                     onChoose: {
                         callback: r => String(Number(r.episode) + 1),
                         var: "episode"
                     }
                 }],
-                defaultAction: "Update",
-                title: "Update Series Data"
+                defaultAction: locale.getLabel("t_season_episode_update_action"),
+                title: locale.getLabel("t_season_episode_update_title")
             }
         }, {
             label: getTimeCode,
@@ -139,13 +177,17 @@ if (config.runsInWidget) {
 
 function getStatusLabel(d) {
     
-    return d.isDone ? "✅" : "🎬"
+    return d.isDone ? locale.getLabel("t_completion_status_completed") : 
+        locale.getLabel("t_completion_status_uncompleted")
 }
 
 function getTag(d) {
+
+    let tag = d.isDone ? locale.getLabel("t_field_completed") :
+        locale.getLabel("t_season_episode_tag_uncompleted")
     
-    return d.isDone ? "➖" :
-        `s${d.season}e${d.episode}`
+    return tag.replace("%{season}", d.season)
+              .replace("%{episode}", d.episode)
 }
     
 function getTimeCode(d) {
@@ -153,10 +195,10 @@ function getTimeCode(d) {
     let value
     
     if (d.isDone) {
-        value = "➖"
+        value = locale.getLabel("t_field_completed")
         
     } else if (!d.hour && !d.minute) {
-        value = "TBW"
+        value = locale.getLabel("t_timecode_unwatched")
         
     } else {
         let hour = String(d.hour).length < 2 ?
@@ -165,7 +207,9 @@ function getTimeCode(d) {
         let minute = String(d.minute).length < 2 ?
             "0" + d.minute : d.minute
         
-        value = `${hour}:${minute}`
+        value = locale.getLabel("t_timecode_watched")
+            .replace("%{hour}", hour)
+            .replace("%{minute}", minute)
     }
     
     return value
@@ -200,15 +244,15 @@ function buildWidget(serieName) {
     
     let fields = [
         {
-            label: "S",
+            label: locale.getLabel("w_season_label"),
             value: rec.season
         },
         {
-            label: "E",
+            label: locale.getLabel("w_episode_label"),
             value: rec.episode
         },
         {
-            label: "T",
+            label: locale.getLabel("w_timecode_label"),
             value: getTimeCode(rec)
         }
     ]
@@ -216,8 +260,8 @@ function buildWidget(serieName) {
     if (rec.isDone) {
         fields = [
             {
-                label: "✓",
-                value: "Done"
+                label: locale.getLabel("w_completed_label_pt1"),
+                value: locale.getLabel("w_completed_label_pt2")
             }
         ]
     }
@@ -245,7 +289,7 @@ function buildWidget(serieName) {
         label.textColor = colors.reverse
         label.textOpacity = .9
         
-        const separator = hStack.addText("|")
+        const separator = hStack.addText(locale.getLabel("w_label_value_separator"))
         
         separator.font = Font.blackRoundedSystemFont(dataFont)
         separator.textColor = colors.sep
