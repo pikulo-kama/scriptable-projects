@@ -7,6 +7,7 @@ const root = {
     fileImport: importModule("File Util"),
     alertImport: importModule("Alert Util"),
     configImport: importModule("Config Util"),
+    locale: importModule("Localization"),
     
     inputs: {
         datePicker: "datePicker",
@@ -14,25 +15,31 @@ const root = {
         listForm: "listForm"
     },
     
+    filterTypes: {
+        boolean: "boolean",
+        text: "text"
+    },
+    
+    filterTypeHandlers: () => ({
+        boolean: root.handleBooleanFilter,
+        text: root.handleTextFilter
+    }),
     
     defaultConfig: {
+        filterStorageFile: "filter.json",
         storageFile: "storage.json",
         storageScript: Script.name(),
         showSeparators: false,
         header: {
-            title: "Table",
             titleColor: Color.darkGray(),
-            backgroundColor: Color.white(),
-            addNewBtnName: "New"
+            backgroundColor: Color.white()
         },
         creationFields: [],
         dataDefaults: [],
         fields: [],
+        filterFields: [],
         deleteField: {
-            label: "🗑️",
-            weight: 15,
-            message: "Are you sure?",
-            confirmLabel: "Yes"
+            weight: 15
         }
     },
     
@@ -67,9 +74,42 @@ const root = {
         root.table.removeAllRows()
         await root.addAdminPanel()
         
-        for (let record of root.tableData) {
+        let data = root.getFilteredData()
+        
+        for (let record of data) {
             await root.addEntryRow(record)
         }
+    },
+    
+    
+    getFilteredData: () => {
+        
+        let filters = root.getAppliedFilters()
+        let data = root.tableData
+        
+        for (filterField of Object.keys(filters)) {
+            
+            let filterValue = filters[filterField]
+            let filterType = root.configImport.conf("filterFields")
+                .find(field => field.var === filterField).type
+                
+            let filterFunction = null
+            
+            switch (filterType) {
+                
+                case root.filterTypes.boolean: {
+                    filterFunction = row => row[filterField] === filterValue
+                }
+                case root.filterTypes.text: {
+                    filterFunction = row => String(row[filterField]).toLowerCase()
+                        .includes(String(filterValue).toLowerCase())
+                }
+            }
+            
+            data = data.filter(filterFunction)
+        }
+        
+        return data
     },
     
     
@@ -80,22 +120,157 @@ const root = {
         adminRow.cellSpacing = 0.1
         adminRow.backgroundColor = root.configImport.conf("header.backgroundColor")
         
-        const label = adminRow.addText(root.configImport.conf("header.title"))
+        const label = adminRow.addText(root.locale.getLabel("headerTitle"))
         label.widthWeight = 410
         label.titleColor = root.configImport.conf("header.titleColor")
         
-        const addNewCell = adminRow.addButton(root.configImport.conf("header.addNewBtnName"))
+        if (root.configImport.conf("filterFields").length > 0) {
+            
+            const filterCell = adminRow.addButton(root.locale.getLabel("headerFilterButton"))
+            filterCell.widthWeight = 40
+            filterCell.onTap = root.openFilterPopup
+        }
+        
+        const addNewCell = adminRow.addButton(root.locale.getLabel("headerCreateButton"))
         addNewCell.widthWeight = 40
         addNewCell.onTap = async () => {
             const record = await root.createNewRecord()
             
             if (record != -1) {
                 root.tableData.push(record)
-                await root.updateRow(record)
+                await root.reloadTable()
             }
         }
         
         root.table.addRow(adminRow)
+    },
+    
+    
+    openFilterPopup: async () => {
+        
+        let clearAllAction = root.locale.getLabel("clearAllFiltersAction")
+        let appliedFilters = Object.keys(root.getAppliedFilters())
+        
+        let filterAppliedLabel = root.locale.getLabel("filterAppliedIndicator")
+        let filterFields = root.configImport.conf("filterFields")
+            .map(field => {
+                let prefix = ""
+                
+                if (appliedFilters.includes(field.var)) {
+                    prefix = filterAppliedLabel + " "
+                }
+                
+                let popupLabel = prefix + field.label
+                return {...field, popupLabel}
+            })
+        
+        let actions = filterFields.map(field => field.popupLabel)
+        actions.push(clearAllAction)
+        
+        const result = await root.alertImport.createCancelableAlert({
+            actions: actions,
+            title: root.locale.getLabel("filterSelectionPopupTitle")
+        })
+        
+        if (result.isCancelled) {
+            return
+        }
+        
+        if (result.choice === clearAllAction) {
+            root.updateFilters({})
+            
+        } else {
+            let selectedField = filterFields.find(field => field.popupLabel === result.choice)
+            let handler = root.filterTypeHandlers()[selectedField.type]
+            
+            await handler(selectedField)
+        }
+        
+        await root.reloadTable()
+    },
+    
+    
+    handleBooleanFilter: async (field) => {
+        
+        let filters = root.getAppliedFilters()
+        let filter = filters[field.var]
+        
+        const getAction = (condition, label) => {
+            let filterAppliedLabel = root.locale.getLabel("filterAppliedIndicator")
+            let indicator = (condition ? filterAppliedLabel : "")
+            return label.replace("%{applied}", indicator).trim()
+        }
+        
+        let yesAction = getAction(filter === true, root.locale.getLabel("yesBooleanAction"))
+        let noAction = getAction(filter === false, root.locale.getLabel("noBooleanAction"))
+        let clearAction = root.locale.getLabel("clearFilterAction")
+        
+        let result = await root.alertImport.createCancelableAlert({
+            title: root.locale.getLabel("filterPopupTitle").replace("%{filterName}", field.label),
+            actions: [yesAction, noAction, clearAction]
+        })
+        
+        if (result.isCancelled) {
+            return
+        }
+        
+        if (result.choice === clearAction) {
+            delete filters[field.var]
+            
+        } else {
+            filters[field.var] = result.choice === yesAction
+        }
+        
+        await root.updateFilters(filters)
+    },
+    
+    
+    handleTextFilter: async (field) => {
+        
+        let filters = root.getAppliedFilters()
+        let filter = filters[field.var]
+        
+        let applyFilterAction = root.locale.getLabel("applyFilterAction")
+        let clearFilterAction = root.locale.getLabel("clearFilterAction")
+        
+        let result = await root.alertImport.createCancelableAlert({
+            title: root.locale.getLabel("filterPopupTitle").replace("%{filterName}", field.label),
+            actions: [applyFilterAction, clearFilterAction],
+            fields: [{
+                var: field.var,
+                initial: filter,
+                label: field.label
+            }]
+        })
+        
+        if (result.isCancelled) {
+            return
+        }
+        
+        if (result.choice === applyFilterAction) {
+            filters[field.var] = result.data[field.var]
+            
+        } else if (result.choice === clearFilterAction) {
+            delete filters[field.var]
+        }
+        
+        await root.updateFilters(filters)
+    },
+    
+    
+    getAppliedFilters: () => {
+        return JSON.parse(root.fileImport.getConfiguration(
+            root.configImport.conf("filterStorageFile"),
+            "{}"
+        ))
+    },
+    
+    
+    updateFilters: async content => {
+        await root.fileImport.updateConfiguration(
+            root.configImport.conf("filterStorageFile"),
+            JSON.stringify(content)
+        )
     },
     
     
@@ -127,7 +302,7 @@ const root = {
                 let foundRowData = root.tableData.find(r => r.id == rowData.id)
                 root.mergeData(updatedData, foundRowData)
                 
-                await root.updateRow(foundRowData, row)
+                await root.reloadTable()
             }
         }
         
@@ -138,7 +313,7 @@ const root = {
     
     addDeleteField: async (row, rowData) => {
         
-        let deleteBtn = row.addButton(root.configImport.conf("deleteField.label"))
+        let deleteBtn = row.addButton(root.locale.getLabel("deleteFieldLabel"))
         deleteBtn.widthWeight = root.configImport.conf("deleteField.weight")
         deleteBtn.onTap = async () => {
             let res = await root.deleteRecord(row, rowData)
@@ -189,8 +364,11 @@ const root = {
         }
         
         if (actions.length == 0) {
-            handler.defaultAction = "Ok"
-            actions = "Ok"
+            
+            let defaultUpdateLabel = root.locale.getLabel("formDefaultUpdateLabel")
+            
+            handler.defaultAction = defaultUpdateLabel
+            actions = defaultUpdateLabel
         }
         
         for (let i = 0; i < fields.length; i++) {
@@ -437,8 +615,8 @@ const root = {
     deleteRecord: async (rowData, row) => {
         
         const result = await root.alertImport.createCancelableAlert({
-            title: root.configImport.conf("deleteField.message"),
-            actions: root.configImport.conf("deleteField.confirmLabel")
+            title: root.locale.getLabel("deleteFieldMessage"),
+            actions: root.locale.getLabel("deleteFieldConfirmAction")
         })
         
         if (!result.isCancelled) {
@@ -448,7 +626,7 @@ const root = {
         return false
     },
     
-    updateRow: async (newRowData, row) => {      
+    reloadTable: async () => {
         root.saveData()
         await root.syncTable()
         root.table.reload()
@@ -469,6 +647,24 @@ const root = {
     }
 }
 
+root.locale.registerLabels({
+    "deleteFieldConfirmAction": "Yes",
+    "deleteFieldMessage": "Are you sure?",
+    "deleteFieldLabel": "🗑️",
+    "headerTitle": "📺 Shows&Movies",
+    "headerFilterButton": "🔎",
+    "headerCreateButton": "➕",
+    "filterAppliedIndicator": "✅",
+    "filterSelectionPopupTitle": "Filter",
+    "filterPopupTitle": "Filter by %{filterName}",
+    "clearAllFiltersAction": "Clear All",
+    "clearFilterAction": "Clear",
+    "yesBooleanAction": "%{applied} Yes",
+    "noBooleanAction": "%{applied} No",
+    "applyFilterAction": "Filter",
+    "formDefaultUpdateLabel": "OK"
+})
 
+module.exports.filterTypes = root.filterTypes
 module.exports.inputs = root.inputs
 module.exports.buildTable = root.buildTable
