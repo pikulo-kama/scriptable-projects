@@ -7,18 +7,18 @@ const locale = importModule("Localization")
 
 await locale.registerLabels({
   "timezone": "Europe/Kiev",
-  "month_january": "Січ",
-  "month_february": "Лют",
-  "month_march": "Бер",
-  "month_april": "Кві",
-  "month_may": "Тра",
-  "month_june": "Чер",
-  "month_july": "Лип",
-  "month_august": "Сер",
-  "month_september": "Вер",
-  "month_october": "Жов",
-  "month_november": "Лис",
-  "month_december": "Гру",
+  "month_january": "Jan",
+  "month_february": "Feb",
+  "month_march": "Mar",
+  "month_april": "Apr",
+  "month_may": "May",
+  "month_june": "Jun",
+  "month_july": "Jul",
+  "month_august": "Aug",
+  "month_september": "Sep",
+  "month_october": "Oct",
+  "month_november": "Nov",
+  "month_december": "Dec",
 })
 
 let arguments = JSON.parse(args.widgetParameter)
