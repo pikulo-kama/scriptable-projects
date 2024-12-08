@@ -30,7 +30,7 @@ class Main {
             .filter(script => script.endsWith(".js"))
             .map(script => {
                 let tags = Main.fm.allTags(Main.fm.joinPath(Main.fm.documentsDirectory(), script))
-                return new Script(script, tags)
+                return new ScriptInfo(script, tags)
             })
             .filter(script => script.hasLocales() && !script.isLibrary())
         
@@ -150,7 +150,7 @@ class Main {
     }
 }
 
-class Script {
+class ScriptInfo {
     
     static localeFileRegex = "locale_\\w+\.json"
     
@@ -163,7 +163,7 @@ class Script {
     }
     
     loadLocales(scriptName) {
-        return fileUtil.findExtConfigurations(Script.localeFileRegex, scriptName)
+        return fileUtil.findExtConfigurations(ScriptInfo.localeFileRegex, scriptName)
             .map(localeFile => new Locale(localeFile))
     }
     
