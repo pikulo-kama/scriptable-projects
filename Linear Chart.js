@@ -3,7 +3,7 @@
 // icon-color: deep-purple; icon-glyph: chart-line;
 
 // In order to use script just write
-// importModule("Linear Chart")
+// importModule ("Linear Chart")
 // Module exports 2 methods:
 // - generateChartImage - used to generate graph and 
 // return an image to user. User can provide
