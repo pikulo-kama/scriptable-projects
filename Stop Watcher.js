@@ -7,8 +7,6 @@ const crud = importModule("CRUD Module")
 const locale = importModule("Localization")
 
 await locale.registerLabels({
-    "t_header_title": "📺 Shows&Movies",
-    "t_add_new_row_btn": "➕",
     "t_serie_name_placeholder": "...",
     "t_completion_status_label_done": "Mark as in-progress?",
     "t_completion_status_label_undone": "Have you completed it?",
@@ -34,6 +32,7 @@ await locale.registerLabels({
     "t_field_completed": "➖",
     "t_timecode_watched": "%{hour}:%{minute}",
     "t_timecode_unwatched": "TBW",
+    "t_filter_button": "🔎",
     "w_season_label": "S",
     "w_episode_label": "E",
     "w_timecode_label": "T",
@@ -54,10 +53,8 @@ if (config.runsInWidget) {
     await crud.buildTable({
         storageFile: "watchlist.json",
         header: {
-            title: locale.getLabel("t_header_title"),
             titleColor: new Color("#364b4d"),
-            backgroundColor: new Color("#c5d0d1"),
-            addNewBtnName: locale.getLabel("t_add_new_row_btn")
+            backgroundColor: new Color("#c5d0d1")
         },
         onChange: (row, field, oldVal, newVal) => {
             
@@ -91,6 +88,15 @@ if (config.runsInWidget) {
         }, {
             var: "minute",
             default: null
+        }],
+        filterFields: [{
+            var: "isDone",
+            type: crud.filterTypes.boolean,
+            label: "Completed"
+        }, {
+            var: "serieName",
+            type: crud.filterTypes.text,
+            label: "Name"
         }],
         fields: [{
             label: getStatusLabel,
