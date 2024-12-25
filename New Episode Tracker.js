@@ -13,10 +13,10 @@ const conf = {
         mockData: false,
         forceSeriesName: false,
         rerollColor: false,
-        seriesName: "the-last-of-us"
+        seriesName: "game-of-thrones"
     },
 
-    googleVisionApiKey: "<your API key here>",
+    googleVisionApiKey: files.getConfiguration("google_vision_api_key.txt", "<your API key>"),
     backgroundColor: new Color("070d0d")
 };
 
@@ -366,7 +366,8 @@ class Series {
 
         if (!colorFromFile || conf.debug.rerollColor) {
 
-            colorFromFile = {color: await this.__retrieveDominantColor()};
+            let dominantColor = await this.__retrieveDominantColor();
+            colorFromFile = {color: dominantColor};
             colorMap[this._imageURI] = colorFromFile;
 
             files.updateConfiguration(fileName, JSON.stringify(colorMap));
@@ -481,7 +482,7 @@ class Series {
         let response = await webView.evaluateJavaScript(`
             var xhr = new XMLHttpRequest();
 
-            xhr.open('POST', "https://vision.googleapis.com/v1/images:annotate?alt=json&key=${conf.visionApiKey}", false);
+            xhr.open('POST', "https://vision.googleapis.com/v1/images:annotate?alt=json&key=${conf.googleVisionApiKey}", false);
 
             xhr.send(JSON.stringify({
                 "requests": [{
@@ -500,13 +501,8 @@ class Series {
             JSON.parse(xhr.responseText);
         `);
 
-        let colors = response.responses[0].imagePropertiesAnnotation.dominantColors.colors;
-        
-        console.log(colors);
-        
+        let colors = response.responses[0].imagePropertiesAnnotation.dominantColors.colors;        
         let randomColor = colors[Math.floor(Math.random()* colors.length)];
-        
-        console.log(randomColor);
 
         let red = Number(randomColor.color.red).toString(16);
         let green = Number(randomColor.color.green).toString(16);
@@ -680,7 +676,7 @@ function getSeriesName() {
         args.widgetParameter;
 
     if (!seriesName) {
-        throw new Error("Series name is not provided")
+        throw new Error("Series name was not provided")
     }
 
     return seriesName;
