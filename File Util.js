@@ -5,7 +5,7 @@
 const root = {
     
     manager: FileManager.iCloud(),
-    getScriptableDir: () => root.joinPaths([
+    getScriptableDir: () => root.__joinPaths([
         root.manager.documentsDirectory(),
         "Resources"
     ]),
@@ -17,7 +17,7 @@ const root = {
     updateExtConfiguration: async (fileName, content, scriptName) => {
         
         const manager = root.manager
-        const targetDirectory = root.joinPaths(
+        const targetDirectory = root.__joinPaths(
             [root.getScriptableDir(), scriptName])
         
         if (!manager.isDirectory(targetDirectory)) {
@@ -26,20 +26,20 @@ const root = {
         
         const targetFile = manager.joinPath(targetDirectory, fileName)
             
-        await manager.write(targetFile, root.castToData(content))
+        await manager.write(targetFile, root.__castToData(content))
     },
     
     getConfiguration: (fileName, defaultValue) => {
-        return root.doGetConfiguration(fileName, defaultValue, Script.name())
+        return root.__doGetConfiguration(fileName, defaultValue, Script.name())
     },
     
     getExtConfiguration: (fileName, defaultValue, scriptName) => {
-        return root.doGetConfiguration(fileName, defaultValue, scriptName)
+        return root.__doGetConfiguration(fileName, defaultValue, scriptName)
     },
     
     findExtConfigurations: (fileNameRegex, scriptName) => {
         
-        let scriptDir = root.joinPaths(
+        let scriptDir = root.__joinPaths(
             [root.getScriptableDir(), scriptName]
         )
         
@@ -51,8 +51,8 @@ const root = {
             .filter(fileName => fileName.match(fileNameRegex))
     },
     
-    doGetConfiguration: (fileName, defaultValue, scriptName) => {
-        const targetFile = root.joinPaths(
+    __doGetConfiguration: (fileName, defaultValue, scriptName) => {
+        const targetFile = root.__joinPaths(
             [root.getScriptableDir(), scriptName, fileName]
         )
         
@@ -66,11 +66,11 @@ const root = {
     },
     
     
-    castToData: content => {
+    __castToData: content => {
         return Data.fromString(String(content))
     },
     
-    joinPaths: paths => {
+    __joinPaths: paths => {
         let resultPath = ""
         
         for (let path of paths) {
