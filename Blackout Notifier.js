@@ -2,6 +2,9 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: gray; icon-glyph: moon;
 
+const ui = importModule("UI");
+
+
 const conf = {
     debug: {
         enable: false,
@@ -498,6 +501,10 @@ class OutageRecord {
 }
 
 
+/**
+ * Helper class used to render
+ * widget with schedule information.
+ */
 class ScheduleWidget {
 
     /**
@@ -510,7 +517,7 @@ class ScheduleWidget {
         // This is triggered when schedule data was
         // not loaded due to connection issues.
         if (!webView.isAvailable()) {
-            this.__present(this.__getNotAvailableRootWidget());
+            ui.present(this.__getNotAvailableRootWidget());
             return;
         }
 
@@ -518,22 +525,40 @@ class ScheduleWidget {
         const todaySchedule = webView.getToday();
 
         // Render header of widget (icon + address).
-        const headerStack = this.__addStack(root);
-        this.__addIcon(headerStack, "lightbulb.slash", 15, null, "regular");
-        this.__addSpacer(headerStack, 5);
-        this.__addText(headerStack, conf.address.shortAddress, Font.blackRoundedSystemFont(10), new Color("bfbfbf"), null, 16);
+        const headerStack = ui.stack().renderFor(root);
+        
+        ui.image()
+            .icon("lightbulb.slash")
+            .size(15)
+            .regularWeight()
+            .renderFor(headerStack);
+            
+        ui.spacer().renderFor(headerStack, 5);
+        
+        ui.text()
+            .content(conf.address.shortAddress)
+            .limit(16)
+            .blackRoundedFont(10)
+            .color(new Color("bfbfbf"))
+            .renderFor(headerStack);
 
         // Add indicator if there are schedules for tomorrow.
         if (webView.getTomorrow().hasInfo()) {
             this.__renderTomorrowScheduleIndicator(root, webView.getTomorrow());
         }
 
-        this.__addSpacer(root);
+        ui.spacer().renderFor(root);
 
         // Show placeholder when there are no outages planned for today.
         if (!todaySchedule.hasNext()) {
-            this.__addIcon(root, "lightbulb.fill", 46, Color.yellow(), "heavy");
-            this.__addSpacer(root);
+            ui.image()
+                .icon("lightbulb.fill")
+                .size(46)
+                .yellowColor()
+                .heavyWeight()
+                .renderFor(root);
+                
+            ui.spacer().renderFor(root);
         }
 
         // Add each outage record.
@@ -542,11 +567,11 @@ class ScheduleWidget {
 
             // Don't add spacing after last outage record.
             if (todaySchedule.hasNext()) {
-                this.__addSpacer(root, 5);
+                ui.spacer().renderFor(root, 5);
             }
         }
 
-        this.__present(root);
+        ui.present(root);
     }
 
     /**
@@ -557,25 +582,37 @@ class ScheduleWidget {
      */
     __renderOutageRecord(root, outageRecord) {
 
-        let outageIconCode = outageRecord.getOrder() + ".square.fill";
-        let outageIconColor = null;
-        let opacity = null;
-
+        let outageIcon = ui.image();
+        let outagePeriodText = ui.text();
+        
         // Change styling of outages that may not occur.
         if (outageRecord.isProbable()) {
-            outageIconCode = "questionmark.square";
-            outageIconColor = Color.yellow();
+            outageIcon.icon("questionmark.square")
+            outageIcon.yellowColor();
+                
+        } else {
+            let iconCode = outageRecord.getOrder() + ".square.fill"
+            outageIcon.icon(iconCode);
         }
 
         // Make outage record slightly transparent if it's already passed.
         if (outageRecord.isPassed()) {
-            opacity = 0.6;
+            outageIcon.opacity(0.6);
+            outagePeriodText.opacity(0.6);
         }
 
-        let outageStack = this.__addStack(root);
-        this.__addIcon(outageStack, outageIconCode, 16, outageIconColor, null, opacity);
-        this.__addSpacer(outageStack, 2);
-        this.__addText(outageStack, outageRecord.toString(), Font.blackSystemFont(14), null, opacity);
+        let outageStack = ui.stack().renderFor(root);
+        
+        outageIcon
+            .size(16)
+            .renderFor(outageStack);
+        
+        ui.spacer().renderFor(outageStack, 2);
+        
+        outagePeriodText
+            .content(outageRecord.toString())
+            .blackFont(14)
+            .renderFor(outageStack);
     }
 
     /**
@@ -593,12 +630,25 @@ class ScheduleWidget {
             indicatorColor = Color.red();
         }
 
-        this.__addSpacer(root, 2);
-        const newScheduleStack = this.__addStack(root);
-        this.__addSpacer(newScheduleStack, 3);
-        this.__addIcon(newScheduleStack, "info.circle.fill", 10, indicatorColor, "light", 0.7);
-        this.__addSpacer(newScheduleStack, 3);
-        this.__addText(newScheduleStack, "new", Font.blackRoundedSystemFont(10), null, 0.9);
+        ui.spacer().renderFor(root, 2);
+            
+        const newScheduleStack = ui.stack().renderFor(root);
+        
+        ui.spacer().renderFor(newScheduleStack, 3);
+        ui.image()
+            .icon("info.circle.fill")
+            .size(10)
+            .color(indicatorColor)
+            .lightWeight()
+            .opacity(0.7)
+            .renderFor(newScheduleStack);
+
+        ui.spacer().renderFor(newScheduleStack, 3);
+        ui.text()
+            .content("new")
+            .blackRoundedFont(10)
+            .opacity(0.9)
+            .renderFor(newScheduleStack);
     }
 
     /**
@@ -611,113 +661,15 @@ class ScheduleWidget {
 
         const root = this.__createRootWidget();
 
-        this.__addSpacer(root);
-        this.__addIcon(root, "network.slash", 46, null, "heavy");
-        this.__addSpacer(root);
+        ui.spacer().renderFor(root);
+        ui.image()
+            .icon("network.slash")
+            .size(46)
+            .heavyWeight()
+            .renderFor(root);
+        ui.spacer().renderFor(root);
         
         return root;
-    }
-
-    /**
-     * Wrapper to create stack.
-     * 
-     * @param {*} parent parent widget.
-     * @returns {StackWidget} stack widget.
-     */
-    __addStack(parent) {
-        let stack = parent.addStack();
-        stack.centerAlignContent();
-
-        return stack;
-    }
-
-    /**
-     * Wrapper to create text widget.
-     * 
-     * @param {*} parent parent widget.
-     * @param {String} text widget text.
-     * @param {Font} font font of text.
-     * @param {Color} color color of text.
-     * @param {Number} opacity opacity of text.
-     * @param {Number} maxLength max length of text.
-     * @returns {TextWidget} text widget.
-     */
-    __addText(parent, text, font, color, opacity, maxLength) {
-
-        if (maxLength) {
-            text = this.__truncate(text, maxLength);
-        }
-
-        let textWidget = parent.addText(text);
-
-        if (font) {
-            textWidget.font = font;
-        }
-
-        if (color) {
-            textWidget.textColor = color;
-        }
-
-        if (opacity) {
-            textWidget.textOpacity = opacity;
-        }
-
-        textWidget.centerAlignText();
-        return textWidget;
-    }
-
-    /**
-     * Wrapper to create image widget.
-     * 
-     * @param {*} parent parent widget.
-     * @param {String} iconCode SF symbol code.
-     * @param {Number} size image size.
-     * @param {Color} color image color.
-     * @param {String} weight SF symbol weight.
-     * @param {Number} opacity image opacity.
-     * @returns {ImageWidget} image widget.
-     */
-    __addIcon(parent, iconCode, size, color, weight, opacity) {
-
-        let icon = SFSymbol.named(iconCode);
-
-        if (weight == "light") {
-            icon.applyLightWeight();
-
-        } else if (weight == "regular") {
-            icon.applyRegularWeight();
-
-        } else if (weight == "heavy") {
-            icon.applyHeavyWeight();
-        }
-
-        let iconWidget = parent.addImage(icon.image);
-
-        if (size) {
-            iconWidget.imageSize = new Size(size, size);
-        }
-
-        if (color) {
-            iconWidget.tintColor = color;
-        }
-
-        if (opacity) {
-            iconWidget.imageOpacity = opacity;
-        }
-        
-        iconWidget.centerAlignImage();
-        return iconWidget;
-    }
-
-    /**
-     * Wrapper to add spacer.
-     * 
-     * @param {*} parent parent widget.
-     * @param {Number} size spacer size.
-     * @returns {SpacerWidget} spacer widget.
-     */
-    __addSpacer(parent, size) {
-        return parent.addSpacer(size);
     }
 
     /**
@@ -727,7 +679,7 @@ class ScheduleWidget {
      */
     __createRootWidget() {
 
-        const root = new ListWidget();
+        const root = ui.createRoot();
         
         if (conf.showGradient) {
             
@@ -737,34 +689,6 @@ class ScheduleWidget {
         }
         
         return root;
-    }
-
-    /**
-     * Truncates text to provided length.
-     * 
-     * @param {String} text text to truncate.
-     * @param {Number} maxLength maximum final text length.
-     * @returns {String} truncated text.
-     */
-    __truncate(text, maxLength) {
-
-        if (text.length > maxLength) {
-            
-            let truncated = text.substring(0, maxLength - 2);
-            text = truncated + "..";
-        }
-
-        return text;
-    }
-
-    /**
-     * Used to present root widget.
-     * 
-     * @param {ListWidget} root root widget.
-     */
-    __present(root) {
-        QuickLook.present(root);
-        Script.setWidget(root);
     }
 }
 
