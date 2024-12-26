@@ -94,7 +94,7 @@ class ScheduleWebView {
      * If data is not available this is most likely due
      * to connection issues on device or host is down.
      * 
-     * @returns {boolean} True if available, otherwise False.
+     * @returns {Boolean} True if available, otherwise False.
      */
     isAvailable() {}
 }
@@ -110,65 +110,27 @@ class DebugScheduleWebView extends ScheduleWebView {
     
     getToday() {
         
-        let data;
+        let records = [];
         
-        if (conf.debug.forceNoOutages) {
-            data = [];
+        if (!conf.debug.forceNoOutages) {
             
-        } else {
-            
-            data = this.__generateSegmentsWithType(8, 0)
-                    .concat(this.__generateSegmentsWithType(1, 1))
-                    .concat(this.__generateSegmentsWithType(5, 0))
-                    .concat(this.__generateSegmentsWithType(4, 2))
-                    .concat(this.__generateSegmentsWithType(16, 0))
-                    .concat(this.__generateSegmentsWithType(2, 2))
-                    .concat(this.__generateSegmentsWithType(7, 0))
-                    .concat(this.__generateSegmentsWithType(4, 1))
-                    .concat(this.__generateSegmentsWithType(1, 0));
+            records = [
+                new OutageRecord(Time.of(4), Time.of(4, 30), false, 1),
+                new OutageRecord(Time.of(9), Time.of(11), true, 2),
+                new OutageRecord(Time.of(17), Time.of(18), true, 3),
+                new OutageRecord(Time.of(21, 30), Time.of(23, 30), false, 4)
+            ];
         }
         
-        return new Schedule({
-            hoursList: data
-        });
+        return new Schedule(records);
     }
     
     getTomorrow() {
-        
-        let data = null;
-        
-        if (conf.debug.forceIndicator) {
-            data = this.__generateSegmentsWithType(48, 1);
-        }
-        
-        return new Schedule({
-            hoursList: data
-        });
+        return new Schedule(conf.debug.forceIndicator ? [] : null);
     }
     
     isAvailable() {
         return !conf.debug.forceNotAvailable;
-    }
-    
-    /**
-     * Generates list of schedule segments
-     * with provided outage type.
-     * 
-     * @param {Number} amount amount of segments that should be created.
-     * @param {Number} type outage type of segmenst.
-     * @returns {Array<Object>} list of schedule segments
-     */
-    __generateSegmentsWithType(amount, type) {
-        
-        let outages = [];
-        
-        while (amount-- > 0) {
-            outages.push({
-                electricity: type
-            });
-        }
-        
-        return outages;
     }
 }
 
@@ -176,25 +138,11 @@ class DebugScheduleWebView extends ScheduleWebView {
 /**
  * Used to get schedule data from OE IF outage website.
  * 
- * Filed "electicity" represents type of outage.
+ * Field "status" represents type of outage.
  * There are three types:
  * - 0 - No outage
  * - 1 - Outage
  * - 2 - Probable outage
- * 
- * Data structure looks like so:
- * 
- * "today": {
- *  "hourList": [
- *      {
- *          "electricity": 0
- *      },
- *      {
- *          "electricity": 1
- *      },
- *      ...
- *  ]
- * }
  */
 class OeIfScheduleWebView extends ScheduleWebView {
 
@@ -209,15 +157,14 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
     async downloadSchedules() {
 
-        let webView = await this.__getWebView();
-        let schedules = await webView.evaluateJavaScript(this.__getDownloadScheduleJSPayload());
+        let schedules = await this.__downloadSchedulesInternal();
 
         if (schedules) {
 
             this._available = true;
 
-            this._today = new Schedule(schedules.graphs.today);
-            this._tomorrow = new Schedule(schedules.graphs.tomorrow);
+            this._today = new Schedule(schedules.today);
+            this._tomorrow = new Schedule(schedules.tomorrow);
         }
     }
 
@@ -242,6 +189,124 @@ class OeIfScheduleWebView extends ScheduleWebView {
     }
 
     /**
+     * Used to download raw JSON data of schedules.
+     * Returns data for both today and tomorrow.
+     * 
+     * @returns {Map<String, List<OutageRecord>>} Map with schedule records for today and tomorrow
+     */
+    async __downloadSchedulesInternal() {
+
+        let today;
+        let tomorrow;
+
+        let queue = await this.__getQueueNumber();
+
+        let webView = await this.__getWebView();
+        let scheduleList = await webView.evaluateJavaScript(this.__getDownloadSchedulesByQueueJSPayload());
+
+        let first = scheduleList[0];
+        let second = scheduleList[1];
+
+        if (first) {
+            
+            let info = this.__createOutageRecords(first.queues[queue]);
+
+            if (this.__isFutureSchedule(first)) {
+                tomorrow = info;
+
+            } else {
+                today = info;
+            }
+        }
+
+        if (second) {
+
+            let info = this.__createOutageRecords(first.queues[queue]);
+
+            if (this.__isFutureSchedule(second)) {
+                tomorrow = info;
+
+            } else {
+                today = info;
+            }
+        }
+
+        return {
+            today,
+            tomorrow
+        };
+    }
+
+    /**
+     * Used to transform raw outage JSON
+     * to list of OutageRecord.
+     * 
+     * @param {Object} outageEntries JSON of outage entries
+     * @returns {List<OutageRecord>} list of wrapped outage records
+     */
+    __createOutageRecords(outageEntries) {
+
+        let outageRecords = [];
+
+        if (!outageEntries) {
+            return null;
+        }
+
+        let outageOrder = 1;
+
+        for (let outageEntry of outageEntries) {
+
+            let startTime = Time.ofString(outageEntry.from);
+            let endTime = Time.ofString(outageEntry.to);
+
+            let isProbable = outageEntry.status !== 1;
+
+            outageRecords.push(new OutageRecord(startTime, endTime, isProbable, outageOrder++));
+        }
+
+        return outageRecords;
+    }
+
+    /**
+     * Used to get queue number for the provided
+     * address.
+     * 
+     * @returns formatted queue number (i.e. 3.1, 5.2, etc)
+     */
+    async __getQueueNumber() {
+
+        let webView = await this.__getWebView();
+        let response = await webView.evaluateJavaScript(this.__getDownloadScheduleJSPayload());
+
+        let queue = response.current.queue;
+        let subQueue = response.current.subqueue;
+
+        return queue + "." + subQueue;
+    }
+
+    /**
+     * Checks if schedule is planned for today or tomorrow.
+     * 
+     * @param {Object} schedule JSON object of schedule
+     * @returns {Boolean} True if for tomorrow otherwise False
+     */
+    __isFutureSchedule(schedule) {
+
+        if (!schedule) {
+            return false;
+        }
+
+        let dateParts = schedule.eventDate.split(".");
+        
+        let day = dateParts[0];
+        let month = dateParts[1];
+        let year = dateParts[2];
+
+        let scheduleDate = new Date(`${year}-${month}-${day}`);
+        return scheduleDate > new Date();
+    }
+
+    /**
      * Wrapper to get web view of OE IF website.
      * 
      * @returns {WebView} web view.
@@ -256,6 +321,9 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
     /**
      * JS script that will send request to get outages JSON data.
+     * Used only to get queue information.
+     * 
+     * Actual data is retrieved separately.
      * 
      * @returns {String} JS script as text.
      */
@@ -293,32 +361,54 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
             "submitButton.click();";
     }
+
+    /**
+     * JS script that will send request 
+     * to get outages JSON data.
+     * 
+     * @returns {String} JS script as text.
+     */
+    __getDownloadSchedulesByQueueJSPayload() {
+        return "" +
+            "$.ajax({" +
+            "   url: 'https://be-svitlo.oe.if.ua/schedule-by-queue'," +
+            "   data: {" +
+            "      accountNumber: ''," +
+            "      userSearchChoice: 'pob'," +
+            "      address: '" + conf.address.address + "'" +
+            "   }," +
+            "   async: false" +
+            "}).responseJSON;";
+    }
 }
 
 
 /**
- * Used to store list of outage recrords.
+ * Used to store list of outage records.
  * Also serves as iterator.
  */
 class Schedule {
     
     /**
-     * @param {Object} rawData JSON object with ras schedule data.
+     * @param {List<OutageRecord>} records list of outage records.
      */
-    constructor(rawData) {
+    constructor(records) {
         
         this._outageRecords = [];
         this._outageRecordIndex = -1;
-        this._hasInfo = true;
-        
-        this.__fillOutageRecords(rawData);
+        this._hasInfo = false;
+
+        if (records) {
+            this._hasInfo = true
+            this._outageRecords = records;
+        }
     }
     
     /**
      * Checks if schedule 
      * was updated with outage information.
      * 
-     * @returns {boolean} True if information was updated, otherwise False.
+     * @returns {Boolean} True if information was updated, otherwise False.
      */
     hasInfo() {
         return this._hasInfo;
@@ -328,7 +418,7 @@ class Schedule {
      * Iterator method, checks if there 
      * is next record in collection.
      * 
-     * @returns {boolean} True if has next record, otherwise False.
+     * @returns {Boolean} True if has next record, otherwise False.
      */
     hasNext() {
         return this._outageRecordIndex + 1 < this._outageRecords.length;
@@ -341,88 +431,6 @@ class Schedule {
      */
     next() {
         return this._outageRecords[++this._outageRecordIndex];
-    }
-
-    /**
-     * Used to transform raw JSON
-     * into list of outage records.
-     * 
-     * @param {Object} rawData JSON object with ras schedule data.
-     */
-    __fillOutageRecords(rawData) {
-
-        let scheduleSegments = rawData?.hoursList;
-        
-        if (!scheduleSegments) {
-            this._hasInfo = false;
-            return;
-        }
-        
-        // Get how much minutes each segment of data represents.
-        // i.e. 24 hours (24 * 60 = 1440),
-        // If 48 segments then 1440 / 48 = 30 = each segment is 30 minutes.
-        let scheduleSegmentDuration = new Time(24).getTime() / scheduleSegments.length;
-        let outageOrder = 1;
-        
-        for (let segmentId = 0; segmentId < scheduleSegments.length; segmentId++) {
-
-            let scheduleSegment = scheduleSegments[segmentId];
-            let outageType = scheduleSegment.electricity;
-
-            let isNoOutage = outageType == 0;
-            let isProbableOutage = outageType == 2;
-
-            if (isNoOutage) {
-                continue;
-            }
-            
-            let outageStreak = this.__getOutageStreak(segmentId, scheduleSegments, outageType);
-
-            let outageStart = segmentId * scheduleSegmentDuration;
-            let outageEnd = outageStart + (outageStreak * scheduleSegmentDuration);
-            
-            // Need to shift index
-            // since adjacent outages of the same type
-            // will be included in current record and 
-            // don't need their own.
-            segmentId += outageStreak;
-            this._outageRecords.push(
-                new OutageRecord(Time.of(outageStart), Time.of(outageEnd), isProbableOutage, outageOrder++)
-            );
-        }
-    }
-
-    /**
-     * Traverses daily schedule segments recursively.
-     * To find amount of adjacent segments with the same outage type.
-     * Method also counts segmentIdx that was provided.
-     * 
-     * Example: If segmentIdx=2 and outageType=1 and scheduleSegments=[type=0, type=2, type=1, type=1, type=0].
-     * This method will then return 2 since there are only two adjacent segments with outage type 1.
-     * 
-     * @param {Number} segmentIdx index of schedule segment for which streak should be found.
-     * @param {Array<Object>} scheduleSegments full list of schedule segments.
-     * @param {Number} outageType outage type based on which streak should be found.
-     * @param {Number} segmentCount This is only used internally by method.
-     * @returns {Number} amount of adjacent segments with the same outage type.
-     */
-    __getOutageStreak(segmentIdx, scheduleSegments, outageType, segmentCount = 1) {
-
-        let nextSegmentIdx = segmentIdx + 1;
-
-        // Break if last schedule segment reached.
-        if (nextSegmentIdx >= scheduleSegments.length) {
-            return segmentCount;
-        }
-
-        let nextSegmentOutageType = scheduleSegments[nextSegmentIdx].electricity;
-
-        // If outage type is the same then look deeper.
-        if (nextSegmentOutageType == outageType) {
-            return this.__getOutageStreak(nextSegmentIdx, scheduleSegments, outageType, segmentCount + 1);
-        }
-
-        return segmentCount;
     }
 }
 
@@ -451,7 +459,7 @@ class OutageRecord {
     /**
      * Tells whether schedule is probable or will happen 100%.
      * 
-     * @returns {boolean} True if outage is probable, otherwise False.
+     * @returns {Boolean} True if outage is probable, otherwise False.
      */
     isProbable() {
         return this._isProbable;
@@ -469,7 +477,7 @@ class OutageRecord {
     /**
      * Checks if outage record is in past.
      * 
-     * @returns {boolean} True if outage record is already in past,
+     * @returns {Boolean} True if outage record is already in past,
      * otherwise False.
      */
     isPassed() {
@@ -477,10 +485,10 @@ class OutageRecord {
         let now = new Date();
 
         let finishTime = this._endTime;
-        let currentTime = new Time(now.getHours() , now.getMinutes());
+        let currentTime = Time.of(now.getHours() , now.getMinutes());
         
         if (conf.debug.enable) {
-            currentTime = new Time(conf.debug.currentHour);
+            currentTime = Time.of(conf.debug.currentHour);
         }
 
         return currentTime.getTime() >= finishTime.getTime();
@@ -710,25 +718,31 @@ class Time {
     constructor(hours, minutes) {
      
         this._hours = hours;
-        this._minutes = 0;
-        this._time = hours * Time.HOUR_MINUTES;
-
-        if (minutes) {
-            this._minutes = minutes;
-            this._time += minutes;
-        }
+        this._minutes = minutes;
+        this._time = hours * Time.HOUR_MINUTES + minutes;
     }
 
     /**
-     * Creates time from sum of hours and minutes.
+     * Creates time from hours and minutes.
      * 
-     * @param {Number} time time that should be transofrmed into object.
+     * @param {Number} hours hours
+     * @param {Number} minutes minutes
      * @returns {Time} instance of Time.
      */
-    static of(time) {
+    static of(hours, minutes) {
 
-        let hours = Math.floor(time / Time.HOUR_MINUTES);
-        let minutes = time - (hours * Time.HOUR_MINUTES);
+        if (!minutes) {
+            minutes = 0;
+        }
+
+        return new Time(hours, minutes);
+    }
+
+    static ofString(stringTime) {
+
+        let timeParts = stringTime.split(Time.HOUR_MINUTE_SEPARATOR);
+        let hours = Number(timeParts[0]);
+        let minutes = Number(timeParts[1]);
 
         return new Time(hours, minutes);
     }
