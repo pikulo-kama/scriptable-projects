@@ -9,11 +9,20 @@ const ui = importModule("UI");
 
 const conf = {
     debug: {
-        enabled: false,
-        mockData: false,
-        forceSeriesName: false,
-        rerollColor: false,
-        seriesName: "game-of-thrones"
+        enabled: true,
+        
+        mockData: true,
+        forceCountdownMonths: false,
+        forceCountdownWeeks: false,
+        forceCountdownDays: false,
+        forceCountdownHours: false,
+        forceWaitingStatus: false,
+        forceEndedStatus: false,
+        
+        forceSeriesName: true,
+        seriesName: "game-of-thrones",
+        
+        rerollColor: false
     },
 
     googleVisionApiKey: files.getConfiguration("google_vision_api_key.txt", "<your API key>"),
@@ -88,25 +97,52 @@ class StubApiResource extends ApiResource {
             title: "Game of Thrones",
             image: null,
             imageURI: null,
-            status: Status.Ongoing,
+            status: conf.debug.forceEndedStatus ? Status.Ended : Status.Ongoing,
             episodes: [
                 {
                     season: 1,
                     episode: 1,
-                    airDate: this.__dateNMonthInPast(12)
+                    airDate: this.__dateNMonthsInPast(12)
                 },
                 {
                     season: 1,
                     episode: 2,
-                    airDate: this.__dateNMonthInPast(6)
+                    airDate: this.__dateNMonthsInPast(6)
                 },
                 {
                     season: 2,
                     episode: 1,
-                    airDate: this.__dateNMonthInFuture(4)
+                    airDate: this.__getNextEpisodeDate()
                 }
             ]
         };
+    }
+
+    __getNextEpisodeDate() {
+
+        // Last known episode already aired.
+        // No information when next would be (Waiting).
+        if (conf.debug.forceWaitingStatus) {
+            return this.__dateNMonthsInPast(1);
+        }
+
+        if (conf.debug.forceCountdownHours) {
+            return this.__dateNHoursInFuture(2);
+        }
+
+        if (conf.debug.forceCountdownDays) {
+            return this.__dateNDaysInFuture(5);
+        }
+
+        if (conf.debug.forceCountdownWeeks) {
+            return this.__dateNDaysInFuture(8);
+        }
+
+        if (conf.debug.forceCountdownMonths) {
+            return this.__dateNMonthsInFuture(3);
+        }
+        
+        return new Date();
     }
 
     /**
@@ -116,7 +152,7 @@ class StubApiResource extends ApiResource {
      * @param {Number} months amount of months
      * @returns date in the past
      */
-    __dateNMonthInPast(months) {
+    __dateNMonthsInPast(months) {
 
         let date = new Date();
         date.setMonth(date.getMonth() - months);
@@ -131,10 +167,40 @@ class StubApiResource extends ApiResource {
      * @param {Number} months amount of months
      * @returns date in the future
      */
-    __dateNMonthInFuture(months) {
+    __dateNMonthsInFuture(months) {
         
         let date = new Date();
         date.setMonth(date.getMonth() + months);
+
+        return date;
+    }
+
+    /**
+     * Used to create date wich
+     * is N days in future from now.
+     * 
+     * @param {Number} days amount of days
+     * @returns date in the future
+     */
+    __dateNDaysInFuture(days) {
+        
+        let date = new Date();
+        date.setDate(date.getDate() + days);
+
+        return date;
+    }
+
+    /**
+     * Used to create date wich
+     * is N hours in future from now.
+     * 
+     * @param {Number} hours amount of hours
+     * @returns date in the future
+     */
+    __dateNHoursInFuture(hours) {
+        
+        let date = new Date();
+        date.setHours(date.getHours() + hours);
 
         return date;
     }
@@ -328,19 +394,23 @@ class Series {
         let time = this._countdown.time;
         let type = this._countdown.type;
 
-        let countdownString;
+        switch (type) {
 
-        if (type == 'hour') {
-            countdownString = time + 'h';
+            case 'hour':
+                return `${time}h`;
+            
+            case 'day':
+                return `${time}d`;
+            
+            case 'week':
+                return `~${time}w`;
 
-        } else if (type == 'day') {
-            countdownString = time + 'd';
-
-        } else if (type == 'month') {
-            countdownString = '~' + time + 'mo';
+            case 'month':
+                return `~${time}mo`;
+            
+            default:
+                return `${time} ${type}`;
         }
-
-        return countdownString;
     }
 
     /**
