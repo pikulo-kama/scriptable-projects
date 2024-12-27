@@ -31,15 +31,6 @@ const conf = {
 
 
 /**
- * TV series status enum.
- */
-class Status {
-    static Ended = "Ended";
-    static Ongoing = "Ongoing";
-}
-
-
-/**
  * Used to obtain TV series information.
  */
 class ApiResource {
@@ -57,112 +48,106 @@ class ApiResource {
      *    - episode
      *    - airDate (date when episode would be released)
      * 
-     * @returns {Object} JSON with series information
+     * @returns {SeriesInfo} series information
      */
     async download() {}
 }
 
 
 /**
- * TV series API resource factory.
- * Should always be used to get instance of ApiResource.
+ * Main TV series API resource.
+ * Consumes 'episodate' API to get series information.
  */
-class ApiResourceFactory {
+class EpisodateApiResource extends ApiResource {
+
+    constructor() {
+        super();
+        this._webUrl = "https://episodate.com/api/show-details?q=";
+    }
+
+    async download() {
+
+        const cacheConfig = this.__getCacheConfig();
+        const url = this.__getSeriesUrl();
+
+        const seriesData = await cacheUtil.getRequest(cacheConfig, url);
+        const seriesInfo = new SeriesInfo(
+            seriesData.title,
+            seriesData.status == 'Ended' ? Status.Ended : Status.Ongoing,
+            seriesData.image,
+            seriesData.imageURI
+        );
+
+        seriesData.episodes.forEach(ep => {
+            let episode = new EpisodeInfo(
+                ep.season,
+                ep.episode,
+                new Date(ep.airDate)
+            );
+            
+            seriesInfo.addEpisode(episode);
+        });
+
+        return seriesInfo;
+    }
 
     /**
-     * Used to get instance of ApiResource.
+     * Used to get URL for current series
+     * information.
      * 
-     * @returns {ApiResource} resource with series info
+     * @returns {String} URL
      */
-    static getResource() {
+    __getSeriesUrl() {
+        return this._webUrl + conf.seriesName;
+    }
 
-        if (conf.debug.mockData) {
-            return new StubApiResource();
-        }
-
-        return new EpisodateApiResource();
-    }
-}
-
-class SeriesInfo {
-    
-    constructor(
-        title,
-        status,
-        image, 
-        imageURI
-    ) {
-        
-        this._title = title;
-        this._status = status;
-        this._image = image;
-        this._imageURI = imageURI;
-        
-        this._episodes = [];
-    }
-    
-    getTitle() {
-        return this._title;
-    }
-    
-    getStatus() {
-        return this._status;
-    }
-    
-    getImage() {
-        return this._image;
-    }
-    
-    getImageURI() {
-        return this._imageURI;
-    }
-    
-    getEpisodes() {
-        return this._episodes;
-    }
-    
-    addEpisode(episode) {
-        this._episodes.push(episode);
-    }
-}
-
-class Episode {
-    
-    constructor(
-        season,
-        episode,
-        airDate
-    ) {
-        
-        this._season = season;
-        this._episode = episode;
-        this._airDate = airDate;
-    }
-    
-    getSeason() {
-        return this._season;
-    }
-    
-    getEpisode() {
-        return this._episode;
-    }
-    
-    getAirDate() {
-        return this._airDate;
-    }
-    
-    toString() {
-        
-        let episodeString = "";
-        
-        let season = this._season;
-        let episode = this._episode;
-        
-        if (season && episode) {
-            episodeString = `s${season}e${episode}`;
-        }
-        
-        return episodeString;
+    /**
+     * Used to get cache configuration of 
+     * TV series information.
+     * 
+     * This config is used to cache and then
+     * retrieve series information from cache.
+     * 
+     * @returns {Object} cache config
+     */
+    __getCacheConfig() {
+        return [
+            {
+                prop: "tvShow.name",
+                alias: "title"
+            },
+            {
+                prop: "tvShow.image_thumbnail_path",
+                alias: "image",
+                type: cacheUtil.types.IMAGE
+            },
+            {
+                prop: "tvShow.image_thumbnail_path",
+                alias: "imageURI"
+            },
+            {
+                prop: "tvShow.status"
+            },
+            {
+                prop: "tvShow.episodes",
+                type: cacheUtil.types.LIST,
+                mappings: [
+                    {
+                        prop: "season"
+                    },
+                    {
+                        prop: "episode"
+                    },
+                    {
+                        prop: "air_date",
+                        alias: "airDate",
+                        transform: (text) => {
+                            return new Date(text.replace(" ", "T") + "Z");
+                        }
+                    }
+                ]
+            }
+        ];
     }
 }
 
@@ -181,20 +166,27 @@ class StubApiResource extends ApiResource {
         );
         
         seriesInfo.addEpisode(
-            new Episode(1, 1, this.__dateNMonthsInPast(12))
+            new EpisodeInfo(1, 1, this.__dateNMonthsInPast(12))
         );
         
         seriesInfo.addEpisode(
-            new Episode(1, 2, this.__dateNMonthsInPast(6))
+            new EpisodeInfo(1, 2, this.__dateNMonthsInPast(6))
         );
         
         seriesInfo.addEpisode(
-            new Episode(2, 1, this.__getNextEpisodeDate())
+            new EpisodeInfo(2, 1, this.__getNextEpisodeDate())
         );
         
         return seriesInfo;
     }
 
+    /**
+     * Used to get next episode date
+     * behavious will change depending on
+     * debug configuration
+     * 
+     * @returns {Date} next episode release date
+     */
     __getNextEpisodeDate() {
 
         // Last known episode already aired.
@@ -285,99 +277,100 @@ class StubApiResource extends ApiResource {
 
 
 /**
- * Main TV series API resource.
- * Consumes 'episodate' API to get series information.
+ * TV series API resource factory.
+ * Should always be used to get instance of ApiResource.
  */
-class EpisodateApiResource extends ApiResource {
-
-    constructor() {
-        super();
-        this._webUrl = "https://episodate.com/api/show-details?q=";
-    }
-
-    async download() {
-
-        const cacheConfig = this.__getCacheConfig();
-        const url = this.__getSeriesUrl();
-
-        const seriesData = await cacheUtil.getRequest(cacheConfig, url);
-        const seriesInfo = new SeriesInfo(
-            seriesData.title,
-            seriesData.status == 'Ended' ? Status.Ended : Status.Ongoing,
-            seriesData.image,
-            seriesData.imageURI
-        );
-
-        seriesData.episodes.forEach(ep => {
-            let episode = new Episode(
-                ep.season,
-                ep.episode,
-                new Date(ep.airDate)
-            );
-            
-            seriesInfo.addEpisode(episode);
-        });
-
-        return seriesInfo;
-    }
+class ApiResourceFactory {
 
     /**
-     * Used to get URL for current series
-     * information.
+     * Used to get instance of ApiResource.
      * 
-     * @returns {String} URL
+     * @returns {ApiResource} resource with series info
      */
-    __getSeriesUrl() {
-        return this._webUrl + conf.seriesName;
-    }
+    static getResource() {
 
+        if (conf.debug.mockData) {
+            return new StubApiResource();
+        }
+
+        return new EpisodateApiResource();
+    }
+}
+
+
+/**
+ * DTO with series information.
+ */
+class SeriesInfo {
+    
     /**
-     * Used to get cache configuration of 
-     * TV series information.
-     * 
-     * This config is used to cache and then
-     * retrieve series information from cache.
-     * 
-     * @returns {Object} cache config
+     * @param {String} title series title
+     * @param {Status} status status of series (Ended, Ongoing)
+     * @param {String} image path to series image on device file system
+     * @param {String} imageURI URI to series image
      */
-    __getCacheConfig() {
-        return [
-            {
-                prop: "tvShow.name",
-                alias: "title"
-            },
-            {
-                prop: "tvShow.image_thumbnail_path",
-                alias: "image",
-                type: cacheUtil.types.IMAGE
-            },
-            {
-                prop: "tvShow.image_thumbnail_path",
-                alias: "imageURI"
-            },
-            {
-                prop: "tvShow.status"
-            },
-            {
-                prop: "tvShow.episodes",
-                type: cacheUtil.types.LIST,
-                mappings: [
-                    {
-                        prop: "season"
-                    },
-                    {
-                        prop: "episode"
-                    },
-                    {
-                        prop: "air_date",
-                        alias: "airDate",
-                        transform: (text) => {
-                            return new Date(text.replace(" ", "T") + "Z");
-                        }
-                    }
-                ]
-            }
-        ];
+    constructor(title, status, image, imageURI) {
+        
+        this._title = title;
+        this._status = status;
+        this._image = image;
+        this._imageURI = imageURI;
+        
+        this._episodes = [];
+    }
+    
+    /**
+     * Get series title.
+     * 
+     * @returns {String} series title
+     */
+    getTitle() {
+        return this._title;
+    }
+    
+    /**
+     * Get series status.
+     * 
+     * @returns {Status} series status
+     */
+    getStatus() {
+        return this._status;
+    }
+    
+    /**
+     * Get series image path.
+     * 
+     * @returns {String} series image path
+     */
+    getImage() {
+        return this._image;
+    }
+    
+    /**
+     * Get series image URI.
+     * 
+     * @returns {String} series image URI
+     */
+    getImageURI() {
+        return this._imageURI;
+    }
+    
+    /**
+     * Get series episode list.
+     * 
+     * @returns {Array<Episode>} list of series episodes
+     */
+    getEpisodes() {
+        return this._episodes;
+    }
+    
+    /**
+     * Adds episode to the series.
+     * 
+     * @param {EpisodeInfo} episode episode that should be added
+     */
+    addEpisode(episode) {
+        this._episodes.push(episode);
     }
 }
 
@@ -391,7 +384,7 @@ class Series {
     static __REGEXP_COUNTDOWN = /in\s(\d+)\s(\w+)/;
 
     /**
-     * @param {SeriesInfo} data with series information
+     * @param {SeriesInfo} seriesInfo series information
      */
     constructor(seriesInfo) {
         
@@ -442,7 +435,7 @@ class Series {
      * Used to check whether current TV
      * series has ended.
      * 
-     * @returns {boolean} True if ended, otherwise False
+     * @returns {Boolean} True if ended, otherwise False
      */
     isEnded() {
         return this._seriesInfo.getStatus() == Status.Ended;
@@ -452,7 +445,7 @@ class Series {
      * Used to check whether current TV
      * has countdown for the next episode.
      * 
-     * @returns {boolean} True if has countdown, otherwise False
+     * @returns {Boolean} True if has countdown, otherwise False
      */
     hasCountdown() {
         return !!this._countdown;
@@ -562,18 +555,12 @@ class Series {
      * Used to initialize countdown
      * for the series.
      * 
-     * @param {SeriesInfo} data with series information
+     * @param {SeriesInfo} seriesInfo with series information
      */
     __processCountdown(seriesInfo) {
 
-        const episodes = seriesInfo?.getEpisodes();
-
-        if (!episodes) {
-            return;
-        }
-
-        let now = SpyDate.now();
-        let nextEpisode = this.__getEpisodeAfter(episodes, now);
+        let now = new Date();
+        let nextEpisode = this.__getEpisodeAfter(seriesInfo, now);
 
         if (!nextEpisode) {
             return;
@@ -602,11 +589,18 @@ class Series {
      * Used to get episode that will be
      * released after provided date.
      * 
-     * @param {List<Object>} episodes list of episodes' JSON data
+     * @param {SeriesInfo} seriesInfo series information
      * @param {Date} targetDate date for which episode should be found
-     * @returns {Object} JSON of episode that releases after provided date
+     * @returns {EpisodeInfo} episode that releases after provided date
      */
-    __getEpisodeAfter(episodes, targetDate) {
+    __getEpisodeAfter(seriesInfo, targetDate) {
+
+        let episodes = seriesInfo?.getEpisodes();
+
+        if (!episodes) {
+            return;
+        }
+
         episodes = episodes.filter(episode =>
             episode.getAirDate() > targetDate
         )
@@ -677,11 +671,94 @@ class Series {
 
 
 /**
+ * Episode DTO
+ */
+class EpisodeInfo {
+    
+    /**
+     * @param {Number} season season
+     * @param {Number} episode episode number
+     * @param {Date} airDate episode release date
+     */
+    constructor(season, episode, airDate) {
+        this._season = season;
+        this._episode = episode;
+        this._airDate = airDate;
+    }
+    
+    /**
+     * Used to get episode season.
+     * 
+     * @returns {Number} season
+     */
+    getSeason() {
+        return this._season;
+    }
+    
+    /**
+     * Used to get episode number.
+     * 
+     * @returns {Number} episode number
+     */
+    getEpisode() {
+        return this._episode;
+    }
+    
+    /**
+     * Used to get episode release date.
+     * 
+     * @returns {Date} release date
+     */
+    getAirDate() {
+        return this._airDate;
+    }
+    
+    /**
+     * Used to get textual representation
+     * of episode.
+     * 
+     * Example: s2e12 (season 2, episode 12), etc.
+     * 
+     * @returns {String} textual representation of episode
+     */
+    toString() {
+        
+        let episodeString = "";
+        
+        let season = this._season;
+        let episode = this._episode;
+        
+        if (season && episode) {
+            episodeString = `s${season}e${episode}`;
+        }
+        
+        return episodeString;
+    }
+}
+
+
+/**
+ * TV series status enum.
+ */
+class Status {
+    static Ended = "Ended";
+    static Ongoing = "Ongoing";
+}
+
+
+/**
  * Helper class used to create
  * widget with TV series information.
  */
 class SeriesWidget {
 
+    /**
+     * Used to create widget based on
+     * the series information.
+     * 
+     * @param {Series} series series that should be rendered
+     * @returns {ListWidget} widget with all series info ready to render
+     */
     create(series) {
 
         const root = this.__createRootWidget(series);
@@ -733,6 +810,12 @@ class SeriesWidget {
         return root;
     }
     
+    /**
+     * Used to render countdown block of the series.
+     * 
+     * @param {*} root parent widget where block should be
+     * @param {Series} series series
+     */
     __renderCountdown(root, series) {
 
         const countdownBox = ui.stack()
@@ -749,6 +832,14 @@ class SeriesWidget {
             .renderFor(countdownBox);
     }
     
+    /**
+     * Used to render release info block.
+     * Contains season/episode string (s1e3)
+     * and actual date when next episode would air.
+     * 
+     * @param {*} root parent widget where block should be
+     * @param {Series} series series
+     */
     __renderReleaseInformation(root, series) {
         
         const releaseInfoStack = ui.stack()
@@ -780,6 +871,18 @@ class SeriesWidget {
             .renderFor(releaseInfoStack);
     }
     
+    /**
+     * Used to render series status.
+     * This is invoked when there are no information
+     * when next episode would be released.
+     * 
+     * Can render two statuses:
+     * - Series has ended
+     * - No info, but series has not ended (Wait)
+     * 
+     * @param {*} root parent widget where block should be
+     * @param {Series} series series
+     */
     __renderStatusPlaceholder(root, series) {
         
         const statusWidget = ui.image();
@@ -803,7 +906,8 @@ class SeriesWidget {
     /**
      * Wrapper to create root widget.
      * 
-     * @returns {ListWidget} root widget.
+     * @param {Series} series series
+     * @returns {ListWidget} root widget
      */
     __createRootWidget(series) {
 
@@ -826,26 +930,6 @@ class SeriesWidget {
         }
 
         return root;
-    }
-}
-
-
-/**
- * Helper class which is used
- * to retrieve current date.
- * 
- * Main purpose of the helper is to be able to overwrite behavior
- * to return mock dates when application runs in debug mode.
- */
-class SpyDate {
-
-    /**
-     * Used to get current date.
-     * 
-     * @returns {Date} current date
-     */
-    static now() {
-        return new Date();
     }
 }
 

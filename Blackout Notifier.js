@@ -32,27 +32,6 @@ const conf = {
 
 
 /**
- * Should be used to get instance of ScheduleWebView.
- */
-class ScheduleWebViewFactory {
-    
-    /**
-     * Used to get instance of ScheduleWebView.
-     * 
-     * @returns {ScheduleWebView} schedule web view.
-     */
-    static getWebView() {
-        
-        if (conf.debug.enable) {
-            return new DebugScheduleWebView();
-        }
-        
-        return new OeIfScheduleWebView();
-    }
-}
-
-
-/**
  * Interface.
  * Shouldn't be used directly.
  * 
@@ -97,6 +76,27 @@ class ScheduleWebView {
      * @returns {Boolean} True if available, otherwise False.
      */
     isAvailable() {}
+}
+
+
+/**
+ * Should be used to get instance of ScheduleWebView.
+ */
+class ScheduleWebViewFactory {
+    
+    /**
+     * Used to get instance of ScheduleWebView.
+     * 
+     * @returns {ScheduleWebView} schedule web view.
+     */
+    static getWebView() {
+        
+        if (conf.debug.enable) {
+            return new DebugScheduleWebView();
+        }
+        
+        return new OeIfScheduleWebView();
+    }
 }
 
 
