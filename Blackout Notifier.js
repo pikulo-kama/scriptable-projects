@@ -221,7 +221,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
         if (second) {
 
-            let info = this.__createOutageRecords(first.queues[queue]);
+            let info = this.__createOutageRecords(second.queues[queue]);
 
             if (this.__isFutureSchedule(second)) {
                 tomorrow = info;
