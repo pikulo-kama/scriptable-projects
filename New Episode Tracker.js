@@ -11,7 +11,7 @@ const conf = {
     debug: {
         enabled: true,
         
-        mockData: true,
+        mockData: false,
         forceCountdownMonths: false,
         forceCountdownWeeks: false,
         forceCountdownDays: false,
@@ -19,8 +19,8 @@ const conf = {
         forceWaitingStatus: false,
         forceEndedStatus: false,
         
-        forceSeriesName: true,
-        seriesName: "game-of-thrones",
+        forceSeriesName: false,
+        seriesName: "the-last-of-us",
         
         rerollColor: false
     },
@@ -84,6 +84,88 @@ class ApiResourceFactory {
     }
 }
 
+class SeriesInfo {
+    
+    constructor(
+        title,
+        status,
+        image, 
+        imageURI
+    ) {
+        
+        this._title = title;
+        this._status = status;
+        this._image = image;
+        this._imageURI = imageURI;
+        
+        this._episodes = [];
+    }
+    
+    getTitle() {
+        return this._title;
+    }
+    
+    getStatus() {
+        return this._status;
+    }
+    
+    getImage() {
+        return this._image;
+    }
+    
+    getImageURI() {
+        return this._imageURI;
+    }
+    
+    getEpisodes() {
+        return this._episodes;
+    }
+    
+    addEpisode(episode) {
+        this._episodes.push(episode);
+    }
+}
+
+class Episode {
+    
+    constructor(
+        season,
+        episode,
+        airDate
+    ) {
+        
+        this._season = season;
+        this._episode = episode;
+        this._airDate = airDate;
+    }
+    
+    getSeason() {
+        return this._season;
+    }
+    
+    getEpisode() {
+        return this._episode;
+    }
+    
+    getAirDate() {
+        return this._airDate;
+    }
+    
+    toString() {
+        
+        let episodeString = "";
+        
+        let season = this._season;
+        let episode = this._episode;
+        
+        if (season && episode) {
+            episodeString = `s${season}e${episode}`;
+        }
+        
+        return episodeString;
+    }
+}
+
 
 /**
  * TV series API resource used for debugging.
@@ -92,30 +174,25 @@ class ApiResourceFactory {
 class StubApiResource extends ApiResource {
 
     async download() {
-
-        return {
-            title: "Game of Thrones",
-            image: null,
-            imageURI: null,
-            status: conf.debug.forceEndedStatus ? Status.Ended : Status.Ongoing,
-            episodes: [
-                {
-                    season: 1,
-                    episode: 1,
-                    airDate: this.__dateNMonthsInPast(12)
-                },
-                {
-                    season: 1,
-                    episode: 2,
-                    airDate: this.__dateNMonthsInPast(6)
-                },
-                {
-                    season: 2,
-                    episode: 1,
-                    airDate: this.__getNextEpisodeDate()
-                }
-            ]
-        };
+        
+        let seriesInfo = new SeriesInfo(
+            "Debug",
+            conf.debug.forceEndedStatus ? Status.Ended : Status.Ongoing
+        );
+        
+        seriesInfo.addEpisode(
+            new Episode(1, 1, this.__dateNMonthsInPast(12))
+        );
+        
+        seriesInfo.addEpisode(
+            new Episode(1, 2, this.__dateNMonthsInPast(6))
+        );
+        
+        seriesInfo.addEpisode(
+            new Episode(2, 1, this.__getNextEpisodeDate())
+        );
+        
+        return seriesInfo;
     }
 
     __getNextEpisodeDate() {
@@ -223,11 +300,22 @@ class EpisodateApiResource extends ApiResource {
         const cacheConfig = this.__getCacheConfig();
         const url = this.__getSeriesUrl();
 
-        const seriesInfo = await cacheUtil.getRequest(cacheConfig, url);
+        const seriesData = await cacheUtil.getRequest(cacheConfig, url);
+        const seriesInfo = new SeriesInfo(
+            seriesData.title,
+            seriesData.status == 'Ended' ? Status.Ended : Status.Ongoing,
+            seriesData.image,
+            seriesData.imageURI
+        );
 
-        seriesInfo.episodes.forEach(episode => {
-            episode.airDate = new Date(episode.airDate);
-            episode.status = episode.status == 'Ended' ? Status.Ended : Status.Ongoing;
+        seriesData.episodes.forEach(ep => {
+            let episode = new Episode(
+                ep.season,
+                ep.episode,
+                new Date(ep.airDate)
+            );
+            
+            seriesInfo.addEpisode(episode);
         });
 
         return seriesInfo;
@@ -303,20 +391,18 @@ class Series {
     static __REGEXP_COUNTDOWN = /in\s(\d+)\s(\w+)/;
 
     /**
-     * @param {Object} rawData JSON data with series information
+     * @param {SeriesInfo} data with series information
      */
-    constructor(rawData) {
-
-        this._title = rawData.title;
-        this._status = rawData.status;
-        this._imageURI = rawData.imageURI;
-        this._image = this.__processImage(rawData.image);
+    constructor(seriesInfo) {
+        
+        this._seriesInfo = seriesInfo;
+        this._image = this.__processImage(seriesInfo.getImage());
 
         this._countdown = null;
         this._nextEpisode = null;
         this._dominantColor = null;
 
-        this.__processCountdown(rawData);
+        this.__processCountdown(seriesInfo);
     }
 
     /**
@@ -325,7 +411,7 @@ class Series {
      * @returns {String} series title
      */
     getTitle() {
-        return this._title;
+        return this._seriesInfo.getTitle();
     }
 
     /**
@@ -359,7 +445,7 @@ class Series {
      * @returns {boolean} True if ended, otherwise False
      */
     isEnded() {
-        return this._status == Status.Ended;
+        return this._seriesInfo.getStatus() == Status.Ended;
     }
 
     /**
@@ -373,13 +459,17 @@ class Series {
     }
 
     /**
-     * Used to get next episode of the series
+     * Used to get air date of next episode of the series
      * that hasn't been released yet.
      * 
-     * @returns {Object} JSON with next episode information
+     * @returns {Date} air date of next episode
      */
+    getNextEpisodeDate() {
+        return this._nextEpisode?.getAirDate();
+    }
+    
     getNextEpisode() {
-        return this._nextEpisode;
+        return this._nextEpisode?.toString();
     }
 
     /**
@@ -423,22 +513,24 @@ class Series {
      * would be used to get colors for the image.
      */
     async obtainDominantColor() {
-
-        if (!this._imageURI) {
+        
+        const imageURI = this._seriesInfo.getImageURI();
+        
+        if (!imageURI) {
             this._dominantColor = Color.gray();
             return;
         }
-
+        
         const fileName = "dominant_colors.json";
 
         let colorMap = JSON.parse(files.getConfiguration(fileName, "{}"));
-        let colorFromFile = colorMap[this._imageURI];
+        let colorFromFile = colorMap[imageURI];
 
         if (!colorFromFile || conf.debug.rerollColor) {
 
             let dominantColor = await this.__retrieveDominantColor();
             colorFromFile = {color: dominantColor};
-            colorMap[this._imageURI] = colorFromFile;
+            colorMap[imageURI] = colorFromFile;
 
             files.updateConfiguration(fileName, JSON.stringify(colorMap));
         }
@@ -470,11 +562,11 @@ class Series {
      * Used to initialize countdown
      * for the series.
      * 
-     * @param {Object} rawData JSON data with series information
+     * @param {SeriesInfo} data with series information
      */
-    __processCountdown(rawData) {
+    __processCountdown(seriesInfo) {
 
-        const episodes = rawData?.episodes;
+        const episodes = seriesInfo?.getEpisodes();
 
         if (!episodes) {
             return;
@@ -488,7 +580,7 @@ class Series {
         }
 
         Series.__formatter.useNumericDateTimeStyle();
-        let countdownString = Series.__formatter.string(nextEpisode.airDate, now);
+        let countdownString = Series.__formatter.string(nextEpisode.getAirDate(), now);
 
         // Remove 's' from end of countdown
         if (countdownString.endsWith('s')) {
@@ -516,7 +608,7 @@ class Series {
      */
     __getEpisodeAfter(episodes, targetDate) {
         episodes = episodes.filter(episode =>
-            episode.airDate > targetDate
+            episode.getAirDate() > targetDate
         )
 
         if (episodes.length == 0) {
@@ -525,7 +617,7 @@ class Series {
 
         // Sort ascending.
         episodes.sort((first, second) => 
-            first.airDate - second.airDate
+            first.getAirDate() - second.getAirDate()
         )
 
         // Get first episode after the specifed date.
@@ -558,7 +650,7 @@ class Series {
                 "requests": [{
                     "image": {
                         "source": {
-                            "imageUri": "${this._imageURI}"
+                            "imageUri": "${this._seriesInfo.getImageURI()}"
                         }
                     },
                     "features": [{
@@ -616,7 +708,7 @@ class SeriesWidget {
         ui.text()
             .content(series.getTitle())
             .blackRoundedFont(24)
-            .limit(20)
+            .limit(16)
             .rightAlign()
             .renderFor(contentStack);
 
@@ -631,13 +723,7 @@ class SeriesWidget {
             this.__renderCountdown(contentStack, series);
             ui.spacer().renderFor(contentStack);
             
-            // Air date
-            ui.date()
-                .content(nextEpisode.airDate)
-                .blackFont(8)
-                .opacity(0.7)
-                .rightAlign()
-                .renderFor(contentStack);
+            this.__renderReleaseInformation(contentStack, series)
         
         } else {
             // Other statuses (ended, waiting for next season)
@@ -661,6 +747,37 @@ class SeriesWidget {
             .color(conf.backgroundColor)
             .boldMonospacedFont(36)
             .renderFor(countdownBox);
+    }
+    
+    __renderReleaseInformation(root, series) {
+        
+        const releaseInfoStack = ui.stack()
+            .rightAlign()
+            .renderFor(root);
+        
+        // Season / episode 
+        ui.text()
+            .content(series.getNextEpisode())
+            .blackFont(10)
+            .opacity(0.9)
+            .renderFor(releaseInfoStack);
+        
+        ui.spacer().renderFor(releaseInfoStack, 4);
+        
+        ui.text()
+            .content("|")
+            .blackFont(10)
+            .color(series.getDominantColor())
+            .renderFor(releaseInfoStack);
+        
+        ui.spacer().renderFor(releaseInfoStack, 4);
+        
+        // Air date
+        ui.date()
+            .content(series.getNextEpisodeDate())
+            .blackFont(8)
+            .opacity(0.7)
+            .renderFor(releaseInfoStack);
     }
     
     __renderStatusPlaceholder(root, series) {
