@@ -5,7 +5,7 @@
 const root = {
     
     manager: FileManager.iCloud(),
-    getScriptableDir: () => root.__joinPaths([
+    getScriptableDir: () => root.joinPaths([
         root.manager.documentsDirectory(),
         "Resources"
     ]),
@@ -17,7 +17,7 @@ const root = {
     updateExtConfiguration: async (fileName, content, scriptName) => {
         
         const manager = root.manager
-        const targetDirectory = root.__joinPaths(
+        const targetDirectory = root.joinPaths(
             [root.getScriptableDir(), scriptName])
         
         if (!manager.isDirectory(targetDirectory)) {
@@ -39,7 +39,7 @@ const root = {
     
     findExtConfigurations: (fileNameRegex, scriptName) => {
         
-        let scriptDir = root.__joinPaths(
+        let scriptDir = root.joinPaths(
             [root.getScriptableDir(), scriptName]
         )
         
@@ -50,9 +50,19 @@ const root = {
         return root.manager.listContents(scriptDir)
             .filter(fileName => fileName.match(fileNameRegex))
     },
+
+    joinPaths: paths => {
+        let resultPath = ""
+        
+        for (let path of paths) {
+            resultPath = root.manager.joinPath(resultPath, path)
+        }
+        
+        return resultPath
+    },
     
     __doGetConfiguration: (fileName, defaultValue, scriptName) => {
-        const targetFile = root.__joinPaths(
+        const targetFile = root.joinPaths(
             [root.getScriptableDir(), scriptName, fileName]
         )
         
@@ -68,16 +78,6 @@ const root = {
     
     __castToData: content => {
         return Data.fromString(String(content))
-    },
-    
-    __joinPaths: paths => {
-        let resultPath = ""
-        
-        for (let path of paths) {
-            resultPath = root.manager.joinPath(resultPath, path)
-        }
-        
-        return resultPath
     }
 }
 
@@ -86,3 +86,4 @@ module.exports.updateExtConfiguration = root.updateExtConfiguration
 module.exports.getConfiguration = root.getConfiguration
 module.exports.getExtConfiguration = root.getExtConfiguration
 module.exports.findExtConfigurations = root.findExtConfigurations
+module.exports.joinPaths = root.joinPaths;
