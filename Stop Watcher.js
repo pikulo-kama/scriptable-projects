@@ -5,6 +5,7 @@ const fileUtil = importModule("File Util")
 const alertUtil = importModule("Alert Util")
 const crud = importModule("CRUD Module")
 const locale = importModule("Localization")
+const ui = importModule("UI")
 
 await locale.registerLabels({
     "t_serie_name_placeholder": "...",
@@ -42,8 +43,8 @@ await locale.registerLabels({
 })
 
 // debug
-if (false) {
-    buildWidget("TUF")
+if (true) {
+    buildWidget("Dungeon GF")
     return
 }
 
@@ -278,49 +279,59 @@ function buildWidget(serieName) {
         sep: Color.lightGray()
     }
     
-    const widget = new ListWidget()
-    const stack = widget.addStack()
+    const root = ui.rootWidget()
+        .color(colors.main)
+        .render();
     
-    const serieNameWidget = stack.addText(rec.serieName.padEnd(20))
-    stack.addSpacer(20)
+    const contentStack = ui.stack()
+        .vertical()
+        .renderFor(root);
+    
+    // Series name
+    ui.text()
+        .content(rec.serieName.padEnd(20))
+        .color(colors.reverse)
+        .blackMonospacedFont(dataFont + 1)
+        .renderFor(contentStack);
+    
+    ui.spacer().renderFor(contentStack);
         
     for (let field of fields) {
-        const hStack = stack.addStack()
-        hStack.spacing = 7
-        hStack.layoutHorizontally()
         
-        const label = hStack.addText(field.label)
+        const infoRowStack = ui.stack().renderFor(contentStack);
         
-        label.font = Font.boldMonospacedSystemFont(dataFont)
-        label.textColor = colors.reverse
-        label.textOpacity = .9
+        // Label
+        ui.text()
+            .content(field.label)
+            .color(colors.reverse)
+            .opacity(0.9)
+            .boldMonospacedFont(dataFont)
+            .renderFor(infoRowStack);
+            
+        ui.spacer().renderFor(infoRowStack, 4);
         
-        const separator = hStack.addText(locale.getLabel("w_label_value_separator"))
+        // Separator
+        ui.text()
+            .content(locale.getLabel("w_label_value_separator"))
+            .color(colors.sep)
+            .opacity(0.8)
+            .blackRoundedFont(dataFont)
+            .renderFor(infoRowStack);
         
-        separator.font = Font.blackRoundedSystemFont(dataFont)
-        separator.textColor = colors.sep
-        separator.textOpacity = .8
+        ui.spacer().renderFor(infoRowStack, 4);
         
-        const value = hStack.addText(field.value)
-        
-        value.font = Font.blackRoundedSystemFont(dataFont)
-        value.textColor = colors.reverse
-        value.textOpacity = .7
-        
+        // Value
+        ui.text()
+            .content(field.value)
+            .color(colors.reverse)
+            .opacity(0.7)
+            .blackRoundedFont(dataFont)
+            .renderFor(infoRowStack);
     }
     
-    stack.addSpacer(rec.isDone ? 50 : 30)
+    ui.spacer().renderFor(contentStack);
     
-    widget.backgroundColor = colors.main
-    stack.layoutVertically()
-    
-    serieNameWidget.font = Font.
-         blackMonospacedSystemFont(dataFont + 1)
-    serieNameWidget.textColor = colors.reverse
-    
-    QuickLook.present(widget)
-    Script.setWidget(widget)
-    Script.complete()
+    ui.present(root);
 }
 
 function getData() {

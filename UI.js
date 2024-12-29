@@ -144,6 +144,11 @@ const root = {
                 textBuilder.__font = Font.boldMonospacedSystemFont(size);
                 return textBuilder;
             },
+
+            blackMonospacedFont: (size) => {
+                textBuilder.__font = Font.blackMonospacedSystemFont(size);
+                return textBuilder;
+            },
             
             blackFont: (size) => {
                 textBuilder.__font = Font.blackSystemFont(size);
@@ -480,6 +485,86 @@ const root = {
 
         return dateBuilder;
     },
+
+    rootWidget: () => {
+
+        const rootBuilder = {
+
+            color: (color) => {
+                rootBuilder.__color = color;
+                return rootBuilder;
+            },
+
+            gradient: () => {
+
+                const gradientBuilder = {
+
+                    __colors: [],
+                    __locations: [],
+
+                    color: (location, color) => {
+                        gradientBuilder.__locations.push(location);
+                        gradientBuilder.__colors.push(color);
+                        return gradientBuilder;
+                    },
+
+                    leftToRight: () => {
+                        gradientBuilder.__startPoint = new Point(0, 1);
+                        gradientBuilder.__endPoint = new Point(1, 1);
+                        return gradientBuilder;
+                    },
+
+                    create: () => {
+
+                        const colors = gradientBuilder.__colors;
+                        const locations = gradientBuilder.__locations;
+                        const startPoint = gradientBuilder.__startPoint;
+                        const endPoint = gradientBuilder.__endPoint;
+
+                        const gradient = new LinearGradient();
+
+                        if (colors.length > 0) {
+                            gradient.colors = colors;
+                            gradient.locations = locations;
+                        }
+
+                        if (startPoint) {
+                            gradient.startPoint = startPoint;
+                        }
+
+                        if (endPoint) {
+                            gradient.endPoint = endPoint;
+                        }
+
+                        rootBuilder.__gradient = gradient;
+                        return rootBuilder;
+                    }
+                };
+
+                return gradientBuilder;
+            },
+
+            render: () => {
+
+                const color = rootBuilder.__color;
+                const gradient = rootBuilder.__gradient;
+
+                const rootWidget = new ListWidget();
+
+                if (color) {
+                    rootWidget.backgroundColor = color;
+                }
+
+                if (gradient) {
+                    rootWidget.backgroundGradient = gradient;
+                }
+
+                return rootWidget;
+            }
+        };
+
+        return rootBuilder;
+    },
     
     /**
     * Used to present root widget.
@@ -489,10 +574,6 @@ const root = {
     present: (rootWidget) => {
         QuickLook.present(rootWidget);
         Script.setWidget(rootWidget);
-    },
-
-    createRoot: () => {
-        return new ListWidget();
     }
 };
 
@@ -501,6 +582,6 @@ module.exports.stack = root.stack;
 module.exports.text = root.text;
 module.exports.image = root.image;
 module.exports.date = root.date;
+module.exports.rootWidget = root.rootWidget;
 module.exports.present = root.present;
-module.exports.createRoot = root.createRoot;
  

@@ -9,7 +9,7 @@ const ui = importModule("UI");
 
 const conf = {
     debug: {
-        enabled: true,
+        enabled: false,
         
         mockData: false,
         forceCountdownMonths: false,
@@ -912,24 +912,21 @@ class SeriesWidget {
     __createRootWidget(series) {
 
         const dominantColor = series.getDominantColor();
-        const root = ui.createRoot();
+        return ui.rootWidget()
+            .gradient()
+                .leftToRight()
+                .color(0, dominantColor)
+                .color(0.7, conf.backgroundColor)
+                .create()
+            .render();
 
-        if (dominantColor) {
+//             const gradient = new LinearGradient();
+            root.gradientColor(0, dominantColor)
+                .gradientColor(0.7, conf.backgroundColor);
+//             gradient.startPoint = new Point(0, 1);
+//             gradient.endPoint = new Point(1, 1);
 
-            const gradient = new LinearGradient();
-
-            gradient.startPoint = new Point(0, 1);
-            gradient.endPoint = new Point(1, 1);
-
-            gradient.locations = [0, 0.7];
-            gradient.colors = [
-                dominantColor,
-                conf.backgroundColor
-            ];
-            root.backgroundGradient = gradient;
-        }
-
-        return root;
+        return root.render();
     }
 }
 

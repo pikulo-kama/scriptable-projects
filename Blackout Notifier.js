@@ -20,13 +20,12 @@ const conf = {
     },
     
     showGradient: true,
-    styleGradient: (gradient) => {
+    styleGradient: (rootWidget) => {
         
-        gradient.locations = [0, 0.5];
-        gradient.colors = [
-            new Color("040059"),
-            new Color("030037")
-        ];
+        rootWidget.gradient()
+            .color(0, new Color("040059"))
+            .color(0.5, new Color("030037"))
+            .create()
     }
 };
 
@@ -687,16 +686,13 @@ class ScheduleWidget {
      */
     __createRootWidget() {
 
-        const root = ui.createRoot();
+        const rootWidget = ui.rootWidget()
         
         if (conf.showGradient) {
-            
-            const gradient = new LinearGradient();
-            conf.styleGradient(gradient);
-            root.backgroundGradient = gradient;
+            conf.styleGradient(rootWidget);
         }
         
-        return root;
+        return rootWidget.render();
     }
 }
 
