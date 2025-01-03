@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: pink; icon-glyph: bars;
 const { FileUtil } = importModule("File Util");
-const { CacheRequest, CacheDataType } = importModule("Cache");
+const { metadata, cacheRequest } = importModule("Cache");
 const { Locale } = importModule("Localization")
 const {
     spacer,
@@ -17,28 +17,25 @@ const conf = {
     api: "https://episodate.com/api/show-details?q=",
 }
 
-const cacheConf = [
-    {
-        prop: "tvShow.name"
-    },
-    {
-        prop: "tvShow.episodes",
-        type: CacheDataType.List,
-        mappings: [
-            {
-                prop: "air_date",
-                alias: "airDate",
-                transform: v => new Date(v.replace(" ", "T") + "Z")
-            },
-            {
-                prop: "season"
-            },
-            {
-                prop: "episode"
-            }
-        ]
-    }
-]
+const cacheMetadata = metadata()
+    .data()
+        .property("tvShow.name")
+        .add()
+    .list()
+        .property("tvShow.episodes")
+        .data()
+            .property("air_date")
+            .alias("airDate")
+            .transformFunction(value => new Date(value.replace(" ", "T") + "Z"))
+            .add()
+        .data()
+            .property("season")
+            .add()
+        .data()
+            .property("episode")
+            .add()
+        .add()
+    .create();
 
 await Locale.registerLabels({
     "t_header": "⚪️ Watchlist",
@@ -209,14 +206,15 @@ function getListOfSeries() {
 async function getSerieApiInfo(serieInfo) {
     
     const now = Date.now();
+    const request = cacheRequest(cacheMetadata);
     
-    let showApiData = await CacheRequest.get(conf.api + serieInfo.id, cacheConf);
+    let showApiData = await request.get(conf.api + serieInfo.id);
     let episodeQualifier = getEpQualifier(serieInfo);
     
     let unwatchedEpisodes = showApiData.episodes.filter(episode => 
-            getEpQualifier(episode) > episodeQualifier &&
-            now > new Date(episode.airDate)
-        )
+        getEpQualifier(episode) > episodeQualifier &&
+        now > new Date(episode.airDate)
+    )
 
     return {
         id: serieInfo.id,

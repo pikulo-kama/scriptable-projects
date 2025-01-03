@@ -3,7 +3,7 @@
 // icon-color: deep-purple; icon-glyph: database;
 
 const { FileUtil } = importModule("File Util");
-const { AlertUtil } = importModule("Alert Util");
+const { modal } = importModule("Modal");
 const { Locale } = importModule("Localization");
 const { ConfigStore } = importModule("Config Util");
 
@@ -166,20 +166,20 @@ const root = {
         let actions = filterFields.map(field => field.popupLabel)
         actions.push(clearAllAction)
         
-        const result = await AlertUtil.createCancelableAlert({
-            actions: actions,
-            title: Locale.tr("filterSelectionPopupTitle")
-        })
+        const result = await modal()
+            .title(Locale.tr("filterSelectionPopupTitle"))
+            .actions(actions)
+            .present();
         
-        if (result.isCancelled) {
+        if (result.isCancelled()) {
             return
         }
         
-        if (result.choice === clearAllAction) {
+        if (result.choice() === clearAllAction) {
             root.updateFilters({})
             
         } else {
-            let selectedField = filterFields.find(field => field.popupLabel === result.choice)
+            let selectedField = filterFields.find(field => field.popupLabel === result.choice())
             let handler = root.filterTypeHandlers()[selectedField.type]
             
             await handler(selectedField)
@@ -191,69 +191,69 @@ const root = {
     
     handleBooleanFilter: async (field) => {
         
-        let filters = root.getAppliedFilters()
-        let filter = filters[field.var]
+        let filters = root.getAppliedFilters();
+        let filter = filters[field.var];
         
         const getAction = (condition, label) => {
-            let filterAppliedLabel = Locale.tr("filterAppliedIndicator")
-            let indicator = (condition ? filterAppliedLabel : "")
-            return label.replace("%{applied}", indicator).trim()
+            let filterAppliedLabel = Locale.tr("filterAppliedIndicator");
+            let indicator = (condition ? filterAppliedLabel : "");
+            return label.replace("%{applied}", indicator).trim();
         }
         
-        let yesAction = getAction(filter === true, Locale.tr("yesBooleanAction"))
-        let noAction = getAction(filter === false, Locale.tr("noBooleanAction"))
-        let clearAction = Locale.tr("clearFilterAction")
+        let yesAction = getAction(filter === true, Locale.tr("yesBooleanAction"));
+        let noAction = getAction(filter === false, Locale.tr("noBooleanAction"));
+        let clearAction = Locale.tr("clearFilterAction");
         
-        let result = await AlertUtil.createCancelableAlert({
-            title: Locale.tr("filterPopupTitle").replace("%{filterName}", field.label),
-            actions: [yesAction, noAction, clearAction]
-        })
+        const result = await modal()
+            .title(Locale.tr("filterPopupTitle").replace("%{filterName}", field.label))
+            .actions([yesAction, noAction, clearAction])
+            .present();
         
-        if (result.isCancelled) {
-            return
+        if (result.isCancelled()) {
+            return;
         }
         
-        if (result.choice === clearAction) {
-            delete filters[field.var]
+        if (result.choice() === clearAction) {
+            delete filters[field.var];
             
         } else {
-            filters[field.var] = result.choice === yesAction
+            filters[field.var] = result.choice() === yesAction;
         }
         
-        await root.updateFilters(filters)
+        await root.updateFilters(filters);
     },
     
     
     handleTextFilter: async (field) => {
         
-        let filters = root.getAppliedFilters()
-        let filter = filters[field.var]
+        let filters = root.getAppliedFilters();
+        let filter = filters[field.var];
         
-        let applyFilterAction = Locale.tr("applyFilterAction")
-        let clearFilterAction = Locale.tr("clearFilterAction")
+        let applyFilterAction = Locale.tr("applyFilterAction");
+        let clearFilterAction = Locale.tr("clearFilterAction");
         
-        let result = await AlertUtil.createCancelableAlert({
-            title: Locale.tr("filterPopupTitle").replace("%{filterName}", field.label),
-            actions: [applyFilterAction, clearFilterAction],
-            fields: [{
-                var: field.var,
-                initial: filter,
-                label: field.label
-            }]
-        })
-        
-        if (result.isCancelled) {
-            return
+        const result = await modal()
+            .title(Locale.tr("filterPopupTitle").replace("%{filterName}", field.label))
+            .actions([applyFilterAction, clearFilterAction])
+            .field()
+                .name(field.var)
+                .label(field.label)
+                .initial(filter)
+                .add()
+            .present();
+
+        if (result.isCancelled()) {
+            return;
         }
         
-        if (result.choice === applyFilterAction) {
-            filters[field.var] = result.data[field.var]
+        if (result.choice() === applyFilterAction) {
+            filters[field.var] = result.get(field.var);
             
-        } else if (result.choice === clearFilterAction) {
-            delete filters[field.var]
+        } else if (result.choice() === clearFilterAction) {
+            delete filters[field.var];
         }
         
-        await root.updateFilters(filters)
+        await root.updateFilters(filters);
     },
     
     
@@ -330,104 +330,109 @@ const root = {
     
     handleForm: async (field, rowData, handler) => {
         
-        let handlerActions = []
-        let updatedData = {}
-        let actions = []
+        let handlerActions = [];
+        let updatedData = {};
+        let actions = [];
         
-        let title = handler.title
-        let fields = handler.fields
+        let title = handler.title;
+        let fields = handler.fields;
         
         if (fields === undefined) {
-            fields = []
+            fields = [];
         }
         
         if (typeof title == "function") {
-            title = title(rowData)
+            title = title(rowData);
         }
         
         if (handler.defaultAction !== undefined) {
-            actions.push(handler.defaultAction)
-        
+            actions.push(handler.defaultAction);
         }
         
         if (handler.actions !== undefined) {
             
-            handlerActions = handler.actions
+            handlerActions = handler.actions;
             
             if (typeof handler.actions == "function") {
-                handlerActions = handler.actions(rowData)
+                handlerActions = handler.actions(rowData);
             }
             
-            actions = actions.concat(handlerActions.map(a => a.name))
-        
+            actions = actions.concat(handlerActions.map(a => a.name));
         }
         
         if (actions.length == 0) {
             
-            let defaultUpdateLabel = Locale.tr("formDefaultUpdateLabel")
+            let defaultUpdateLabel = Locale.tr("formDefaultUpdateLabel");
             
-            handler.defaultAction = defaultUpdateLabel
-            actions = defaultUpdateLabel
+            handler.defaultAction = defaultUpdateLabel;
+            actions = [defaultUpdateLabel];
+        }
+
+        const modalBuilder = modal();
+        
+        fields.forEach(field =>
+
+            modalBuilder.field()
+                .name(field.var)
+                .label(field.label)
+                .initial(rowData[field.var])
+                .add()
+        );
+        
+        const result = await modalBuilder
+            .title(title)
+            .actions(actions)
+            .present();
+        
+        if (result.isCancelled()) {
+            return -1;
         }
         
-        for (let i = 0; i < fields.length; i++) {
-            fields[i].initial = rowData[fields[i].var]
-        }
+        let onChangeCallback = root.__configStore.get("onChange");
         
-        const result = await AlertUtil.createCancelableAlert({
-            fields: fields,
-            actions: actions,
-            title: title
-        })
-        
-        if (result.isCancelled) {
-            return -1
-        }
-        
-        let onChangeCallback = root.__configStore.get("onChange")
-        
-        if (handler.defaultAction == result.choice) {
+        if (handler.defaultAction == result.choice()) {
             
             for (let i = 0; i < fields.length; i++) {
-                let varName = fields[i].var
-                let newValue = result.data[varName]
+
+                let varName = fields[i].var;
+                let newValue = result.get(varName);
                 
-                let oldValue = rowData[varName]
+                let oldValue = rowData[varName];
         
                 if (onChangeCallback != undefined && oldValue != newValue) {
-                    onChangeCallback(rowData, varName, newValue, oldValue)
+                    onChangeCallback(rowData, varName, newValue, oldValue);
                 }
                 
-                updatedData[varName] = newValue
+                updatedData[varName] = newValue;
             }
             
         } else {
             
             let actionRecord = handlerActions
-                .find(action => action.name == result.choice)
+                .find(action => action.name == result.choice());
             
             if (actionRecord?.onChoose != undefined) {
                 
-                let callback = actionRecord.onChoose
-                let varName = callback.var
+                let callback = actionRecord.onChoose;
+                let varName = callback.var;
                 
-                let newValue = callback.callback
+                let newValue = callback.callback;
                 
                 if (typeof callback.callback == "function") {
-                    newValue = callback.callback(rowData, result.choice)
+                    newValue = callback.callback(rowData, result.choice());
                 }
                 
-                let oldValue = rowData[varName]
+                let oldValue = rowData[varName];
         
                 if (onChangeCallback != undefined && oldValue != newValue) {
-                    onChangeCallback(rowData, varName, newValue, oldValue)
+                    onChangeCallback(rowData, varName, newValue, oldValue);
                 }
                 
-                updatedData[varName] = newValue
+                updatedData[varName] = newValue;
             }
         }
         
-        return updatedData
+        return updatedData;
     },
     
     
@@ -476,32 +481,33 @@ const root = {
     
     handleListForm: async (field, rowData, handler) => {
         
-        let data = {}
-        data[field.var] = []
+        let data = {};
+        data[field.var] = [];
         
-        let lastChoice = ""
+        let lastChoice = "";
         
         do {
-            let res = await AlertUtil.createCancelableAlert({
-                actions: ["Add", "Done"],
-                title: field.title,
-                fields: [{
-                    validations: field.validations,
-                    label: field.fieldLabel,
-                    var: "tmpField"
-                }]
-            })
+
+            let result = await modal()
+                .title(field.title)
+                .actions(["Add", "Done"])
+                .field()
+                    .name("tmpField")
+                    .label(field.fieldLabel)
+                    .validations(field.validations)
+                    .add()
+                .present();
             
-            if (res.isCancelled) {
-                return -1
+            if (result.isCancelled()) {
+                return -1;
             }
             
-            lastChoice = res.choice
-            data[field.var].push(res.data.tmpField)
+            lastChoice = result.choice();
+            data[field.var].push(result.get("tmpField"));
             
         } while (lastChoice == "Add")
         
-        return data
+        return data;
     },
     
     
@@ -604,16 +610,16 @@ const root = {
     
     deleteRecord: async (rowData, row) => {
         
-        const result = await AlertUtil.createCancelableAlert({
-            title: Locale.tr("deleteFieldMessage"),
-            actions: Locale.tr("deleteFieldConfirmAction")
-        })
+        const result = await modal()
+            .title(Locale.tr("deleteFieldMessage"))
+            .actions([Locale.tr("deleteFieldConfirmAction")])
+            .present();
         
-        if (!result.isCancelled) {
-            return true
+        if (!result.isCancelled()) {
+            return true;
         }
         
-        return false
+        return false;
     },
     
     reloadTable: async () => {

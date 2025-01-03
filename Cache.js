@@ -11,150 +11,268 @@ class CacheDataType {
     static List = "List";
 }
 
+class PropertyMetadata {
+
+    constructor(builder, type, callback) {
+        this.__builder = builder;
+        this.__callback = callback;
+        this.__propertyType = type
+        this.__property = undefined;
+        this.__propertyAlias = undefined;
+        this.__transformFunction = (value) => value;
+    }
+
+    property(property) {
+        this.__property = property;
+        return this;
+    }
+
+    alias(alias) {
+        this.__propertyAlias = alias;
+        return this;
+    }
+
+    transformFunction(transofrmFunction) {
+        this.__transformFunction = transofrmFunction;
+        return this;
+    }
+
+    add() {
+        this.__callback(this._getPropertyMetadata());
+        return this.__builder;
+    }
+
+    _getPropertyMetadata() {
+        return {
+            property: this.__property,
+            alias: this.__propertyAlias,
+            type: this.__propertyType,
+            transformFunction: this.__transformFunction
+        };
+    }
+}
+
+class ListMetadata extends PropertyMetadata {
+
+    constructor(parentBuilder, callback) {
+        super(parentBuilder, CacheDataType.List, callback);
+        this.__listPropertyMetadata = [];
+    }
+
+    data() {
+        return new PropertyMetadata(this, 
+            CacheDataType.Data, 
+            (fieldMetadata) => this.__listPropertyMetadata.push(fieldMetadata)
+        );
+    }
+
+    image() {
+        return new PropertyMetadata(this, 
+            CacheDataType.Image, 
+            (fieldMetadata) => this.__listPropertyMetadata.push(fieldMetadata)
+        );
+    }
+
+    list() {
+        return new ListMetadata(this,
+            (fieldMetadata) => this.__listPropertyMetadata.push(fieldMetadata)
+        );
+    }
+
+    _getPropertyMetadata() {
+
+        let metadata = super._getPropertyMetadata();
+        metadata.listPropertyMetadata = this.__listPropertyMetadata;
+        
+        return metadata;
+    }
+}
+
+class Metadata {
+
+    constructor(parentBuilder, callback) {
+        this.__parentBuilder = parentBuilder;
+        this.__callback = callback;
+        this.__fields = [];
+    }
+
+    data() {
+        return new PropertyMetadata(this, 
+            CacheDataType.Data, 
+            (fieldMetadata) => this.__fields.push(fieldMetadata)
+        );
+    }
+
+    image() {
+        return new PropertyMetadata(this, 
+            CacheDataType.Image, 
+            (fieldMetadata) => this.__fields.push(fieldMetadata)
+        );
+    }
+
+    list() {
+        return new ListMetadata(this,
+            (fieldMetadata) => this.__fields.push(fieldMetadata)
+        );
+    }
+
+    create() {
+
+        if (this.__callback) {
+            this.__callback(this.__fields);
+        }
+
+        if (this.__parentBuilder) {
+            return this.__parentBuilder;
+        }
+
+        return this.__fields;
+    }
+}
+
 class CacheRequest {
 
     static __FILE_NAME = "cache.json";
     static __manager = FileManager.local();
 
-    static async get(url, config) {
+    constructor(metadata) {
+        this.__metadata = metadata;
+    }
 
-        let data = null;
-        let rawData = null;
+    async get(url) {
+
+        let processedResponse = null;
 
         try {
-            rawData = await new Request(url).loadJSON();
+            let responseData = await new Request(url).loadJSON();
 
-            data = await this.__formatData(config, rawData);
-            await this.__cacheData(data, url);
+            processedResponse = await this.__processResponse(this.__metadata, responseData);
+            await this.__cacheResponse(url, processedResponse);
 
         } catch (error) {
             console.log(error);
             console.log("Getting data from cache");
-            data = this.__getFromCache(url);
+            processedResponse = this.__getResponseFromCache(url);
         }
 
-        return data;
+        return processedResponse;
     }
 
-    static async __formatData(config, rawData) {
+    async __processResponse(metadata, responseData) {
 
-        let data = {};
+        let processedResponse = {};
 
-        for (let fieldConfig of config) {
+        for (let fieldMetadata of metadata) {
 
-            let fieldData = this.__parseProperty(fieldConfig.prop, rawData);
-            let key = fieldData.defaultAlias;
-            let value = null;
+            let property = this.__getPropertyFromResponse(fieldMetadata.property, responseData);
+            let propertyName = property.name;
+            let propertyValue;
 
-            if (fieldConfig.type == undefined) {
-                fieldConfig.type = CacheDataType.Data;
+            if (fieldMetadata.alias) {
+                propertyName = fieldMetadata.alias;
             }
 
-            if (fieldConfig.alias !== undefined) {
-                key = fieldConfig.alias;
-            }
+            switch (fieldMetadata.type) {
 
-            switch (fieldConfig.type) {
                 case CacheDataType.Data:
-                    let rawValue = fieldData.value;
-
-                    if (fieldConfig.transform != undefined) {
-                        value = fieldConfig.transform(rawValue);
-
-                    } else {
-                        value = rawValue;
-                    }
-
+                    propertyValue = fieldMetadata.transformFunction(property.value);
                     break;
 
                 case CacheDataType.Image:
-                    value = await this.__saveImage(fieldData.value);
+                    propertyValue = await this.__processImage(property.value);
                     break;
 
                 case CacheDataType.List:
-                    value = await this.__formatList(fieldConfig.mappings, fieldData.value);
+                    propertyValue = await this.__processList(fieldMetadata.listPropertyMetadata, property.value);
                     break;
             }
 
-            data[key] = value;
+            processedResponse[propertyName] = propertyValue;
         }
 
-        return data;
+        return processedResponse;
     }
 
-    static async __formatList(config, rawData) {
+    async __processImage(imageURI) {
 
-        let result = [];
-
-        if (!rawData) {
-            return result;
-        }
-
-        for (let record of rawData) {
-            result.push(await this.__formatData(config, record));
-        }
-
-        return result;
+        let imagePath = CacheRequest.__manager.joinPath(
+            CacheRequest.__manager.cacheDirectory(), 
+            `CIMG-${UUID.string()}.jpeg`
+        );
+        
+        CacheRequest.__manager.writeImage(imagePath, await new Request(imageURI).loadImage());
+        return imagePath;
     }
 
-    static __parseProperty(prop, data) {
+    async __processList(listMetadata, collection) {
 
-        let parts = prop.split(".");
-        let resultData = data;
+        let processedCollection = [];
 
-        for (let part of parts) {
+        if (!collection) {
+            return [];
+        }
 
-            if (resultData instanceof Array) {
-                resultData = null;
+        for (let entry of collection) {
+            processedCollection.push(await this.__processResponse(listMetadata, entry));
+        }
+
+        return processedCollection;
+    }
+
+    __getPropertyFromResponse(composedProperty, response) {
+
+        let propertyChain = composedProperty.split(".");
+        let propertyValue = response;
+
+        for (let property of propertyChain) {
+
+            // There should be no list objects
+            // on the way.
+            if (propertyValue instanceof Array) {
+                propertyValue = null;
                 break;
             }
 
-            resultData = resultData[part];
+            propertyValue = propertyValue[property];
         }
 
         return {
-            value: resultData,
-            defaultAlias: parts[parts.length - 1]
+            name: propertyChain.pop(),
+            value: propertyValue
         };
     }
 
-    static async __saveImage(imageUrl) {
+    async __cacheResponse(url, response) {
 
-        let imageName = "CIMG-" + UUID.string() + ".jpeg";
-        let filePath = this.__manager.joinPath(this.__manager.cacheDirectory(), imageName);
-
-        this.__manager.writeImage(filePath, await new Request(imageUrl).loadImage());
-        return filePath;
-    }
-
-    static async __cacheData(data, key) {
-
-        let cache = FileUtil.readLocalJson(this.__FILE_NAME, [])
-            .filter(entry => entry.id != key);
+        let cache = FileUtil.readLocalJson(CacheRequest.__FILE_NAME, [])
+            .filter(entry => entry.id != url);
 
         cache.push({
-            id: key,
-            value: data
+            id: url,
+            value: response
         });
 
-        FileUtil.updateLocalJson(this.__FILE_NAME, cache);
+        FileUtil.updateLocalJson(CacheRequest.__FILE_NAME, cache);
     }
 
-    static __getFromCache(key) {
+    __getResponseFromCache(key) {
         
-        let value = null;
-        let entryFromCache = FileUtil.readLocalJson(this.__FILE_NAME, [])
+        const entryFromCache = FileUtil.readLocalJson(CacheRequest.__FILE_NAME, [])
             .find(entry => entry.id == key);
 
-        if (entryFromCache) {
-            value = entryFromCache.value;
-        }
-        
-        return value;
+        return entryFromCache?.value;
     }
 }
 
+function metadata() {
+    return new Metadata();
+}
+
+function cacheRequest(metadata) {
+    return new CacheRequest(metadata);
+}
+
 module.exports = {
-    CacheRequest,
-    CacheDataType
+    metadata,
+    cacheRequest
 };

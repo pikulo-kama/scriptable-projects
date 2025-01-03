@@ -3,7 +3,7 @@
 // icon-color: purple; icon-glyph: globe;
 
 const { FileUtil } = importModule("File Util");
-const { AlertUtil } = importModule("Alert Util");
+const { modal } = importModule("Modal");
 const { Locale } = importModule("Localization");
 
 await Locale.registerLabels({
@@ -79,28 +79,28 @@ class Main {
     
     editFieldAndSaveChanges(key) {
         
-        const that = this
+        const that = this;
         
         return async () => {
             
-            let result = await AlertUtil.createCancelableAlert({
-                title: Locale.tr("t_label_form_header").replace("%label_key", key),
-                fields: [{
-                    var: key,
-                    label: key,
-                    initial: that.data[key]
-                }],
-                actions: Locale.tr("t_update_action")
-            })
+            let result = await modal()
+                .title(Locale.tr("t_label_form_header").replace("%label_key", key))
+                .actions([Locale.tr("t_update_action")])
+                .field()
+                    .name(key)
+                    .label(key)
+                    .initial(that.data[key])
+                    .add()
+                .present();
             
-            if (!result.isCancelled) {
+            if (!result.isCancelled()) {
                 
-                that.data[key] = result.data[key]
-                await that.saveData()
+                that.data[key] = result.get(key);
+                await that.saveData();
                 
-                that.table.removeAllRows()
-                that.buildTable()
-                that.table.reload()
+                that.table.removeAllRows();
+                that.buildTable();
+                that.table.reload();
             }
         }
     }
@@ -115,18 +115,18 @@ class Main {
     
     async selectScript(scriptList) {
             
-        let result = await AlertUtil.createCancelableAlert({
-            title: Locale.tr("select_script"),
-            actions: scriptList.map(script => script.verboseName)
-        })
+        const result = await modal()
+            .title(Locale.tr("select_script"))
+            .actions(scriptList.map(script => script.verboseName))
+            .present();
         
-        if (!result.isCancelled) {
+        if (!result.isCancelled()) {
             return scriptList.find(script => 
-                script.verboseName === result.choice
-            )
+                script.verboseName === result.choice()
+            );
         }
         
-        return null
+        return null;
     }
     
     async selectLocale(script) {
@@ -135,18 +135,18 @@ class Main {
             return script.locales[0]
         }
         
-        let result = await AlertUtil.createCancelableAlert({
-            title: Locale.tr("select_locale"),
-            actions: script.locales.map(localeObj => localeObj.locale)
-        })
+        const result = await modal()
+            .title(Locale.tr("select_locale"))
+            .actions(script.locales.map(localeObj => localeObj.locale))
+            .present();
         
-        if (!result.isCancelled) {
+        if (!result.isCancelled()) {
             return script.locales.find(localeObj =>
-                localeObj.locale === result.choice
-            )
+                localeObj.locale === result.choice()
+            );
         }
         
-        return null
+        return null;
     }
 }
 

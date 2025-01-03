@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: orange; icon-glyph: film;
 
-const { CacheRequest, CacheDataType } = importModule("Cache");
+const { cacheRequest, metadata } = importModule("Cache");
 const { FileUtil } = importModule("File Util");
 const {
     spacer,
@@ -75,10 +75,11 @@ class EpisodateApiResource extends ApiResource {
 
     async download() {
 
-        const cacheConfig = this.__getCacheConfig();
+        const metadata = this.__getMetadata();
         const url = this.__getSeriesUrl();
 
-        const seriesData = await CacheRequest.get(url, cacheConfig);
+        const request = cacheRequest(metadata);
+        const seriesData = await request.get(url);
 
         const seriesInfo = new SeriesInfo(
             seriesData.title,
@@ -119,44 +120,39 @@ class EpisodateApiResource extends ApiResource {
      * 
      * @returns {Object} cache config
      */
-    __getCacheConfig() {
-        return [
-            {
-                prop: "tvShow.name",
-                alias: "title"
-            },
-            {
-                prop: "tvShow.image_thumbnail_path",
-                alias: "image",
-                type: CacheDataType.Image
-            },
-            {
-                prop: "tvShow.image_thumbnail_path",
-                alias: "imageURI"
-            },
-            {
-                prop: "tvShow.status"
-            },
-            {
-                prop: "tvShow.episodes",
-                type: CacheDataType.List,
-                mappings: [
-                    {
-                        prop: "season"
-                    },
-                    {
-                        prop: "episode"
-                    },
-                    {
-                        prop: "air_date",
-                        alias: "airDate",
-                        transform: (text) => {
-                            return new Date(text.replace(" ", "T") + "Z");
-                        }
-                    }
-                ]
-            }
-        ];
+    __getMetadata() {
+
+        return metadata()
+            .data()
+                .property("tvShow.name")
+                .alias("title")
+                .add()
+            .image()
+                .property("tvShow.image_thumbnail_path")
+                .alias("image")
+                .add()
+            .data()
+                .property("tvShow.image_thumbnail_path")
+                .alias("imageURI")
+                .add()
+            .data()
+                .property("tvShow.status")
+                .add()
+            .list()
+                .property("tvShow.episodes")
+                .data()
+                    .property("season")
+                    .add()
+                .data()
+                    .property("episode")
+                    .add()
+                .data()
+                    .property("air_date")
+                    .alias("airDate")
+                    .transformFunction(value => new Date(value.replace(" ", "T") + "Z"))
+                    .add()
+                .add()
+            .create();
     }
 }
 

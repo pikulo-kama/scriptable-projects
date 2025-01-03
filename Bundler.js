@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-archive;
 
-const { AlertUtil } = importModule("Alert Util");
+const { modal } = importModule("Modal");
 const { Locale } = importModule("Locale");
 
 await Locale.registerLabels({
@@ -36,17 +36,17 @@ async function selectScript() {
         .filter(script => script.endsWith(".js") && isBundleable(script))
         .map(script => script.replace(".js", ""))
         .sort()
-        
-    let result = await AlertUtil.createCancelableAlert({
-        title: Locale.tr("select_script_to_bundle"),
-        actions: scriptList
-    })
+
+    let result = await modal()
+        .title(Locale.tr("select_script_to_bundle"))
+        .actions(scriptList)
+        .present();
     
-    if (!result.isCancelled) {
-        inputData.selectedScript = result.choice
+    if (!result.isCancelled()) {
+        inputData.selectedScript = result.choice();
     }
     
-    return inputData
+    return inputData;
 }
 
 function bundleScript(script, parentScript, dataIn) {
