@@ -2,9 +2,17 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: orange; icon-glyph: film;
 
-const cacheUtil = importModule("Cache");
-const files = importModule("File Util");
-const ui = importModule("UI");
+const { CacheRequest, CacheDataType } = importModule("Cache");
+const { FileUtil } = importModule("File Util");
+const {
+    spacer,
+    stack,
+    text,
+    image,
+    date,
+    rootWidget,
+    present
+} = importModule("UI");
 
 
 const conf = {
@@ -25,7 +33,7 @@ const conf = {
         rerollColor: false
     },
 
-    googleVisionApiKey: files.getConfiguration("google_vision_api_key.txt", "<your API key>"),
+    googleVisionApiKey: FileUtil.readLocalFile("google_vision_api_key.txt", "<your API key>"),
     backgroundColor: new Color("070d0d")
 };
 
@@ -70,7 +78,8 @@ class EpisodateApiResource extends ApiResource {
         const cacheConfig = this.__getCacheConfig();
         const url = this.__getSeriesUrl();
 
-        const seriesData = await cacheUtil.getRequest(cacheConfig, url);
+        const seriesData = await CacheRequest.get(url, cacheConfig);
+
         const seriesInfo = new SeriesInfo(
             seriesData.title,
             seriesData.status == 'Ended' ? Status.Ended : Status.Ongoing,
@@ -119,7 +128,7 @@ class EpisodateApiResource extends ApiResource {
             {
                 prop: "tvShow.image_thumbnail_path",
                 alias: "image",
-                type: cacheUtil.types.IMAGE
+                type: CacheDataType.Image
             },
             {
                 prop: "tvShow.image_thumbnail_path",
@@ -130,7 +139,7 @@ class EpisodateApiResource extends ApiResource {
             },
             {
                 prop: "tvShow.episodes",
-                type: cacheUtil.types.LIST,
+                type: CacheDataType.List,
                 mappings: [
                     {
                         prop: "season"
@@ -507,16 +516,15 @@ class Series {
      */
     async obtainDominantColor() {
         
+        const fileName = "dominant_colors.json";
         const imageURI = this._seriesInfo.getImageURI();
         
         if (!imageURI) {
             this._dominantColor = Color.gray();
             return;
         }
-        
-        const fileName = "dominant_colors.json";
 
-        let colorMap = JSON.parse(files.getConfiguration(fileName, "{}"));
+        let colorMap = FileUtil.readLocalJson(fileName, {});
         let colorFromFile = colorMap[imageURI];
 
         if (!colorFromFile || conf.debug.rerollColor) {
@@ -525,7 +533,7 @@ class Series {
             colorFromFile = {color: dominantColor};
             colorMap[imageURI] = colorFromFile;
 
-            files.updateConfiguration(fileName, JSON.stringify(colorMap));
+            FileUtil.updateLocalJson(fileName, colorMap);
         }
 
         this._dominantColor = new Color(colorFromFile.color);
@@ -765,40 +773,38 @@ class SeriesWidget {
 
         // Render widget wrapper
         // with small paddings on top and bottom.
-        ui.spacer().renderFor(root, 4);
-        const rootStack = ui.stack().renderFor(root);
-        ui.spacer().renderFor(root, 4);
+        spacer().renderFor(root, 4);
+        const rootStack = stack().renderFor(root);
+        spacer().renderFor(root, 4);
 
         // Series image
-        ui.image()
+        image()
             .image(series.getImage())
             .radius(5)
             .renderFor(rootStack);
 
-        ui.spacer().renderFor(rootStack);
+        spacer().renderFor(rootStack);
         
-        const contentStack = ui.stack()
+        const contentStack = stack()
             .vertical()
             .renderFor(rootStack);
         
         // Series title
-        ui.text()
+        text()
             .content(series.getTitle())
             .blackRoundedFont(24)
             .limit(16)
             .rightAlign()
             .renderFor(contentStack);
 
-        ui.spacer().renderFor(contentStack);
+        spacer().renderFor(contentStack);
         
         if (series.hasCountdown()) {
-
-            const nextEpisode = series.getNextEpisode();
-        
+                    
             // Countdown
-            ui.spacer().renderFor(contentStack, 10);
+            spacer().renderFor(contentStack, 10);
             this.__renderCountdown(contentStack, series);
-            ui.spacer().renderFor(contentStack);
+            spacer().renderFor(contentStack);
             
             this.__renderReleaseInformation(contentStack, series)
         
@@ -818,14 +824,14 @@ class SeriesWidget {
      */
     __renderCountdown(root, series) {
 
-        const countdownBox = ui.stack()
+        const countdownBox = stack()
             .color(series.getDominantColor())
             .padding(5)
             .radius(5)
             .rightAlign()
             .renderFor(root);
         
-        ui.text()
+        text()
             .content(series.getCountdown())
             .color(conf.backgroundColor)
             .boldMonospacedFont(36)
@@ -842,29 +848,29 @@ class SeriesWidget {
      */
     __renderReleaseInformation(root, series) {
         
-        const releaseInfoStack = ui.stack()
+        const releaseInfoStack = stack()
             .rightAlign()
             .renderFor(root);
         
         // Season / episode 
-        ui.text()
+        text()
             .content(series.getNextEpisode())
             .blackFont(10)
             .opacity(0.9)
             .renderFor(releaseInfoStack);
         
-        ui.spacer().renderFor(releaseInfoStack, 4);
+        spacer().renderFor(releaseInfoStack, 4);
         
-        ui.text()
+        text()
             .content("|")
             .blackFont(10)
             .color(series.getDominantColor())
             .renderFor(releaseInfoStack);
         
-        ui.spacer().renderFor(releaseInfoStack, 4);
+        spacer().renderFor(releaseInfoStack, 4);
         
         // Air date
-        ui.date()
+        date()
             .content(series.getNextEpisodeDate())
             .blackFont(8)
             .opacity(0.7)
@@ -885,7 +891,7 @@ class SeriesWidget {
      */
     __renderStatusPlaceholder(root, series) {
         
-        const statusWidget = ui.image();
+        const statusWidget = image();
         
         if (series.isEnded()) {
             statusWidget.icon("checkmark.circle");
@@ -911,22 +917,13 @@ class SeriesWidget {
      */
     __createRootWidget(series) {
 
-        const dominantColor = series.getDominantColor();
-        return ui.rootWidget()
+        return rootWidget()
             .gradient()
                 .leftToRight()
-                .color(0, dominantColor)
+                .color(0, series.getDominantColor())
                 .color(0.7, conf.backgroundColor)
                 .create()
             .render();
-
-//             const gradient = new LinearGradient();
-            root.gradientColor(0, dominantColor)
-                .gradientColor(0.7, conf.backgroundColor);
-//             gradient.startPoint = new Point(0, 1);
-//             gradient.endPoint = new Point(1, 1);
-
-        return root.render();
     }
 }
 
@@ -966,5 +963,5 @@ if (conf.debug.enabled) {
     renderedWidget.presentMedium();
 
 } else {
-    ui.present(renderedWidget);
+    present(renderedWidget);
 }

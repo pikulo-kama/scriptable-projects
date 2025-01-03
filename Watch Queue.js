@@ -1,10 +1,16 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: pink; icon-glyph: bars;
-const fileUtil = importModule("File Util")
-const cacheUtil = importModule("Cache")
-const locale = importModule("Localization")
-
+const { FileUtil } = importModule("File Util");
+const { CacheRequest, CacheDataType } = importModule("Cache");
+const { Locale } = importModule("Localization")
+const {
+    spacer,
+    stack,
+    text,
+    rootWidget,
+    present
+} = importModule("UI");
 
 const conf = {
     debug: false,
@@ -17,7 +23,7 @@ const cacheConf = [
     },
     {
         prop: "tvShow.episodes",
-        type: cacheUtil.types.LIST,
+        type: CacheDataType.List,
         mappings: [
             {
                 prop: "air_date",
@@ -34,7 +40,7 @@ const cacheConf = [
     }
 ]
 
-await locale.registerLabels({
+await Locale.registerLabels({
     "t_header": "⚪️ Watchlist",
     "w_nothing": "Nothing",
     "w_to_be_watched": "to be Watched",
@@ -76,31 +82,31 @@ function buildWidget(seriesData) {
         .filter(serie => serie.showInSummary)
         .reduce((sum, serie) => sum + serie.episodeCount, 0)
         
-    let episodeCountLabel
+    let episodeCountWidget = text();
     
+    // Nothing to be watched
     if (unwatchedEpisodes === 0) {
-        episodeCountLabel = locale.getLabel("w_nothing")
-        
+        episodeCountWidget.content(Locale.tr("w_nothing"));
+    
+    // Display episode count
     } else {
-        episodeCountLabel = getEpisodeCountLabel(unwatchedEpisodes)
+        episodeCountWidget.content(getEpisodeCountLabel(unwatchedEpisodes));
     }
     
-    const widget = new ListWidget()
+    const root = rootWidget().render();
     
-    const episodeCountWidget = widget.addText(episodeCountLabel)
-    widget.addSpacer(10)
-    const headerWidget = widget.addText(locale.getLabel("w_to_be_watched"))
-
-    headerWidget.centerAlignText()
-    headerWidget.font = Font.blackMonospacedSystemFont(18)
-    headerWidget.textOpacity = .8
-
-    episodeCountWidget.centerAlignText()
-    episodeCountWidget.font = Font.blackMonospacedSystemFont(24)
-    episodeCountWidget.textOpacity = 1
-
-    QuickLook.present(widget)
-    Script.setWidget(widget)
+    episodeCountWidget
+        .blackMonospacedFont(24)
+        .renderFor(root);
+    
+    spacer().renderFor(root, 10);
+    
+    text()
+        .content(Locale.tr("w_to_be_watched"))
+        .blackMonospacedFont(18)
+        .renderFor(root);
+        
+    present(root);
 }
 
 function addMessageRow(header, subheader, table) {
@@ -120,7 +126,7 @@ function buildTable(seriesData) {
     headerRow.backgroundColor = Color.darkGray()
     headerRow.cellSpacing = 100
 
-    headerRow.addText(locale.getLabel("t_header"))
+    headerRow.addText(Locale.tr("t_header"))
     table.addRow(headerRow)
     
     let activeData = seriesData
@@ -146,16 +152,16 @@ function buildTable(seriesData) {
     if (seriesData.length === 0) {
 
         addMessageRow(
-            locale.getLabel("t_watchlist_no_data_header"), 
-            locale.getLabel("t_watchlist_no_data_subheader"),
+            Locale.tr("t_watchlist_no_data_header"), 
+            Locale.tr("t_watchlist_no_data_subheader"),
             table
         )
         
     } else if (activeData.length === 0) {
         
         addMessageRow(
-            locale.getLabel("t_watchlist_empty_header"),
-            locale.getLabel("t_watchlist_empty_subheader"),
+            Locale.tr("t_watchlist_empty_header"),
+            Locale.tr("t_watchlist_empty_subheader"),
             table
         )
     }
@@ -165,8 +171,8 @@ function buildTable(seriesData) {
 
 function getEpisodeCountLabel(episodeCount) {
     
-    let label = episodeCount + locale.getLabel("episode")
-    let pluralEnding = locale.getLabel("episode_plural_ending")
+    let label = episodeCount + Locale.tr("episode")
+    let pluralEnding = Locale.tr("episode_plural_ending")
     
     if (episodeCount > 1) {
         label += pluralEnding
@@ -177,11 +183,7 @@ function getEpisodeCountLabel(episodeCount) {
 
 function getListOfSeries() {
     
-    let stopWatcherData = JSON.parse(fileUtil.getExtConfiguration(
-        "watchlist.json", "[]", "Stop Watcher"
-    ))
-    
-    return stopWatcherData
+    return FileUtil.readJson("Stop Watcher", "watchlist.json", [])
         .filter(info => info.serieId)
         .map(info => {
             
@@ -206,9 +208,10 @@ function getListOfSeries() {
 
 async function getSerieApiInfo(serieInfo) {
     
-    const now = Date.now()
-    let showApiData = await cacheUtil.getRequest(cacheConf, conf.api + serieInfo.id)
-    let episodeQualifier = getEpQualifier(serieInfo)
+    const now = Date.now();
+    
+    let showApiData = await CacheRequest.get(conf.api + serieInfo.id, cacheConf);
+    let episodeQualifier = getEpQualifier(serieInfo);
     
     let unwatchedEpisodes = showApiData.episodes.filter(episode => 
             getEpQualifier(episode) > episodeQualifier &&

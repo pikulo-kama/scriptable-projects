@@ -2,11 +2,11 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: globe;
 
-const fileUtil = importModule("File Util")
-const alertUtil = importModule("Alert Util")
-const locale = importModule("Localization")
+const { FileUtil } = importModule("File Util");
+const { AlertUtil } = importModule("Alert Util");
+const { Locale } = importModule("Localization");
 
-await locale.registerLabels({
+await Locale.registerLabels({
     "t_header_label": "Translate '%script_name'",
     "t_label_form_header": "Translate '%label_key'",
     "t_update_action": "Update",
@@ -53,7 +53,7 @@ class Main {
     }
     
     loadLabels() {
-        this.data = JSON.parse(fileUtil.getExtConfiguration(this.locale.fileName, "{}", this.script.verboseName))
+        this.data = FileUtil.readJson(this.script.verboseName, this.locale.fileName, {});
     }
     
     buildTable() {
@@ -63,7 +63,7 @@ class Main {
         headerRow.backgroundColor = Color.darkGray()
         headerRow.cellSpacing = 100
         
-        headerRow.addText(locale.getLabel("t_header_label").replace("%script_name", this.script.verboseName))
+        headerRow.addText(Locale.tr("t_header_label").replace("%script_name", this.script.verboseName))
         this.table.addRow(headerRow)
         
         for (let labelKey of Object.keys(this.data)) {
@@ -83,14 +83,14 @@ class Main {
         
         return async () => {
             
-            let result = await alertUtil.createCancelableAlert({
-                title: locale.getLabel("t_label_form_header").replace("%label_key", key),
+            let result = await AlertUtil.createCancelableAlert({
+                title: Locale.tr("t_label_form_header").replace("%label_key", key),
                 fields: [{
                     var: key,
                     label: key,
                     initial: that.data[key]
                 }],
-                actions: locale.getLabel("t_update_action")
+                actions: Locale.tr("t_update_action")
             })
             
             if (!result.isCancelled) {
@@ -106,17 +106,17 @@ class Main {
     }
     
     async saveData() {
-        await fileUtil.updateExtConfiguration(
+        await FileUtil.updateJson(
+            this.script.verboseName,
             this.locale.fileName,
-            JSON.stringify(this.data),
-            this.script.verboseName
-        )
+            this.data
+        );
     }
     
     async selectScript(scriptList) {
             
-        let result = await alertUtil.createCancelableAlert({
-            title: locale.getLabel("select_script"),
+        let result = await AlertUtil.createCancelableAlert({
+            title: Locale.tr("select_script"),
             actions: scriptList.map(script => script.verboseName)
         })
         
@@ -135,8 +135,8 @@ class Main {
             return script.locales[0]
         }
         
-        let result = await alertUtil.createCancelableAlert({
-            title: locale.getLabel("select_locale"),
+        let result = await AlertUtil.createCancelableAlert({
+            title: Locale.tr("select_locale"),
             actions: script.locales.map(localeObj => localeObj.locale)
         })
         
@@ -163,8 +163,8 @@ class ScriptInfo {
     }
     
     loadLocales(scriptName) {
-        return fileUtil.findExtConfigurations(ScriptInfo.localeFileRegex, scriptName)
-            .map(localeFile => new Locale(localeFile))
+        return FileUtil.findFiles(scriptName, ScriptInfo.localeFileRegex)
+            .map(localeFile => new LocaleDto(localeFile))
     }
     
     hasLocales() {
@@ -176,7 +176,7 @@ class ScriptInfo {
     }
 }
 
-class Locale {
+class LocaleDto {
     
     constructor(fileName) {
         

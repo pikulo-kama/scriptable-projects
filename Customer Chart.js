@@ -1,11 +1,13 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: cyan; icon-glyph: users;
-const chart = importModule("Linear Chart")
-const conf = importModule("Config Util")
-const locale = importModule("Localization")
 
-await locale.registerLabels({
+const { LinearChart } = importModule("Linear Chart");
+const { present } = importModule("UI");
+const { themed } = importModule("Config Util");
+const { Locale } = importModule("Localization");
+
+await Locale.registerLabels({
   "timezone": "Europe/Kiev",
   "month_january": "Jan",
   "month_february": "Feb",
@@ -21,119 +23,145 @@ await locale.registerLabels({
   "month_december": "Dec",
 })
 
-let arguments = JSON.parse(args.widgetParameter)
+const conf = {
+    debug: {
+        enabled: true
+    },
 
-if (config.runsInApp) {
-   arguments = {
-    period: 5,
-    calendar: "Робочий",
-    mode: "dark",
-    trimBlank: true
-  }
-}
+    timeZone: Locale.tr("timezone"),
+    months: [
+        Locale.tr("month_january"),
+        Locale.tr("month_february"),
+        Locale.tr("month_march"),
+        Locale.tr("month_april"),
+        Locale.tr("month_may"),
+        Locale.tr("month_june"),
+        Locale.tr("month_july"),
+        Locale.tr("month_august"),
+        Locale.tr("month_september"),
+        Locale.tr("month_october"),
+        Locale.tr("month_november"),
+        Locale.tr("month_december")
+    ]
+};
 
-const VISIBLE_PERIOD = arguments.period // months
-const CALENDAR_NAME = arguments.calendar
-const COLOR_MODE = arguments.mode
-const TRIM_BLANK = arguments.trimBlank ?? false
 
-const TIMEZONE = locale.getLabel("timezone")
-const MONTHS = [
-  locale.getLabel("month_january"),
-  locale.getLabel("month_february"),
-  locale.getLabel("month_march"),
-  locale.getLabel("month_april"),
-  locale.getLabel("month_may"),
-  locale.getLabel("month_june"),
-  locale.getLabel("month_july"),
-  locale.getLabel("month_august"),
-  locale.getLabel("month_september"),
-  locale.getLabel("month_october"),
-  locale.getLabel("month_november"),
-  locale.getLabel("month_december")
-]
-
-const chartWidget = chart.generateChartWidget({
-    chart: {
-      data: await getChartData(TRIM_BLANK),
-      xField: "month",
-      yField: "amount",
-      showTooltips: true,
-      tooltipFontSize: 30,
-      gridLineWidth: 1,
-      gridColor: conf.get(new Color("FEFBFA10"), new Color("707070")),
-      tooltipColor: new Color("999")
-    }
-}, COLOR_MODE)
-
-Script.setWidget(chartWidget)
-Script.complete()
-
-async function getChartData(skipBlank) {
+class CalendarChartDataRepository {
+    
+    async getChartData() {
   
-  let dateRange = getDateRange()
-  let dataset = []
-  
-  const calendar = await Calendar.forEventsByTitle(CALENDAR_NAME)
-  
-  for (let i = 0; i + 1 < dateRange.length; i++) {
+        let dateRange = this.__getDateRange();
+        let dataset = [];
         
-    let startDate = dateRange[i]
-    let endDate = dateRange[i + 1]
+        const calendar = await Calendar.forEventsByTitle(conf.args.calendar);
+        
+        for (let i = 0; i + 1 < dateRange.length; i++) {
+                
+            let startDate = dateRange[i];
+            let endDate = dateRange[i + 1];
+            
+            const events = await CalendarEvent.between(
+                startDate,
+                endDate, 
+                [calendar]
+            );
+            
+            dataset.push({
+                month: conf.months[startDate.getMonth()],
+                amount: events.length
+            });
+        }
+        
+        if (conf.args.skipBlank) {
+        
+            let datasetCopy = dataset;
+            
+            for (let i = datasetCopy.length - 1; i >= 0; i--) {
+            
+                if (datasetCopy[i].amount > 0) {
+                    break;
+                }
+                
+                let idx = dataset.indexOf(datasetCopy[i]);
+                dataset.splice(idx, 1);
+            }
+        }
     
-    const events = await CalendarEvent.between(
-          startDate,
-          endDate, 
-          [calendar]
-      )
-    
-    dataset.push({
-      month: MONTHS[startDate.getMonth()],
-      amount: events.length
-    })
-  }
-  
-  if (skipBlank) {
-    
-    let datasetCopy = dataset
-    
-    for (let i = datasetCopy.length - 1; i >= 0; i--) {
-      
-      if (datasetCopy[i].amount > 0) {
-        break
-      }
-      
-      let idx = dataset.indexOf(datasetCopy[i])
-      dataset.splice(idx, 1)
+        return dataset;
     }
-  }
-
-  return dataset
-}
-
-function getDateRange() {
-  let currentDate = new Date()
-  let dates = new Array()
-  
-  let monthId = currentDate.getMonth()
-  
-  for (let i = VISIBLE_PERIOD - 1; i >= 0; i--) {
     
-    let date = new Date(
-      currentDate.getFullYear(),
-      monthId - i,
-      1
-    )
-    dates.push(date)
-  }
-  
-  dates.push(currentDate)
-  
-  return dates.map(date => 
-    new Date(date.toLocaleString(
-      'en-US', {
-        timeZone: TIMEZONE
-      })
-    )
-  )
+    __getDateRange() {
+    
+        let currentDate = new Date();
+        let dates = new Array();
+        let monthId = currentDate.getMonth();
+        
+        for (let i = conf.args.period - 1; i >= 0; i--) {
+            
+            let date = new Date(
+                currentDate.getFullYear(),
+                monthId - i,
+                1
+            );
+
+            dates.push(date);
+        }
+        
+        dates.push(currentDate);
+        
+        return dates.map(date => 
+            new Date(date.toLocaleString(
+                'en-US', {
+                    timeZone: conf.timeZone
+                })
+            )
+        );
+    }
 }
+
+
+function getArguments() {
+
+    let arguments = JSON.parse(args.widgetParameter);
+
+    if (conf.debug.enabled) {
+        arguments = {
+            // Period in months
+            period: 5,
+            calendar: "Робочий",
+            mode: "dark",
+            trimBlank: true
+        };
+    }
+
+    if (!arguments.trimBlank) {
+        arguments.trimBlank = false;
+    }
+
+    return arguments;
+}
+
+conf.args = getArguments();
+const repository = new CalendarChartDataRepository();
+
+const chart = new LinearChart({
+    chart: {
+        data: await repository.getChartData(),
+        xField: "month",
+        yField: "amount",
+        showTooltips: true,
+        tooltipFontSize: 30,
+        gridLineWidth: 1,
+        gridColor: themed(new Color("FEFBFA10"), new Color("707070")),
+        tooltipColor: new Color("999")
+    }
+}, conf.args.mode);
+
+if (conf.debug.enabled) {
+    chart.getWidget().presentMedium();
+
+} else {
+    present(chart.getWidget());
+}
+
+Script.complete();

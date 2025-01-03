@@ -2,7 +2,14 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: gray; icon-glyph: moon;
 
-const ui = importModule("UI");
+const {
+    spacer,
+    stack,
+    text,
+    image,
+    rootWidget,
+    present
+} = importModule("UI");
 
 
 const conf = {
@@ -199,6 +206,10 @@ class OeIfScheduleWebView extends ScheduleWebView {
         let tomorrow;
 
         let queue = await this.__getQueueNumber();
+        
+        if (!queue) {
+            return null;
+        }
 
         let webView = await this.__getWebView();
         let scheduleList = await webView.evaluateJavaScript(this.__getDownloadSchedulesByQueueJSPayload());
@@ -276,6 +287,10 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
         let webView = await this.__getWebView();
         let response = await webView.evaluateJavaScript(this.__getDownloadScheduleJSPayload());
+        
+        if (!response) {
+            return null;
+        }
 
         let queue = response.current.queue;
         let subQueue = response.current.subqueue;
@@ -524,7 +539,7 @@ class ScheduleWidget {
         // This is triggered when schedule data was
         // not loaded due to connection issues.
         if (!webView.isAvailable()) {
-            ui.present(this.__getNotAvailableRootWidget());
+            present(this.__getNotAvailableRootWidget());
             return;
         }
 
@@ -532,17 +547,17 @@ class ScheduleWidget {
         const todaySchedule = webView.getToday();
 
         // Render header of widget (icon + address).
-        const headerStack = ui.stack().renderFor(root);
+        const headerStack = stack().renderFor(root);
         
-        ui.image()
+        image()
             .icon("lightbulb.slash")
             .size(15)
             .regularWeight()
             .renderFor(headerStack);
             
-        ui.spacer().renderFor(headerStack, 5);
+        spacer().renderFor(headerStack, 5);
         
-        ui.text()
+        text()
             .content(conf.address.shortAddress)
             .limit(16)
             .blackRoundedFont(10)
@@ -554,18 +569,18 @@ class ScheduleWidget {
             this.__renderTomorrowScheduleIndicator(root, webView.getTomorrow());
         }
 
-        ui.spacer().renderFor(root);
+        spacer().renderFor(root);
 
         // Show placeholder when there are no outages planned for today.
         if (!todaySchedule.hasNext()) {
-            ui.image()
+            image()
                 .icon("lightbulb.fill")
                 .size(46)
                 .yellowColor()
                 .heavyWeight()
                 .renderFor(root);
                 
-            ui.spacer().renderFor(root);
+            spacer().renderFor(root);
         }
 
         // Add each outage record.
@@ -574,11 +589,11 @@ class ScheduleWidget {
 
             // Don't add spacing after last outage record.
             if (todaySchedule.hasNext()) {
-                ui.spacer().renderFor(root, 5);
+                spacer().renderFor(root, 5);
             }
         }
 
-        ui.present(root);
+        present(root);
     }
 
     /**
@@ -589,8 +604,8 @@ class ScheduleWidget {
      */
     __renderOutageRecord(root, outageRecord) {
 
-        let outageIcon = ui.image();
-        let outagePeriodText = ui.text();
+        let outageIcon = image();
+        let outagePeriodText = text();
         
         // Change styling of outages that may not occur.
         if (outageRecord.isProbable()) {
@@ -608,13 +623,13 @@ class ScheduleWidget {
             outagePeriodText.opacity(0.6);
         }
 
-        let outageStack = ui.stack().renderFor(root);
+        let outageStack = stack().renderFor(root);
         
         outageIcon
             .size(16)
             .renderFor(outageStack);
         
-        ui.spacer().renderFor(outageStack, 2);
+        spacer().renderFor(outageStack, 2);
         
         outagePeriodText
             .content(outageRecord.toString())
@@ -637,12 +652,12 @@ class ScheduleWidget {
             indicatorColor = Color.red();
         }
 
-        ui.spacer().renderFor(root, 2);
+        spacer().renderFor(root, 2);
             
-        const newScheduleStack = ui.stack().renderFor(root);
+        const newScheduleStack = stack().renderFor(root);
         
-        ui.spacer().renderFor(newScheduleStack, 3);
-        ui.image()
+        spacer().renderFor(newScheduleStack, 3);
+        image()
             .icon("info.circle.fill")
             .size(10)
             .color(indicatorColor)
@@ -650,8 +665,8 @@ class ScheduleWidget {
             .opacity(0.7)
             .renderFor(newScheduleStack);
 
-        ui.spacer().renderFor(newScheduleStack, 3);
-        ui.text()
+        spacer().renderFor(newScheduleStack, 3);
+        text()
             .content("new")
             .blackRoundedFont(10)
             .opacity(0.9)
@@ -668,13 +683,13 @@ class ScheduleWidget {
 
         const root = this.__createRootWidget();
 
-        ui.spacer().renderFor(root);
-        ui.image()
+        spacer().renderFor(root);
+        image()
             .icon("network.slash")
             .size(46)
             .heavyWeight()
             .renderFor(root);
-        ui.spacer().renderFor(root);
+        spacer().renderFor(root);
         
         return root;
     }
@@ -686,13 +701,13 @@ class ScheduleWidget {
      */
     __createRootWidget() {
 
-        const rootWidget = ui.rootWidget()
+        const root = rootWidget()
         
         if (conf.showGradient) {
-            conf.styleGradient(rootWidget);
+            conf.styleGradient(root);
         }
         
-        return rootWidget.render();
+        return root.render();
     }
 }
 

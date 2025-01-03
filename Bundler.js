@@ -1,17 +1,18 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-archive;
-const alertUtil = importModule("Alert Util")
-const locale = importModule("Locale")
 
-await locale.registerLabels({
+const { AlertUtil } = importModule("Alert Util");
+const { Locale } = importModule("Locale");
+
+await Locale.registerLabels({
     "select_script_to_bundle": "Select Script to Bundle",
     "bundle_prefix": " (Bundled)"
-})
+});
 
-const NOT_BUNDLEABLE_TAG = "Not Bundleable"
-const IMPORT_SCRIPTS_REGEXP = /\s*(?:const|var|let)\s+\w+\s+=\s+importModule\((?:"|')(?<name>.+)(?:"|')\)/g
-const IMPORT_REGEXP = (importName) => new RegExp("importModule\\((\"|\')" + importName + "(\"|\')\\)", "g")
+const NOT_BUNDLEABLE_TAG = "Not Bundleable";
+const IMPORT_SCRIPTS_REGEXP = /\s*(?:const|var|let)\s+\w+\s+=\s+importModule\((?:"|')(?<name>.+)(?:"|')\)/g;
+const IMPORT_REGEXP = (importName) => new RegExp("importModule\\((\"|\')" + importName + "(\"|\')\\)", "g");
 
 
 const fm = FileManager.iCloud()
@@ -36,8 +37,8 @@ async function selectScript() {
         .map(script => script.replace(".js", ""))
         .sort()
         
-    let result = await alertUtil.createCancelableAlert({
-        title: locale.getLabel("select_script_to_bundle"),
+    let result = await AlertUtil.createCancelableAlert({
+        title: Locale.tr("select_script_to_bundle"),
         actions: scriptList
     })
     
@@ -131,7 +132,7 @@ function readScript(scriptName) {
 
 function saveScript(scriptName, content) {
     
-    let newFileName = scriptName + locale.getLabel("select_script_to_bundle") + ".js"
+    let newFileName = scriptName + Locale.tr("select_script_to_bundle") + ".js"
     let newFilePath = fm.joinPath(
         fm.documentsDirectory(),
         newFileName

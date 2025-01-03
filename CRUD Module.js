@@ -2,12 +2,14 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: database;
 
+const { FileUtil } = importModule("File Util");
+const { AlertUtil } = importModule("Alert Util");
+const { Locale } = importModule("Localization");
+const { ConfigStore } = importModule("Config Util");
+
 const root = {
-    
-    fileImport: importModule("File Util"),
-    alertImport: importModule("Alert Util"),
-    configImport: importModule("Config Util"),
-    locale: importModule("Localization"),
+
+    __configStore: new ConfigStore(),
     
     inputs: {
         datePicker: "datePicker",
@@ -50,16 +52,13 @@ const root = {
     
     buildTable: async configIn => {
         
-        root.configImport.store.config = root.defaultConfig
+        root.__configStore.setConfig(root.defaultConfig);
+        root.__configStore.overrideConfig(configIn);
         
-        if (configIn != undefined) {
-            root.configImport.store.userConfig = configIn
-        }
-        
-        root.table.showSeparators = root.configImport.conf("showSeparators")
+        root.table.showSeparators = root.__configStore.get("showSeparators")
         root.tableData = root.getData()
         
-        let sortFunction = root.configImport.conf("sort")
+        let sortFunction = root.__configStore.get("sort")
         
         if (sortFunction) {
             root.tableData = root.tableData.sort(sortFunction)
@@ -90,7 +89,7 @@ const root = {
         for (filterField of Object.keys(filters)) {
             
             let filterValue = filters[filterField]
-            let filterType = root.configImport.conf("filterFields")
+            let filterType = root.__configStore.get("filterFields")
                 .find(field => field.var === filterField).type
                 
             let filterFunction = null
@@ -118,20 +117,20 @@ const root = {
         
         adminRow.isHeader = true
         adminRow.cellSpacing = 0.1
-        adminRow.backgroundColor = root.configImport.conf("header.backgroundColor")
+        adminRow.backgroundColor = root.__configStore.get("header.backgroundColor")
         
-        const label = adminRow.addText(root.locale.getLabel("headerTitle"))
+        const label = adminRow.addText(Locale.tr("headerTitle"))
         label.widthWeight = 410
-        label.titleColor = root.configImport.conf("header.titleColor")
+        label.titleColor = root.__configStore.get("header.titleColor")
         
-        if (root.configImport.conf("filterFields").length > 0) {
+        if (root.__configStore.get("filterFields").length > 0) {
             
-            const filterCell = adminRow.addButton(root.locale.getLabel("headerFilterButton"))
+            const filterCell = adminRow.addButton(Locale.tr("headerFilterButton"))
             filterCell.widthWeight = 40
             filterCell.onTap = root.openFilterPopup
         }
         
-        const addNewCell = adminRow.addButton(root.locale.getLabel("headerCreateButton"))
+        const addNewCell = adminRow.addButton(Locale.tr("headerCreateButton"))
         addNewCell.widthWeight = 40
         addNewCell.onTap = async () => {
             const record = await root.createNewRecord()
@@ -148,11 +147,11 @@ const root = {
     
     openFilterPopup: async () => {
         
-        let clearAllAction = root.locale.getLabel("clearAllFiltersAction")
+        let clearAllAction = Locale.tr("clearAllFiltersAction")
         let appliedFilters = Object.keys(root.getAppliedFilters())
         
-        let filterAppliedLabel = root.locale.getLabel("filterAppliedIndicator")
-        let filterFields = root.configImport.conf("filterFields")
+        let filterAppliedLabel = Locale.tr("filterAppliedIndicator")
+        let filterFields = root.__configStore.get("filterFields")
             .map(field => {
                 let prefix = ""
                 
@@ -167,9 +166,9 @@ const root = {
         let actions = filterFields.map(field => field.popupLabel)
         actions.push(clearAllAction)
         
-        const result = await root.alertImport.createCancelableAlert({
+        const result = await AlertUtil.createCancelableAlert({
             actions: actions,
-            title: root.locale.getLabel("filterSelectionPopupTitle")
+            title: Locale.tr("filterSelectionPopupTitle")
         })
         
         if (result.isCancelled) {
@@ -196,17 +195,17 @@ const root = {
         let filter = filters[field.var]
         
         const getAction = (condition, label) => {
-            let filterAppliedLabel = root.locale.getLabel("filterAppliedIndicator")
+            let filterAppliedLabel = Locale.tr("filterAppliedIndicator")
             let indicator = (condition ? filterAppliedLabel : "")
             return label.replace("%{applied}", indicator).trim()
         }
         
-        let yesAction = getAction(filter === true, root.locale.getLabel("yesBooleanAction"))
-        let noAction = getAction(filter === false, root.locale.getLabel("noBooleanAction"))
-        let clearAction = root.locale.getLabel("clearFilterAction")
+        let yesAction = getAction(filter === true, Locale.tr("yesBooleanAction"))
+        let noAction = getAction(filter === false, Locale.tr("noBooleanAction"))
+        let clearAction = Locale.tr("clearFilterAction")
         
-        let result = await root.alertImport.createCancelableAlert({
-            title: root.locale.getLabel("filterPopupTitle").replace("%{filterName}", field.label),
+        let result = await AlertUtil.createCancelableAlert({
+            title: Locale.tr("filterPopupTitle").replace("%{filterName}", field.label),
             actions: [yesAction, noAction, clearAction]
         })
         
@@ -230,11 +229,11 @@ const root = {
         let filters = root.getAppliedFilters()
         let filter = filters[field.var]
         
-        let applyFilterAction = root.locale.getLabel("applyFilterAction")
-        let clearFilterAction = root.locale.getLabel("clearFilterAction")
+        let applyFilterAction = Locale.tr("applyFilterAction")
+        let clearFilterAction = Locale.tr("clearFilterAction")
         
-        let result = await root.alertImport.createCancelableAlert({
-            title: root.locale.getLabel("filterPopupTitle").replace("%{filterName}", field.label),
+        let result = await AlertUtil.createCancelableAlert({
+            title: Locale.tr("filterPopupTitle").replace("%{filterName}", field.label),
             actions: [applyFilterAction, clearFilterAction],
             fields: [{
                 var: field.var,
@@ -259,25 +258,25 @@ const root = {
     
     
     getAppliedFilters: () => {
-        return JSON.parse(root.fileImport.getConfiguration(
-            root.configImport.conf("filterStorageFile"),
-            "{}"
-        ))
+        return FileUtil.readLocalJson(
+            root.__configStore.get("filterStorageFile"),
+            {}
+        );
     },
     
     
     updateFilters: async content => {
-        await root.fileImport.updateConfiguration(
-            root.configImport.conf("filterStorageFile"),
-            JSON.stringify(content)
-        )
+        await FileUtil.updateLocalJson(
+            root.__configStore.get("filterStorageFile"),
+            content
+        );
     },
     
     
     addEntryRow: async (rowData) => {
         let row = new UITableRow()
         
-        let fields = root.configImport.conf("fields")
+        let fields = root.__configStore.get("fields")
         
         for (let field of fields) {
             let btnLabel = field.label
@@ -313,8 +312,8 @@ const root = {
     
     addDeleteField: async (row, rowData) => {
         
-        let deleteBtn = row.addButton(root.locale.getLabel("deleteFieldLabel"))
-        deleteBtn.widthWeight = root.configImport.conf("deleteField.weight")
+        let deleteBtn = row.addButton(Locale.tr("deleteFieldLabel"))
+        deleteBtn.widthWeight = root.__configStore.get("deleteField.weight")
         deleteBtn.onTap = async () => {
             let res = await root.deleteRecord(row, rowData)
             
@@ -365,7 +364,7 @@ const root = {
         
         if (actions.length == 0) {
             
-            let defaultUpdateLabel = root.locale.getLabel("formDefaultUpdateLabel")
+            let defaultUpdateLabel = Locale.tr("formDefaultUpdateLabel")
             
             handler.defaultAction = defaultUpdateLabel
             actions = defaultUpdateLabel
@@ -375,7 +374,7 @@ const root = {
             fields[i].initial = rowData[fields[i].var]
         }
         
-        const result = await root.alertImport.createCancelableAlert({
+        const result = await AlertUtil.createCancelableAlert({
             fields: fields,
             actions: actions,
             title: title
@@ -385,7 +384,7 @@ const root = {
             return -1
         }
         
-        let onChangeCallback = root.configImport.conf("onChange")
+        let onChangeCallback = root.__configStore.get("onChange")
         
         if (handler.defaultAction == result.choice) {
             
@@ -434,7 +433,7 @@ const root = {
     
     handleDatePicker: async (field, rowData, handler) => {
         
-        const onChangeCallback = root.configImport.conf("onChange")
+        const onChangeCallback = root.__configStore.get("onChange")
         const datePicker = new DatePicker()
         
         let updatedData = {}
@@ -483,7 +482,7 @@ const root = {
         let lastChoice = ""
         
         do {
-            let res = await root.alertImport.createCancelableAlert({
+            let res = await AlertUtil.createCancelableAlert({
                 actions: ["Add", "Done"],
                 title: field.title,
                 fields: [{
@@ -512,8 +511,8 @@ const root = {
             id: await root.getAndIncreaseSequence()
         }
         
-        const dataDefaults = root.configImport.conf("dataDefaults")
-        const creationFields = root.configImport.conf("creationFields")
+        const dataDefaults = root.__configStore.get("dataDefaults")
+        const creationFields = root.__configStore.get("creationFields")
         
         for (let rec of dataDefaults) {
             data[rec.var] = rec.default
@@ -577,46 +576,37 @@ const root = {
     },
     
     getData: () => {
-        let file = root.fileImport.getExtConfiguration(
-            root.configImport.conf("storageFile"), 
-            "[]",
-            root.configImport.conf("storageScript")
-        )
-        return JSON.parse(file)
+        return FileUtil.readJson(
+            root.__configStore.get("storageScript"),
+            root.__configStore.get("storageFile"),
+            []
+        );
     },
     
     getAndIncreaseSequence: async () => {
-        let file = root.fileImport.getConfiguration(
-            "sequence.json", JSON.stringify({
-                next: 0
-            })
-        )
-        
-        let sequence = JSON.parse(file)
-        let nextValue = sequence.next
-        
+
+        let sequence = FileUtil.readLocalJson("sequence.json", {next: 0});
+
         sequence.next += 1
         
-        await root.fileImport.updateConfiguration(
-            "sequence.json", JSON.stringify(sequence)
-        )
-        
-        return nextValue
+        await FileUtil.updateLocalJson("sequence.json", sequence);
+        return sequence.next;
     },
     
     
     saveData: async () => {
-        await root.fileImport.updateConfiguration(
-            root.configImport.conf("storageFile"), 
-            JSON.stringify(root.tableData))
+        await FileUtil.updateLocalJson(
+            root.__configStore.get("storageFile"),
+            root.tableData
+        );
     },
     
     
     deleteRecord: async (rowData, row) => {
         
-        const result = await root.alertImport.createCancelableAlert({
-            title: root.locale.getLabel("deleteFieldMessage"),
-            actions: root.locale.getLabel("deleteFieldConfirmAction")
+        const result = await AlertUtil.createCancelableAlert({
+            title: Locale.tr("deleteFieldMessage"),
+            actions: Locale.tr("deleteFieldConfirmAction")
         })
         
         if (!result.isCancelled) {
@@ -647,7 +637,7 @@ const root = {
     }
 }
 
-root.locale.registerLabels({
+Locale.registerLabels({
     "deleteFieldConfirmAction": "Yes",
     "deleteFieldMessage": "Are you sure?",
     "deleteFieldLabel": "🗑️",

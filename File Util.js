@@ -2,88 +2,109 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: copy;
 
-const root = {
-    
-    manager: FileManager.iCloud(),
-    getScriptableDir: () => root.joinPaths([
-        root.manager.documentsDirectory(),
-        "Resources"
-    ]),
-    
-    updateConfiguration: async (fileName, content) => {
-        await root.updateExtConfiguration(fileName, content, Script.name())
-    },
-    
-    updateExtConfiguration: async (fileName, content, scriptName) => {
-        
-        const manager = root.manager
-        const targetDirectory = root.joinPaths(
-            [root.getScriptableDir(), scriptName])
-        
-        if (!manager.isDirectory(targetDirectory)) {
-            manager.createDirectory(targetDirectory, true)
-        }
-        
-        const targetFile = manager.joinPath(targetDirectory, fileName)
-            
-        await manager.write(targetFile, root.__castToData(content))
-    },
-    
-    getConfiguration: (fileName, defaultValue) => {
-        return root.__doGetConfiguration(fileName, defaultValue, Script.name())
-    },
-    
-    getExtConfiguration: (fileName, defaultValue, scriptName) => {
-        return root.__doGetConfiguration(fileName, defaultValue, scriptName)
-    },
-    
-    findExtConfigurations: (fileNameRegex, scriptName) => {
-        
-        let scriptDir = root.joinPaths(
-            [root.getScriptableDir(), scriptName]
-        )
-        
-        if (!root.manager.isDirectory(scriptDir)) {
-            return []
-        }
-        
-        return root.manager.listContents(scriptDir)
-            .filter(fileName => fileName.match(fileNameRegex))
-    },
+class FileUtil {
 
-    joinPaths: paths => {
-        let resultPath = ""
+    static __manager = FileManager.iCloud();
+
+    static async updateLocalJson(fileName, content) {
+        await this.updateJson(Script.name(), fileName, content);
+    }
+
+    static async updateJson(scriptName, fileName, content) {
+        await this.updateFile(scriptName, fileName, JSON.stringify(content));
+    }
+    
+    static async updateLocalFile(fileName, content) {
+        await this.updateFile(Script.name(), fileName, content);
+    }
+    
+    static async updateFile(scriptName, fileName, content) {
+        
+        const targetDirectory = this.joinPaths(
+            this.__getScriptableDir(), 
+            scriptName
+        );
+        
+        if (!this.__manager.isDirectory(targetDirectory)) {
+            this.__manager.createDirectory(targetDirectory, true);
+        }
+        
+        const targetFile = this.joinPaths(targetDirectory, fileName); 
+        await this.__manager.write(targetFile, this.__castToData(content));
+    }
+
+    static readLocalJson(fileName, defautlValue) {
+        return this.readJson(Script.name(), fileName, defautlValue);
+    }
+
+    static readJson(scriptName, fileName, defaultValue) {
+        let content = this.readFile(scriptName, fileName, defaultValue);
+
+        if (typeof content === 'string') {
+            content = JSON.parse(content);
+        }
+
+        return content;
+    }
+    
+    static readLocalFile(fileName, defaultValue) {
+        return this.readFile(Script.name(), fileName, defaultValue);
+    }
+    
+    static readFile(scriptName, fileName, defaultValue) {
+
+        const targetFile = this.joinPaths(
+            this.__getScriptableDir(), 
+            scriptName, 
+            fileName
+        );
+        
+        if (!this.__manager.fileExists(targetFile)) {
+            console.warn("File does not exist: " + targetFile);
+            return defaultValue;
+        }
+        
+        return this.__manager.readString(targetFile);
+    }
+    
+    static findFiles(scriptName, fileNameRegex) {
+        
+        const scriptDirectory = this.joinPaths(
+            this.__getScriptableDir(), 
+            scriptName
+        );
+        
+        if (!this.__manager.isDirectory(scriptDirectory)) {
+            return [];
+        }
+        
+        return this.__manager.listContents(scriptDirectory)
+            .filter(fileName => fileName.match(fileNameRegex));
+    }
+
+    static joinPaths(...paths) {
+        
+        let resultPath = "";
         
         for (let path of paths) {
-            resultPath = root.manager.joinPath(resultPath, path)
+            resultPath = this.__manager.joinPath(resultPath, path);
         }
         
-        return resultPath
-    },
+        return resultPath;
+    }
+
+    static __getScriptableDir() {
+        return this.joinPaths(
+            this.__manager.documentsDirectory(),
+            "Resources"
+        );
+    }
     
-    __doGetConfiguration: (fileName, defaultValue, scriptName) => {
-        const targetFile = root.joinPaths(
-            [root.getScriptableDir(), scriptName, fileName]
-        )
-        
-        if (!root.manager.fileExists(targetFile)) {
-            
-            console.warn("File does not exist: " + targetFile)
-            return defaultValue
-        }
-        
-        return root.manager.readString(targetFile)
-    },
-    
-    
-    __castToData: content => {
-        return Data.fromString(String(content))
+    static __castToData(content) {
+        return Data.fromString(String(content));
     }
 }
 
-module.exports.updateConfiguration = root.updateConfiguration
-module.exports.updateExtConfiguration = root.updateExtConfiguration
-module.exports.getConfiguration = root.getConfiguration
-module.exports.getExtConfiguration = root.getExtConfiguration
-module.exports.findExtConfigurations = root.findExtConfigurations
-module.exports.joinPaths = root.joinPaths;
+module.exports = {
+    FileUtil
+};

@@ -2,13 +2,56 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: cogs;
 
-const root = {
-    store: {
-        colorMode: "dark",
-        config: {},
-        userConfig: {}
-    },
-    
+class ConfigStore {
+
+    constructor() {
+        this.__config = {};
+        this.__userConfig = {};
+        this.__colorMode = "dark";
+    }
+
+    setConfig(config) {
+        this.__config = config;
+    }
+
+    overrideConfig(config) {
+
+        if (config) {
+            this.__userConfig = config;
+        }
+    }
+
+    setColorMode(colorMode) {
+        this.__colorMode = colorMode;
+    }
+
+    /*
+    * Used to return configuration value.
+    * If value is present in config
+    * provided by user, it would be used
+    * otherwise default one will be returned
+    *
+    * @param fieldStr - configuration key
+    *
+    * @return user-provided or default 
+    * configuration value
+    */
+    get(fieldName) {
+      
+        const fieldArray = fieldName.split(".");
+        
+        const configValue = this.__getField(this.__config, fieldArray);
+        const userConfigValue = this.__getField(this.__userConfig, fieldArray);
+        
+        let value = configValue;
+
+        if (userConfigValue) {
+            value = userConfigValue;
+        }
+
+        return value;
+    }
+
     /*
     * Used to get value from provided
     * object by iterating through nested 
@@ -21,70 +64,54 @@ const root = {
     *
     * @return field from config
     */
-    getField: (c, fArr) => {
-        configValue = c
-        for (field of fArr) {
-          let nextValue = configValue[field]
+    __getField(config, propertyChain) {
+
+        let configValue = config;
+
+        for (let property of propertyChain) {
           
-          if (nextValue == undefined) {
-            configValue = null
-            break
-          }
+            let nextValue = configValue[property];
+          
+            if (nextValue == undefined) {
+                configValue = null;
+                break;
+            } 
         
-          configValue = nextValue
+            configValue = nextValue;
         }
         
         if (Array.isArray(configValue) &&
-          configValue.length == 2 &&
+            configValue.length == 2 &&
             configValue[0].hasOwnProperty("cnfgDark") &&
-            configValue[1].hasOwnProperty("cnfgLight")) {
-          
-          configValue = root.store.colorMode == "dark" ?
-            configValue[0].cnfgDark : configValue[1].cnfgLight
+            configValue[1].hasOwnProperty("cnfgLight")
+        ) {
+            let valuePosition = this.__colorMode == "dark" ? 0 : 1;
+            let valueKey = this.__colorMode == "dark" ? "cnfgDark" : "cnfgLight";
+            configValue = configValue[valuePosition][valueKey];
         }
         
-        return configValue
-    },
-    
-    /*
-    * Used to return configuration value.
-    * If value is present in config
-    * provided by user, it would be used
-    * otherwise default one will be returned
-    *
-    * @param fieldStr - configuration key
-    *
-    * @return user-provided or default 
-    * configuration value
-    */
-    conf: fieldStr => {
-      
-      const fieldArr = fieldStr.split(".")
-      
-      const configValue = root.getField(root.store.config, fieldArr)
-      const userConfigValue = root.getField(root.store.userConfig, fieldArr)
-      
-      return userConfigValue != null 
-        ? userConfigValue : configValue
-    },
-    
-    /**
-    * Used to return value based on current
-    * device theme
-    *
-    * @param dark - parameter that would
-    * be used when dark theme is enabled
-    * 
-    * @param light - parameter that would
-    * be used when light theme is enabled
-    * 
-    *
-    * @return theme specific value
-    */
-    get: (dark, light) => [{cnfgDark: dark}, {cnfgLight: light}]
+        return configValue;
+    }
 }
 
+/**
+* Used to return value based on current
+* device theme
+*
+* @param dark - parameter that would
+* be used when dark theme is enabled
+* 
+* @param light - parameter that would
+* be used when light theme is enabled
+* 
+*
+* @return theme specific value
+*/
+function themed(dark, light) {
+    return [{cnfgDark: dark}, {cnfgLight: light}];
+}
 
-module.exports.store = root.store
-module.exports.conf = root.conf
-module.exports.get = root.get
+module.exports = {
+    ConfigStore,
+    themed
+};

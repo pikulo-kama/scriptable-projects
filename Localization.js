@@ -2,49 +2,52 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: language;
 
-const root = {
-    
-    fileUtil: importModule("File Util"),
-    localizationFileTemplate: "locale{}.json",
-    
-    registerLabels: async labelsObject => {
+const { FileUtil } = importModule("File Util");
+
+class Locale {
+
+    static __LOCALE_FILE_TEMPLATE = "locale{}.json";
+
+    static tr(key) {
+        return this.__getLocaleFile()[key];
+    }
+
+    static async registerLabels(labelsMap) {
         
-        let labels = root.getLocaleFile()
+        let labels = this.__getLocaleFile();
         
-        for (let labelKey of Object.keys(labelsObject)) {
+        for (let labelKey of Object.keys(labelsMap)) {
             
             if (!labels[labelKey]) {
-                labels[labelKey] = labelsObject[labelKey]
+                labels[labelKey] = labelsMap[labelKey];
             }
         }
         
-        await root.updateLocaleFile(labels)
-    },
+        await this.__updateLocaleFile(labels);
+    }
     
-    getLabel: (key) => {
-        let labels = root.getLocaleFile()
-        return labels[key]
-    },
+    static __getLocaleFile() {
+        let fileName = this.__getLocaleFileName(Device.language());
+        return FileUtil.readLocalJson(fileName, {});
+    }
     
-    getLocaleFile: () => {
-        
-        let fileName = root.getLocaleFileName(Device.language())
-            
-        let content = root.fileUtil.getConfiguration(fileName, "{}")
-        return JSON.parse(content)
-    },
+    static async __updateLocaleFile(content) {   
+        let fileName = this.__getLocaleFileName(Device.language());
+        await FileUtil.updateLocalJson(fileName, content);
+    }
     
-    updateLocaleFile: async content => {
-        
-        let fileName = root.getLocaleFileName(Device.language())
-        await root.fileUtil.updateConfiguration(fileName, JSON.stringify(content))
-    },
-    
-    getLocaleFileName: locale => {
-        return root.localizationFileTemplate
-            .replace("{}", locale ? "_" + locale : "")
+    static __getLocaleFileName(locale) {
+
+        let languageCode = "";
+
+        if (locale) {
+            languageCode = "_" + locale;
+        }
+
+        return Locale.__LOCALE_FILE_TEMPLATE.replace("{}", languageCode);
     }
 }
 
-module.exports.registerLabels = root.registerLabels
-module.exports.getLabel = root.getLabel
+module.exports = {
+    Locale
+};

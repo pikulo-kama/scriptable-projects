@@ -2,151 +2,159 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: hdd;
 
-const root = {
-    
-    fileImport: importModule("File Util"),
-    
-    fm: FileManager.local(),
-    cacheDir: () => root.fm.cacheDirectory(),
-    cacheFileName: "cache.json",
-
-    types: {
-        DATA: "data",
-        IMAGE: "image",
-        LIST: "list"
-    },
+const { FileUtil } = importModule("File Util");
 
 
-    getRequest: async (config, url) => {
+class CacheDataType {
+    static Data = "Data";
+    static Image = "Image";
+    static List = "List";
+}
 
-        let data = null
-        let rawData = null
+class CacheRequest {
+
+    static __FILE_NAME = "cache.json";
+    static __manager = FileManager.local();
+
+    static async get(url, config) {
+
+        let data = null;
+        let rawData = null;
 
         try {
-            rawData = await new Request(url).loadJSON()
+            rawData = await new Request(url).loadJSON();
 
-            data = await root.formatData(config, rawData)
-            await root.cacheData(data, url)
+            data = await this.__formatData(config, rawData);
+            await this.__cacheData(data, url);
 
         } catch (error) {
-            console.log(error)
-            console.log("Getting data from cache")
-            data = root.getFromCache(url)
+            console.log(error);
+            console.log("Getting data from cache");
+            data = this.__getFromCache(url);
         }
 
-        return data
-    },
+        return data;
+    }
 
+    static async __formatData(config, rawData) {
 
-    formatData: async (config, rawData) => {
-
-        let data = {}
+        let data = {};
 
         for (let fieldConfig of config) {
-            let fieldData = root.parseProp(fieldConfig.prop, rawData)
-            let key = fieldData.defaultAlias
-            let value = null
+
+            let fieldData = this.__parseProperty(fieldConfig.prop, rawData);
+            let key = fieldData.defaultAlias;
+            let value = null;
 
             if (fieldConfig.type == undefined) {
-                fieldConfig.type = root.types.DATA
+                fieldConfig.type = CacheDataType.Data;
             }
 
             if (fieldConfig.alias !== undefined) {
-                key = fieldConfig.alias
+                key = fieldConfig.alias;
             }
 
             switch (fieldConfig.type) {
-                case root.types.DATA:
-                    let rawValue = fieldData.value
+                case CacheDataType.Data:
+                    let rawValue = fieldData.value;
 
                     if (fieldConfig.transform != undefined) {
-                        value = fieldConfig.transform(rawValue)
+                        value = fieldConfig.transform(rawValue);
+
                     } else {
-                        value = rawValue
+                        value = rawValue;
                     }
-                    break
 
-                case root.types.IMAGE:
-                    value = await root.saveImage(fieldData.value)
-                    break
+                    break;
 
-                case root.types.LIST:
-                    value = await root.formatList(fieldConfig.mappings, fieldData.value)
-                    break
+                case CacheDataType.Image:
+                    value = await this.__saveImage(fieldData.value);
+                    break;
+
+                case CacheDataType.List:
+                    value = await this.__formatList(fieldConfig.mappings, fieldData.value);
+                    break;
             }
 
-            data[key] = value
+            data[key] = value;
         }
 
-        return data
-    },
+        return data;
+    }
 
+    static async __formatList(config, rawData) {
 
-    formatList: async (config, rawData) => {
-
-        let result = []
+        let result = [];
 
         if (!rawData) {
             return result;
         }
 
         for (let record of rawData) {
-            result.push(await root.formatData(config, record))
+            result.push(await this.__formatData(config, record));
         }
 
-        return result
-    },
+        return result;
+    }
 
+    static __parseProperty(prop, data) {
 
-    parseProp: (prop, data) => {
-        let parts = prop.split(".")
-        let resultData = data
+        let parts = prop.split(".");
+        let resultData = data;
 
         for (let part of parts) {
 
             if (resultData instanceof Array) {
-                resultData = null
-                break
+                resultData = null;
+                break;
             }
 
-            resultData = resultData[part]
+            resultData = resultData[part];
         }
 
         return {
             value: resultData,
             defaultAlias: parts[parts.length - 1]
-        }
-    },
+        };
+    }
 
+    static async __saveImage(imageUrl) {
 
-    saveImage: async imageUrl => {
-        let imageName = "CIMG-" + UUID.string() + ".jpeg"
-        let filePath = root.fm.joinPath(root.cacheDir(), imageName)
+        let imageName = "CIMG-" + UUID.string() + ".jpeg";
+        let filePath = this.__manager.joinPath(this.__manager.cacheDirectory(), imageName);
 
-        root.fm.writeImage(filePath, await new Request(imageUrl).loadImage())
+        this.__manager.writeImage(filePath, await new Request(imageUrl).loadImage());
+        return filePath;
+    }
 
-        return filePath
-    },
+    static async __cacheData(data, key) {
 
+        let cache = FileUtil.readLocalJson(this.__FILE_NAME, [])
+            .filter(entry => entry.id != key);
 
-    cacheData: async (data, key) => {
-        let cache = JSON.parse(root.fileImport.getConfiguration(root.cacheFileName, "[]"))
-
-        cache = cache.filter(e => e.id != key)
         cache.push({
             id: key,
             value: data
-        })
+        });
 
-        root.fileImport.updateConfiguration(root.cacheFileName, JSON.stringify(cache))
-    },
+        FileUtil.updateLocalJson(this.__FILE_NAME, cache);
+    }
 
+    static __getFromCache(key) {
+        
+        let value = null;
+        let entryFromCache = FileUtil.readLocalJson(this.__FILE_NAME, [])
+            .find(entry => entry.id == key);
 
-    getFromCache: key => {
-        let cache = JSON.parse(root.fileImport.getConfiguration(root.cacheFileName, "[]"))
-        return cache.find(e => e.id == key).value
+        if (entryFromCache) {
+            value = entryFromCache.value;
+        }
+        
+        return value;
     }
 }
 
-module.exports.types = root.types
-module.exports.getRequest = root.getRequest
+module.exports = {
+    CacheRequest,
+    CacheDataType
+};
