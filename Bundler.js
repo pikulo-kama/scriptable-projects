@@ -3,12 +3,8 @@
 // icon-color: purple; icon-glyph: file-archive;
 
 const { modal } = importModule("Modal");
-const { Locale } = importModule("Locale");
+const { tr } = importModule("Localization");
 
-await Locale.registerLabels({
-    "select_script_to_bundle": "Select Script to Bundle",
-    "bundle_prefix": " (Bundled)"
-});
 
 const NOT_BUNDLEABLE_TAG = "Not Bundleable";
 const IMPORT_SCRIPTS_REGEXP = /\s*(?:const|var|let)\s+\w+\s+=\s+importModule\((?:"|')(?<name>.+)(?:"|')\)/g;
@@ -38,7 +34,7 @@ async function selectScript() {
         .sort()
 
     let result = await modal()
-        .title(Locale.tr("select_script_to_bundle"))
+        .title(tr("select_script_to_bundle"))
         .actions(scriptList)
         .present();
     
@@ -132,7 +128,7 @@ function readScript(scriptName) {
 
 function saveScript(scriptName, content) {
     
-    let newFileName = scriptName + Locale.tr("select_script_to_bundle") + ".js"
+    let newFileName = scriptName + tr("select_script_to_bundle") + ".js"
     let newFilePath = fm.joinPath(
         fm.documentsDirectory(),
         newFileName

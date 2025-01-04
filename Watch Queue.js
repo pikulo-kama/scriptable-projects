@@ -3,7 +3,7 @@
 // icon-color: pink; icon-glyph: bars;
 const { FileUtil } = importModule("File Util");
 const { metadata, cacheRequest } = importModule("Cache");
-const { Locale } = importModule("Localization")
+const { tr } = importModule("Localization")
 const {
     spacer,
     stack,
@@ -36,18 +36,6 @@ const cacheMetadata = metadata()
             .add()
         .add()
     .create();
-
-await Locale.registerLabels({
-    "t_header": "⚪️ Watchlist",
-    "w_nothing": "Nothing",
-    "w_to_be_watched": "to be Watched",
-    "t_watchlist_no_data_header": "Watchlist is empty",
-    "t_watchlist_no_data_subheader": "Add new series in 'Stop Watcher' and make sure that ID is set",
-    "t_watchlist_empty_header": "Nothing to watch 😔",
-    "t_watchlist_empty_subheader": "Looks like you need to wait a little longer...",
-    "episode": " ep",
-    "episode_plural_ending": "s"
-})
 
 let series = getListOfSeries()
 
@@ -83,7 +71,7 @@ function buildWidget(seriesData) {
     
     // Nothing to be watched
     if (unwatchedEpisodes === 0) {
-        episodeCountWidget.content(Locale.tr("w_nothing"));
+        episodeCountWidget.content(tr("w_nothing"));
     
     // Display episode count
     } else {
@@ -99,7 +87,7 @@ function buildWidget(seriesData) {
     spacer().renderFor(root, 10);
     
     text()
-        .content(Locale.tr("w_to_be_watched"))
+        .content(tr("w_to_be_watched"))
         .blackMonospacedFont(18)
         .renderFor(root);
         
@@ -123,7 +111,7 @@ function buildTable(seriesData) {
     headerRow.backgroundColor = Color.darkGray()
     headerRow.cellSpacing = 100
 
-    headerRow.addText(Locale.tr("t_header"))
+    headerRow.addText(tr("t_header"))
     table.addRow(headerRow)
     
     let activeData = seriesData
@@ -149,16 +137,16 @@ function buildTable(seriesData) {
     if (seriesData.length === 0) {
 
         addMessageRow(
-            Locale.tr("t_watchlist_no_data_header"), 
-            Locale.tr("t_watchlist_no_data_subheader"),
+            tr("t_watchlist_no_data_header"), 
+            tr("t_watchlist_no_data_subheader"),
             table
         )
         
     } else if (activeData.length === 0) {
         
         addMessageRow(
-            Locale.tr("t_watchlist_empty_header"),
-            Locale.tr("t_watchlist_empty_subheader"),
+            tr("t_watchlist_empty_header"),
+            tr("t_watchlist_empty_subheader"),
             table
         )
     }
@@ -168,8 +156,8 @@ function buildTable(seriesData) {
 
 function getEpisodeCountLabel(episodeCount) {
     
-    let label = episodeCount + Locale.tr("episode")
-    let pluralEnding = Locale.tr("episode_plural_ending")
+    let label = episodeCount + tr("episode")
+    let pluralEnding = tr("episode_plural_ending")
     
     if (episodeCount > 1) {
         label += pluralEnding

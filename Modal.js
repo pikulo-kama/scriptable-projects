@@ -2,18 +2,18 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: exclamation-triangle;
 
-const { Locale } = importModule("Localization");
+const { tr } = importModule("Localization");
 
 
 class ModalRule {
 
     static NotEmpty = new ModalRule(
-        field => Locale.tr("err_field_cant_be_empty").replace("%field_name", field.label),
+        field => tr("err_field_cant_be_empty", field.label),
         value => !!value && String(value).length !== 0
     );
 
     static Number = new ModalRule(
-        field => Locale.tr("err_field_should_be_number").replace("%field_name", field.label),
+        field => tr("err_field_should_be_number", field.label),
         value => String(value).match("^[0-9]+$")
     );
 
@@ -107,7 +107,7 @@ class Modal {
     constructor() {
         this.__alert = new Alert();
         this.__title = "";
-        this.__cancelLabel = Locale.tr("default_cancel_action");
+        this.__cancelLabel = tr("default_cancel_action");
         this.__actions = [];
         this.__fields = [];
 
@@ -194,22 +194,14 @@ class Modal {
 
         let errorAlert = new Alert();
 
-        errorAlert.addAction(Locale.tr("error_modal_action"));
-        errorAlert.title = Locale.tr("error_modal_title");
+        errorAlert.addAction(tr("error_modal_action"));
+        errorAlert.title = tr("error_modal_title");
         errorAlert.message = message;
         
         await errorAlert.present();
     }
 }
 
-
-Locale.registerLabels({
-    "err_field_cant_be_empty": "Field '%field_name' cannot be empty",
-    "err_field_should_be_number": "Field '%field_name' should be a number",
-    "default_cancel_action": "Cancel",
-    "error_modal_action": "OK",
-    "error_modal_title": "⛔️ Error"
-});
 
 function modal() {
     return new Modal();

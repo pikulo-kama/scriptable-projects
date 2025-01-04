@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: chart-line;
 
-const { ConfigStore, themed } = importModule("Config Util");
+const { ConfigStore, ColorMode, themed } = importModule("Config Util");
 const { rootWidget, image } = importModule("UI");
 
 class LinearChart {
@@ -49,7 +49,7 @@ class LinearChart {
         this.__configStore = new ConfigStore();
         this.__configStore.setConfig(LinearChart.__DEFAULT_CONFIG);
         this.__configStore.overrideConfig(userConfig);
-        this.__configStore.setColorMode(colorMode);
+        this.__configStore.setColorMode(ColorMode.of(colorMode));
     }
 
     /**

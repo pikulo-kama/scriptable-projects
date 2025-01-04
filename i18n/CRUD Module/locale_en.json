@@ -1,0 +1,17 @@
+{
+    "deleteFieldConfirmAction": "Yes",
+    "deleteFieldMessage": "Are you sure?",
+    "deleteFieldLabel": "🗑️",
+    "headerTitle": "📺 Shows&Movies",
+    "headerFilterButton": "🔎",
+    "headerCreateButton": "➕",
+    "filterAppliedIndicator": "✅",
+    "filterSelectionPopupTitle": "Filter",
+    "filterPopupTitle": "Filter by %1",
+    "clearAllFiltersAction": "Clear All",
+    "clearFilterAction": "Clear",
+    "yesBooleanAction": "%1 Yes",
+    "noBooleanAction": "%1 No",
+    "applyFilterAction": "Filter",
+    "formDefaultUpdateLabel": "OK"
+}

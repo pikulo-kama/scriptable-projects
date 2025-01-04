@@ -6,48 +6,60 @@ const { FileUtil } = importModule("File Util");
 
 class Locale {
 
-    static __LOCALE_FILE_TEMPLATE = "locale{}.json";
+    static __DEFAULT_LOCALE = "en";
+    static __translations = null;
 
-    static tr(key) {
-        return this.__getLocaleFile()[key];
+    static tr(key, args) {
+        this.__ensureTranslationsLoaded();
+        let translation = this.__translations[key];
+
+        if (!translation) {
+            logger.warn(`Translation with key '${key}' doesn't exist.`);
+            return "";
+        }
+
+        for (let argId = 0; argId < args.length; argId++) {
+            translation = translation.replaceAll(`%${argId + 1}`, args[argId]);
+        }
+
+        return translation;
     }
 
-    static async registerLabels(labelsMap) {
+    static __ensureTranslationsLoaded() {
+
+        if (this.__translations) {
+            return;
+        }
+
+        this.__translations = {};
+        const languageCode = Device.language();
+        const localeDirectories = FileUtil.findLocaleDirectories();
         
-        let labels = this.__getLocaleFile();
-        
-        for (let labelKey of Object.keys(labelsMap)) {
+        for (let directory of localeDirectories) {
+
+            let localeContent = {};
+            const customLocaleExists = FileUtil.localeExists(directory, languageCode);
+            const defaultLocaleExists = FileUtil.localeExists(directory, this.__DEFAULT_LOCALE);
+
+            if (customLocaleExists) {
+                localeContent = FileUtil.readLocale(directory, languageCode);
             
-            if (!labels[labelKey]) {
-                labels[labelKey] = labelsMap[labelKey];
+            } else if (defaultLocaleExists) {
+                localeContent = FileUtil.readLocale(directory, this.__DEFAULT_LOCALE);
             }
+
+            this.__translations = {
+                ...this.__translations,
+                ...localeContent
+            };
         }
-        
-        await this.__updateLocaleFile(labels);
-    }
-    
-    static __getLocaleFile() {
-        let fileName = this.__getLocaleFileName(Device.language());
-        return FileUtil.readLocalJson(fileName, {});
-    }
-    
-    static async __updateLocaleFile(content) {   
-        let fileName = this.__getLocaleFileName(Device.language());
-        await FileUtil.updateLocalJson(fileName, content);
-    }
-    
-    static __getLocaleFileName(locale) {
-
-        let languageCode = "";
-
-        if (locale) {
-            languageCode = "_" + locale;
-        }
-
-        return Locale.__LOCALE_FILE_TEMPLATE.replace("{}", languageCode);
     }
 }
 
+function tr(key, ...args) {
+    return Locale.tr(key, args);
+}
+
 module.exports = {
-    Locale
+    tr
 };

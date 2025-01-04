@@ -1,0 +1,11 @@
+{
+    "t_header": "⚪️ Watchlist",
+    "w_nothing": "Nothing",
+    "w_to_be_watched": "to be Watched",
+    "t_watchlist_no_data_header": "Watchlist is empty",
+    "t_watchlist_no_data_subheader": "Add new series in 'Stop Watcher' and make sure that ID is set",
+    "t_watchlist_empty_header": "Nothing to watch 😔",
+    "t_watchlist_empty_subheader": "Looks like you need to wait a little longer...",
+    "episode": " ep",
+    "episode_plural_ending": "s"
+}

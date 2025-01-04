@@ -4,7 +4,7 @@
 
 const { FileUtil } = importModule("File Util");
 const { modal } = importModule("Modal");
-const { Locale } = importModule("Localization");
+const { tr } = importModule("Localization");
 const { ConfigStore } = importModule("Config Util");
 
 const root = {
@@ -119,18 +119,18 @@ const root = {
         adminRow.cellSpacing = 0.1
         adminRow.backgroundColor = root.__configStore.get("header.backgroundColor")
         
-        const label = adminRow.addText(Locale.tr("headerTitle"))
+        const label = adminRow.addText(tr("headerTitle"))
         label.widthWeight = 410
         label.titleColor = root.__configStore.get("header.titleColor")
         
         if (root.__configStore.get("filterFields").length > 0) {
             
-            const filterCell = adminRow.addButton(Locale.tr("headerFilterButton"))
+            const filterCell = adminRow.addButton(tr("headerFilterButton"))
             filterCell.widthWeight = 40
             filterCell.onTap = root.openFilterPopup
         }
         
-        const addNewCell = adminRow.addButton(Locale.tr("headerCreateButton"))
+        const addNewCell = adminRow.addButton(tr("headerCreateButton"))
         addNewCell.widthWeight = 40
         addNewCell.onTap = async () => {
             const record = await root.createNewRecord()
@@ -147,10 +147,10 @@ const root = {
     
     openFilterPopup: async () => {
         
-        let clearAllAction = Locale.tr("clearAllFiltersAction")
+        let clearAllAction = tr("clearAllFiltersAction")
         let appliedFilters = Object.keys(root.getAppliedFilters())
         
-        let filterAppliedLabel = Locale.tr("filterAppliedIndicator")
+        let filterAppliedLabel = tr("filterAppliedIndicator")
         let filterFields = root.__configStore.get("filterFields")
             .map(field => {
                 let prefix = ""
@@ -167,7 +167,7 @@ const root = {
         actions.push(clearAllAction)
         
         const result = await modal()
-            .title(Locale.tr("filterSelectionPopupTitle"))
+            .title(tr("filterSelectionPopupTitle"))
             .actions(actions)
             .present();
         
@@ -194,18 +194,20 @@ const root = {
         let filters = root.getAppliedFilters();
         let filter = filters[field.var];
         
-        const getAction = (condition, label) => {
-            let filterAppliedLabel = Locale.tr("filterAppliedIndicator");
+        const getAction = (condition, key) => {
+
+            let filterAppliedLabel = tr("filterAppliedIndicator");
             let indicator = (condition ? filterAppliedLabel : "");
-            return label.replace("%{applied}", indicator).trim();
+
+            return tr(key, indicator).trim();
         }
         
-        let yesAction = getAction(filter === true, Locale.tr("yesBooleanAction"));
-        let noAction = getAction(filter === false, Locale.tr("noBooleanAction"));
-        let clearAction = Locale.tr("clearFilterAction");
+        let yesAction = getAction(filter === true, "yesBooleanAction");
+        let noAction = getAction(filter === false, "noBooleanAction");
+        let clearAction = tr("clearFilterAction");
         
         const result = await modal()
-            .title(Locale.tr("filterPopupTitle").replace("%{filterName}", field.label))
+            .title(tr("filterPopupTitle", field.label))
             .actions([yesAction, noAction, clearAction])
             .present();
         
@@ -229,11 +231,11 @@ const root = {
         let filters = root.getAppliedFilters();
         let filter = filters[field.var];
         
-        let applyFilterAction = Locale.tr("applyFilterAction");
-        let clearFilterAction = Locale.tr("clearFilterAction");
+        let applyFilterAction = tr("applyFilterAction");
+        let clearFilterAction = tr("clearFilterAction");
         
         const result = await modal()
-            .title(Locale.tr("filterPopupTitle").replace("%{filterName}", field.label))
+            .title(tr("filterPopupTitle", field.label))
             .actions([applyFilterAction, clearFilterAction])
             .field()
                 .name(field.var)
@@ -312,7 +314,7 @@ const root = {
     
     addDeleteField: async (row, rowData) => {
         
-        let deleteBtn = row.addButton(Locale.tr("deleteFieldLabel"))
+        let deleteBtn = row.addButton(tr("deleteFieldLabel"))
         deleteBtn.widthWeight = root.__configStore.get("deleteField.weight")
         deleteBtn.onTap = async () => {
             let res = await root.deleteRecord(row, rowData)
@@ -362,7 +364,7 @@ const root = {
         
         if (actions.length == 0) {
             
-            let defaultUpdateLabel = Locale.tr("formDefaultUpdateLabel");
+            let defaultUpdateLabel = tr("formDefaultUpdateLabel");
             
             handler.defaultAction = defaultUpdateLabel;
             actions = [defaultUpdateLabel];
@@ -611,8 +613,8 @@ const root = {
     deleteRecord: async (rowData, row) => {
         
         const result = await modal()
-            .title(Locale.tr("deleteFieldMessage"))
-            .actions([Locale.tr("deleteFieldConfirmAction")])
+            .title(tr("deleteFieldMessage"))
+            .actions([tr("deleteFieldConfirmAction")])
             .present();
         
         if (!result.isCancelled()) {
@@ -642,24 +644,6 @@ const root = {
         return objToMerge
     }
 }
-
-Locale.registerLabels({
-    "deleteFieldConfirmAction": "Yes",
-    "deleteFieldMessage": "Are you sure?",
-    "deleteFieldLabel": "🗑️",
-    "headerTitle": "📺 Shows&Movies",
-    "headerFilterButton": "🔎",
-    "headerCreateButton": "➕",
-    "filterAppliedIndicator": "✅",
-    "filterSelectionPopupTitle": "Filter",
-    "filterPopupTitle": "Filter by %{filterName}",
-    "clearAllFiltersAction": "Clear All",
-    "clearFilterAction": "Clear",
-    "yesBooleanAction": "%{applied} Yes",
-    "noBooleanAction": "%{applied} No",
-    "applyFilterAction": "Filter",
-    "formDefaultUpdateLabel": "OK"
-})
 
 module.exports.filterTypes = root.filterTypes
 module.exports.inputs = root.inputs

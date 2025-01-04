@@ -4,44 +4,28 @@
 
 const { LinearChart } = importModule("Linear Chart");
 const { present } = importModule("UI");
-const { themed } = importModule("Config Util");
-const { Locale } = importModule("Localization");
-
-await Locale.registerLabels({
-  "timezone": "Europe/Kiev",
-  "month_january": "Jan",
-  "month_february": "Feb",
-  "month_march": "Mar",
-  "month_april": "Apr",
-  "month_may": "May",
-  "month_june": "Jun",
-  "month_july": "Jul",
-  "month_august": "Aug",
-  "month_september": "Sep",
-  "month_october": "Oct",
-  "month_november": "Nov",
-  "month_december": "Dec",
-})
+const { themed, ColorMode } = importModule("Config Util");
+const { tr } = importModule("Localization");
 
 const conf = {
     debug: {
         enabled: true
     },
 
-    timeZone: Locale.tr("timezone"),
+    timeZone: tr("timezone"),
     months: [
-        Locale.tr("month_january"),
-        Locale.tr("month_february"),
-        Locale.tr("month_march"),
-        Locale.tr("month_april"),
-        Locale.tr("month_may"),
-        Locale.tr("month_june"),
-        Locale.tr("month_july"),
-        Locale.tr("month_august"),
-        Locale.tr("month_september"),
-        Locale.tr("month_october"),
-        Locale.tr("month_november"),
-        Locale.tr("month_december")
+        tr("month_january"),
+        tr("month_february"),
+        tr("month_march"),
+        tr("month_april"),
+        tr("month_may"),
+        tr("month_june"),
+        tr("month_july"),
+        tr("month_august"),
+        tr("month_september"),
+        tr("month_october"),
+        tr("month_november"),
+        tr("month_december")
     ]
 };
 
@@ -129,7 +113,7 @@ function getArguments() {
             // Period in months
             period: 5,
             calendar: "Робочий",
-            mode: "dark",
+            mode: ColorMode.Dark,
             trimBlank: true
         };
     }

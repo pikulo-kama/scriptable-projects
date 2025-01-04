@@ -2,12 +2,54 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: cogs;
 
+
+class ColorMode {
+    static Light = "light";
+    static Dark = "dark";
+
+    static of(colorModeString) {
+
+        const colorModes = [
+            this.Light,
+            this.Dark
+        ];
+
+        const index = colorModes.indexOf(colorModeString.toLowerCase());
+
+        if (index === -1) {
+            throw new Error("Color mode doesn't exist.");
+        }
+
+        return colorModes[index];
+    }
+}
+
+class ThemedProperty {
+
+    constructor(darkModeProperty, lightModeProperty) {
+        this.__darkModeProperty = darkModeProperty;
+        this.__lightModelProperty = lightModeProperty;
+    }
+
+    get(colorMode) {
+        switch (colorMode) {
+
+            case ColorMode.Dark:
+                return this.__darkModeProperty;
+
+            case ColorMode.Light:
+                return this.__lightModelProperty;
+        }
+    }
+}
+
+
 class ConfigStore {
 
     constructor() {
         this.__config = {};
         this.__userConfig = {};
-        this.__colorMode = "dark";
+        this.__colorMode = ColorMode.Dark;
     }
 
     setConfig(config) {
@@ -36,12 +78,12 @@ class ConfigStore {
     * @return user-provided or default 
     * configuration value
     */
-    get(fieldName) {
+    get(composedProperty) {
       
-        const fieldArray = fieldName.split(".");
+        const propertyChain = composedProperty.split(".");
         
-        const configValue = this.__getField(this.__config, fieldArray);
-        const userConfigValue = this.__getField(this.__userConfig, fieldArray);
+        const configValue = this.__getField(this.__config, propertyChain);
+        const userConfigValue = this.__getField(this.__userConfig, propertyChain);
         
         let value = configValue;
 
@@ -80,14 +122,8 @@ class ConfigStore {
             configValue = nextValue;
         }
         
-        if (Array.isArray(configValue) &&
-            configValue.length == 2 &&
-            configValue[0].hasOwnProperty("cnfgDark") &&
-            configValue[1].hasOwnProperty("cnfgLight")
-        ) {
-            let valuePosition = this.__colorMode == "dark" ? 0 : 1;
-            let valueKey = this.__colorMode == "dark" ? "cnfgDark" : "cnfgLight";
-            configValue = configValue[valuePosition][valueKey];
+        if (configValue instanceof ThemedProperty) {
+            configValue = configValue.get(this.__colorMode);
         }
         
         return configValue;
@@ -108,10 +144,11 @@ class ConfigStore {
 * @return theme specific value
 */
 function themed(dark, light) {
-    return [{cnfgDark: dark}, {cnfgLight: light}];
+    return new ThemedProperty(dark, light);
 }
 
 module.exports = {
     ConfigStore,
+    ColorMode,
     themed
 };

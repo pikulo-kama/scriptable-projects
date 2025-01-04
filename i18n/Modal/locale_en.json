@@ -1,0 +1,7 @@
+{
+    "err_field_cant_be_empty": "Field '%1' cannot be empty",
+    "err_field_should_be_number": "Field '%1' should be a number",
+    "default_cancel_action": "Cancel",
+    "error_modal_action": "OK",
+    "error_modal_title": "⛔️ Error"
+}

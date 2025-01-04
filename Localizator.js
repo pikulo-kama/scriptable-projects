@@ -4,15 +4,7 @@
 
 const { FileUtil } = importModule("File Util");
 const { modal } = importModule("Modal");
-const { Locale } = importModule("Localization");
-
-await Locale.registerLabels({
-    "t_header_label": "Translate '%script_name'",
-    "t_label_form_header": "Translate '%label_key'",
-    "t_update_action": "Update",
-    "select_script": "Select Script",
-    "select_locale": "Select Locale"
-})
+const { tr } = importModule("Localization");
 
 class Main {
     
@@ -63,7 +55,7 @@ class Main {
         headerRow.backgroundColor = Color.darkGray()
         headerRow.cellSpacing = 100
         
-        headerRow.addText(Locale.tr("t_header_label").replace("%script_name", this.script.verboseName))
+        headerRow.addText(tr("t_header_label", this.script.verboseName));
         this.table.addRow(headerRow)
         
         for (let labelKey of Object.keys(this.data)) {
@@ -84,8 +76,8 @@ class Main {
         return async () => {
             
             let result = await modal()
-                .title(Locale.tr("t_label_form_header").replace("%label_key", key))
-                .actions([Locale.tr("t_update_action")])
+                .title(tr("t_label_form_header", key))
+                .actions([tr("t_update_action")])
                 .field()
                     .name(key)
                     .label(key)
@@ -116,7 +108,7 @@ class Main {
     async selectScript(scriptList) {
             
         const result = await modal()
-            .title(Locale.tr("select_script"))
+            .title(tr("select_script"))
             .actions(scriptList.map(script => script.verboseName))
             .present();
         
@@ -136,7 +128,7 @@ class Main {
         }
         
         const result = await modal()
-            .title(Locale.tr("select_locale"))
+            .title(tr("select_locale"))
             .actions(script.locales.map(localeObj => localeObj.locale))
             .present();
         

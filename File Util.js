@@ -5,6 +5,20 @@
 class FileUtil {
 
     static __manager = FileManager.iCloud();
+    
+    static __RESOURCES_DIR = "Resources";
+    static __LOCALES_DIR = "i18n";
+
+    static async updateLocale(scriptName, languageCode, content) {
+        
+        let localeFileName = `locale_${languageCode}.json`;
+        await this.updateFile(
+            scriptName,
+            localeFileName,
+            JSON.stringify(content),
+            this.__LOCALES_DIR
+        );
+    }
 
     static async updateLocalJson(fileName, content) {
         await this.updateJson(Script.name(), fileName, content);
@@ -18,10 +32,10 @@ class FileUtil {
         await this.updateFile(Script.name(), fileName, content);
     }
     
-    static async updateFile(scriptName, fileName, content) {
+    static async updateFile(scriptName, fileName, content, directory = this.__RESOURCES_DIR) {
         
         const targetDirectory = this.joinPaths(
-            this.__getScriptableDir(), 
+            this.__getScriptableDir(directory), 
             scriptName
         );
         
@@ -31,6 +45,39 @@ class FileUtil {
         
         const targetFile = this.joinPaths(targetDirectory, fileName); 
         await this.__manager.write(targetFile, this.__castToData(content));
+    }
+
+    static async localeExists(scriptName, languageCode) {
+        let localeFileName = `locale_${languageCode}.json`;
+        return this.fileExists(scriptName, localeFileName, this.__LOCALES_DIR);
+    }
+
+    static async fileExists(scriptName, fileName, directory = this.__RESOURCES_DIR) {
+
+        const targetFile = this.joinPaths(
+            this.__getScriptableDir(directory), 
+            scriptName, 
+            fileName
+        );
+        
+        return this.__manager.fileExists(targetFile);
+    }
+
+    static readLocale(scriptName, languageCode) {
+
+        let localeFileName = `locale_${languageCode}.json`;
+        let content = this.readFile(
+            scriptName,
+            localeFileName,
+            {},
+            this.__LOCALES_DIR
+        );
+
+        if (typeof content === 'string') {
+            content = JSON.parse(content);
+        }
+
+        return content;
     }
 
     static readLocalJson(fileName, defautlValue) {
@@ -51,10 +98,10 @@ class FileUtil {
         return this.readFile(Script.name(), fileName, defaultValue);
     }
     
-    static readFile(scriptName, fileName, defaultValue) {
+    static readFile(scriptName, fileName, defaultValue, directory = this.__RESOURCES_DIR) {
 
         const targetFile = this.joinPaths(
-            this.__getScriptableDir(), 
+            this.__getScriptableDir(directory), 
             scriptName, 
             fileName
         );
@@ -66,11 +113,16 @@ class FileUtil {
         
         return this.__manager.readString(targetFile);
     }
+
+    static findLocaleDirectories() {
+        const scriptDirectory = this.__getScriptableDir(this.__LOCALES_DIR);
+        return this.__manager.listContents(scriptDirectory);
+    }
     
     static findFiles(scriptName, fileNameRegex) {
         
         const scriptDirectory = this.joinPaths(
-            this.__getScriptableDir(), 
+            this.__getScriptableDir(this.__RESOURCES_DIR), 
             scriptName
         );
         
@@ -93,10 +145,10 @@ class FileUtil {
         return resultPath;
     }
 
-    static __getScriptableDir() {
+    static __getScriptableDir(targetDirectory) {
         return this.joinPaths(
             this.__manager.documentsDirectory(),
-            "Resources"
+            targetDirectory
         );
     }
     

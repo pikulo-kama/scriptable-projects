@@ -4,7 +4,7 @@
 
 const { FileUtil } = importModule("File Util");
 const crud = importModule("CRUD Module");
-const { Locale } = importModule("Localization");
+const { tr } = importModule("Localization");
 const {
     spacer,
     stack,
@@ -156,12 +156,13 @@ class WidgetBuilder {
     __getTimeCode(seriesInfo) {
         
         if (!seriesInfo.hour && !seriesInfo.minute) {
-            return Locale.tr("t_timecode_unwatched");    
+            return tr("t_timecode_unwatched");    
         } 
 
-        return Locale.tr("t_timecode_watched")
-            .replace("%{hour}", this.__pad(seriesInfo.hour))
-            .replace("%{minute}", this.__pad(seriesInfo.minute));
+        return tr("t_timecode_watched",
+            this.__pad(seriesInfo.hour),
+            this.__pad(seriesInfo.minute)
+        );
     }
 
     __pad(text) {
@@ -205,7 +206,7 @@ class SeriesTableView {
                 default: false
             }, {
                 var: "serieName",
-                default: Locale.tr("t_serie_name_placeholder")
+                default: tr("t_serie_name_placeholder")
             }, {
                 var: "season",
                 default: "1"
@@ -234,10 +235,10 @@ class SeriesTableView {
                 handlers: {
                     type: crud.inputs.form,
                     title: (r) => r.isDone ?  
-                            Locale.tr("t_completion_status_label_done") :
-                            Locale.tr("t_completion_status_label_undone"),
+                            tr("t_completion_status_label_done") :
+                            tr("t_completion_status_label_undone"),
                     actions: [{
-                        name: Locale.tr("t_completion_status_toggle_action"),
+                        name: tr("t_completion_status_toggle_action"),
                         onChoose: {
                             callback: r => !r.isDone,
                             var: "isDone"
@@ -245,25 +246,25 @@ class SeriesTableView {
                     }]
                 }
             }, {
-                label: r => !!r.serieId ? Locale.tr("t_api_integration_serie_set") : 
-                                          Locale.tr("t_api_integration_serie_unset"),
+                label: r => !!r.serieId ? tr("t_api_integration_serie_set") : 
+                                          tr("t_api_integration_serie_unset"),
                 weight: 20,
                 handlers: {
                     type: crud.inputs.form,
                     fields: [{
                         var: "serieId",
-                        label: Locale.tr("t_new_serie_id_label")
+                        label: tr("t_new_serie_id_label")
                     }],
                     actions: [{
-                        name: Locale.tr("t_toggle_summary_view_action"),
+                        name: tr("t_toggle_summary_view_action"),
                         onChoose: {
                             callback: r => !r.showInSummary,
                             var: "showInSummary"
                         }
                     }],
-                    defaultAction: Locale.tr("t_update_serie_id_action"),
-                    title: r => r.showInSummary ? Locale.tr("t_show_in_summary_label") : 
-                                                  Locale.tr("t_dont_show_in_summary_label")
+                    defaultAction: tr("t_update_serie_id_action"),
+                    title: r => r.showInSummary ? tr("t_show_in_summary_label") : 
+                                                  tr("t_dont_show_in_summary_label")
                 }
             }, {
                 label: (r) => r.serieName,
@@ -272,10 +273,10 @@ class SeriesTableView {
                     type: crud.inputs.form,
                     fields: [{
                         var: "serieName",
-                        label: Locale.tr("t_serie_name_label"),
+                        label: tr("t_serie_name_label"),
                     }],
-                    defaultAction: Locale.tr("t_serie_name_update_action"), 
-                    title: Locale.tr("t_serie_name_update_title")
+                    defaultAction: tr("t_serie_name_update_action"), 
+                    title: tr("t_serie_name_update_title")
                 }
             }, {
                 label: this.__getTag,
@@ -284,20 +285,20 @@ class SeriesTableView {
                     type: crud.inputs.form,
                     fields: [{
                         var: "season",
-                        label: Locale.tr("t_season_label"),
+                        label: tr("t_season_label"),
                     }, {
                         var: "episode",
-                        label: Locale.tr("t_episode_label"),
+                        label: tr("t_episode_label"),
                     }],
                     actions: [{
-                        name: Locale.tr("t_next_episode_action"),
+                        name: tr("t_next_episode_action"),
                         onChoose: {
                             callback: r => String(Number(r.episode) + 1),
                             var: "episode"
                         }
                     }],
-                    defaultAction: Locale.tr("t_season_episode_update_action"),
-                    title: Locale.tr("t_season_episode_update_title")
+                    defaultAction: tr("t_season_episode_update_action"),
+                    title: tr("t_season_episode_update_title")
                 }
             }, {
                 label: this.__getTimeCode,
@@ -313,17 +314,15 @@ class SeriesTableView {
 
     __getStatusLabel(d) {
     
-        return d.isDone ? Locale.tr("t_completion_status_completed") : 
-            Locale.tr("t_completion_status_uncompleted")
+        return d.isDone ? tr("t_completion_status_completed") : 
+            tr("t_completion_status_uncompleted")
     }
     
     __getTag(d) {
     
-        let tag = d.isDone ? Locale.tr("t_field_completed") :
-            Locale.tr("t_season_episode_tag_uncompleted")
-        
-        return tag.replace("%{season}", d.season)
-                  .replace("%{episode}", d.episode)
+        return d.isDone ? 
+            tr("t_field_completed") :
+            tr("t_season_episode_tag_uncompleted", d.season, d.episode);
     }
         
     __getTimeCode(d) {
@@ -331,10 +330,10 @@ class SeriesTableView {
         let value
         
         if (d.isDone) {
-            value = Locale.tr("t_field_completed")
+            value = tr("t_field_completed")
             
         } else if (!d.hour && !d.minute) {
-            value = Locale.tr("t_timecode_unwatched")
+            value = tr("t_timecode_unwatched")
             
         } else {
             let hour = String(d.hour).length < 2 ?
@@ -343,9 +342,7 @@ class SeriesTableView {
             let minute = String(d.minute).length < 2 ?
                 "0" + d.minute : d.minute
             
-            value = Locale.tr("t_timecode_watched")
-                .replace("%{hour}", hour)
-                .replace("%{minute}", minute)
+            value = tr("t_timecode_watched", hour, minute);
         }
         
         return value
