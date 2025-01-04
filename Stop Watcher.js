@@ -3,8 +3,8 @@
 // icon-color: pink; icon-glyph: stopwatch;
 
 const { FileUtil } = importModule("File Util");
-const crud = importModule("CRUD Module");
 const { tr } = importModule("Localization");
+
 const {
     spacer,
     stack,
@@ -12,7 +12,19 @@ const {
     image,
     rootWidget,
     present
-} = importModule("UI")
+} = importModule("UI");
+
+const {
+    BoolDataField,
+    TextDataField,
+    NumberDataField,
+    UIForm,
+    UIDatePicker,
+    UIDeleteRowField,
+    UIFormAction,
+    UIFormField,
+    UIDataTable
+} = importModule("CRUD Module");
 
 
 const conf = {
@@ -179,168 +191,165 @@ class WidgetBuilder {
 
 class SeriesTableView {
 
+    static __STORAGE_FILE = "watchlist.json";
+
+    constructor() {
+        this.__isDoneField = new BoolDataField("isDone", false);
+        this.__seriesIdField = new TextDataField("serieId");
+        this.__showInSummaryField = new BoolDataField("showInSummary", false);
+        this.__serieNameField = new TextDataField("serieName", tr("t_serie_name_placeholder"));
+        this.__seasonField = new NumberDataField("season", "1");
+        this.__episodeField = new NumberDataField("episode", "1");
+        this.__hourField = new NumberDataField("hour");
+        this.__minuteField = new NumberDataField("minute");
+    }
+
     async present() {
 
-        await crud.buildTable({
-            storageFile: "watchlist.json",
-            header: {
-                titleColor: new Color("#364b4d"),
-                backgroundColor: new Color("#c5d0d1")
-            },
-            onChange: (row, field, oldVal, newVal) => {
-                
-                if (["season", "episode"].includes(field)) {
-                    row.hour = null
-                    row.minute = null
-                }
-            },
-            sort: (f, s) => s.isDone - f.isDone || f.id - s.id,
-            dataDefaults: [{
-                var: "isDone",
-                default: false
-            }, {
-                var: "serieId",
-                default: null,
-            }, {
-                var: "showInSummary",
-                default: false
-            }, {
-                var: "serieName",
-                default: tr("t_serie_name_placeholder")
-            }, {
-                var: "season",
-                default: "1"
-            }, {
-                var: "episode",
-                default: "1"
-            }, {
-                var: "hour",
-                default: null
-            }, {
-                var: "minute",
-                default: null
-            }],
-            filterFields: [{
-                var: "isDone",
-                type: crud.filterTypes.boolean,
-                label: "Completed"
-            }, {
-                var: "serieName",
-                type: crud.filterTypes.text,
-                label: "Name"
-            }],
-            fields: [{
-                label: this.__getStatusLabel,
-                weight: 20,
-                handlers: {
-                    type: crud.inputs.form,
-                    title: (r) => r.isDone ?  
-                            tr("t_completion_status_label_done") :
-                            tr("t_completion_status_label_undone"),
-                    actions: [{
-                        name: tr("t_completion_status_toggle_action"),
-                        onChoose: {
-                            callback: r => !r.isDone,
-                            var: "isDone"
-                        }
-                    }]
-                }
-            }, {
-                label: r => !!r.serieId ? tr("t_api_integration_serie_set") : 
-                                          tr("t_api_integration_serie_unset"),
-                weight: 20,
-                handlers: {
-                    type: crud.inputs.form,
-                    fields: [{
-                        var: "serieId",
-                        label: tr("t_new_serie_id_label")
-                    }],
-                    actions: [{
-                        name: tr("t_toggle_summary_view_action"),
-                        onChoose: {
-                            callback: r => !r.showInSummary,
-                            var: "showInSummary"
-                        }
-                    }],
-                    defaultAction: tr("t_update_serie_id_action"),
-                    title: r => r.showInSummary ? tr("t_show_in_summary_label") : 
-                                                  tr("t_dont_show_in_summary_label")
-                }
-            }, {
-                label: (r) => r.serieName,
-                weight: 70,
-                handlers: {
-                    type: crud.inputs.form,
-                    fields: [{
-                        var: "serieName",
-                        label: tr("t_serie_name_label"),
-                    }],
-                    defaultAction: tr("t_serie_name_update_action"), 
-                    title: tr("t_serie_name_update_title")
-                }
-            }, {
-                label: this.__getTag,
-                weight: 50,
-                handlers: {
-                    type: crud.inputs.form,
-                    fields: [{
-                        var: "season",
-                        label: tr("t_season_label"),
-                    }, {
-                        var: "episode",
-                        label: tr("t_episode_label"),
-                    }],
-                    actions: [{
-                        name: tr("t_next_episode_action"),
-                        onChoose: {
-                            callback: r => String(Number(r.episode) + 1),
-                            var: "episode"
-                        }
-                    }],
-                    defaultAction: tr("t_season_episode_update_action"),
-                    title: tr("t_season_episode_update_title")
-                }
-            }, {
-                label: this.__getTimeCode,
-                weight: 30,
-                handlers: {
-                    type: crud.inputs.datePicker,
-                    hourField: "hour",
-                    minuteField: "minute"
-                }
-            }]
-        })
+        const uiFields = this.__getUIFields()
+        const dataFields = [
+            this.__isDoneField,
+            this.__seriesIdField,
+            this.__showInSummaryField,
+            this.__serieNameField,
+            this.__seasonField,
+            this.__episodeField,
+            this.__hourField,
+            this.__minuteField
+        ];
+
+        const table = new UIDataTable();
+
+        table.allowCreation();
+        table.setTableData(FileUtil.readLocalJson(SeriesTableView.__STORAGE_FILE, []));
+        table.onDataModification((tableData) => FileUtil.updateLocalJson(SeriesTableView.__STORAGE_FILE, tableData));
+        table.onFieldChange(this.__onFieldChange);
+
+        table.setDataFields(dataFields);
+        table.setUIFields(uiFields);
+
+        table.addFilterField(this.__isDoneField, "Completed");
+        table.addFilterField(this.__serieNameField, "Name");
+
+        table.setSortingFunction((first, second) => 
+            second.isDone - first.isDone || first.id - second.id
+        );
+
+        await table.present();
     }
 
-    __getStatusLabel(d) {
-    
-        return d.isDone ? tr("t_completion_status_completed") : 
+    __getUIFields() {
+
+        // Status Field
+        const statusUIField = new UIForm(this.__getStatusLabel, 20);
+        statusUIField.setFormTitleFunction(this.__getStatusFormTitle);
+        const toggleStatusAction = new UIFormAction(tr("t_completion_status_toggle_action"));
+        toggleStatusAction.addCallback(this.__isDoneField, (series) => !series.isDone);
+        statusUIField.addFormAction(toggleStatusAction);
+
+        // Integration Field
+        const apiIntegrationUIField = new UIForm(this.__getApiIntegrationLabel, 20);
+        apiIntegrationUIField.setFormTitleFunction(this.__getApiIntegrationFormTitle);
+        const seriesIdFormField = new UIFormField(this.__seriesIdField, tr("t_new_serie_id_label"));
+        const toggleSummaryViewAction = new UIFormAction(tr("t_toggle_summary_view_action"));
+        toggleSummaryViewAction.addCallback(this.__showInSummaryField, (series) => !series.showInSummary);
+
+        apiIntegrationUIField.addDefaultAction(tr("t_update_serie_id_action"));
+        apiIntegrationUIField.addFormAction(toggleSummaryViewAction);
+        apiIntegrationUIField.addFormField(seriesIdFormField);
+
+        // Series name field
+        const serieNameUIField = new UIForm((series) => series.serieName, 70);
+        serieNameUIField.setFormTitleFunction(() => tr("t_serie_name_update_title"));
+        const serieNameFormField = new UIFormField(this.__serieNameField, tr("t_serie_name_label"));
+
+        serieNameUIField.addDefaultAction(tr("t_serie_name_update_action"));
+        serieNameUIField.addFormField(serieNameFormField);
+
+        // Season/Episode field
+        const tagUIField = new UIForm(this.__getTag, 50);
+        tagUIField.setFormTitleFunction(() => tr("t_season_episode_update_title"));
+        const seasonFormField = new UIFormField(this.__seasonField, tr("t_season_label"));
+        const episodeFormField = new UIFormField(this.__episodeField, tr("t_episode_label"));
+        const nextEpisodeAction = new UIFormAction(tr("t_next_episode_action"));
+        nextEpisodeAction.addCallback(this.__episodeField, (series) => String(Number(series.episode) + 1));
+
+        tagUIField.addDefaultAction(tr("t_season_episode_update_action"));
+        tagUIField.addFormAction(nextEpisodeAction);
+        tagUIField.addFormField(seasonFormField);
+        tagUIField.addFormField(episodeFormField);
+
+        // Time code field
+        const timeCodeUIField = new UIDatePicker(this.__getTimeCode, 30);
+        timeCodeUIField.setHourField(this.__hourField);
+        timeCodeUIField.setMinuteField(this.__minuteField);
+
+        // Delete field
+        const deleteUIField = new UIDeleteRowField(() => tr("deleteFieldLabel"), 15);
+
+        return [
+            statusUIField,
+            apiIntegrationUIField,
+            serieNameUIField,
+            tagUIField,
+            timeCodeUIField,
+            deleteUIField
+        ];
+    }
+
+    __onFieldChange(series, field) {
+        if (field.getName() === "season" ||
+            field.getName() === "episode"
+        ) {
+            series.hour = null;
+            series.minute = null;
+        }
+    }
+
+    __getApiIntegrationLabel(series) {
+        return !!series.serieId ? 
+            tr("t_api_integration_serie_set") : 
+            tr("t_api_integration_serie_unset");
+    }
+
+    __getApiIntegrationFormTitle(series) {
+        return series.showInSummary ? 
+            tr("t_show_in_summary_label") : 
+            tr("t_dont_show_in_summary_label");
+    }
+
+    __getStatusLabel(series) {
+        return series.isDone ? tr("t_completion_status_completed") : 
             tr("t_completion_status_uncompleted")
     }
+
+    __getStatusFormTitle(series) {
+        return series.isDone ? 
+            tr("t_completion_status_label_done") :
+            tr("t_completion_status_label_undone");
+    }
     
-    __getTag(d) {
-    
-        return d.isDone ? 
+    __getTag(series) {
+        return series.isDone ? 
             tr("t_field_completed") :
-            tr("t_season_episode_tag_uncompleted", d.season, d.episode);
+            tr("t_season_episode_tag_uncompleted", series.season, series.episode);
     }
         
-    __getTimeCode(d) {
-        
+    __getTimeCode(series) {
         let value
         
-        if (d.isDone) {
+        if (series.isDone) {
             value = tr("t_field_completed")
             
-        } else if (!d.hour && !d.minute) {
+        } else if (!series.hour && !series.minute) {
             value = tr("t_timecode_unwatched")
             
         } else {
-            let hour = String(d.hour).length < 2 ?
-                "0" + d.hour : d.hour
+            let hour = String(series.hour).length < 2 ?
+                "0" + series.hour : series.hour
             
-            let minute = String(d.minute).length < 2 ?
-                "0" + d.minute : d.minute
+            let minute = String(series.minute).length < 2 ?
+                "0" + series.minute : series.minute
             
             value = tr("t_timecode_watched", hour, minute);
         }

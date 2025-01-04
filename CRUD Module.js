@@ -5,616 +5,350 @@
 const { FileUtil } = importModule("File Util");
 const { modal } = importModule("Modal");
 const { tr } = importModule("Localization");
-const { ConfigStore } = importModule("Config Util");
 
-const root = {
+class DataField {
 
-    __configStore: new ConfigStore(),
-    
-    inputs: {
-        datePicker: "datePicker",
-        form: "form",
-        listForm: "listForm"
-    },
-    
-    filterTypes: {
-        boolean: "boolean",
-        text: "text"
-    },
-    
-    filterTypeHandlers: () => ({
-        boolean: root.handleBooleanFilter,
-        text: root.handleTextFilter
-    }),
-    
-    defaultConfig: {
-        filterStorageFile: "filter.json",
-        storageFile: "storage.json",
-        storageScript: Script.name(),
-        showSeparators: false,
-        header: {
-            titleColor: Color.darkGray(),
-            backgroundColor: Color.white()
-        },
-        creationFields: [],
-        dataDefaults: [],
-        fields: [],
-        filterFields: [],
-        deleteField: {
-            weight: 15
-        }
-    },
-    
-    
-    tableData: [],
-    table: new UITable(),
-    
-    
-    buildTable: async configIn => {
-        
-        root.__configStore.setConfig(root.defaultConfig);
-        root.__configStore.overrideConfig(configIn);
-        
-        root.table.showSeparators = root.__configStore.get("showSeparators")
-        root.tableData = root.getData()
-        
-        let sortFunction = root.__configStore.get("sort")
-        
-        if (sortFunction) {
-            root.tableData = root.tableData.sort(sortFunction)
-        }
-        
-        await root.syncTable()
-        
-        root.table.present()
-    },
-    
-    syncTable: async () => {
-        root.table.removeAllRows()
-        await root.addAdminPanel()
-        
-        let data = root.getFilteredData()
-        
-        for (let record of data) {
-            await root.addEntryRow(record)
-        }
-    },
-    
-    
-    getFilteredData: () => {
-        
-        let filters = root.getAppliedFilters()
-        let data = root.tableData
-        
-        for (filterField of Object.keys(filters)) {
-            
-            let filterValue = filters[filterField]
-            let filterType = root.__configStore.get("filterFields")
-                .find(field => field.var === filterField).type
-                
-            let filterFunction = null
-            
-            switch (filterType) {
-                
-                case root.filterTypes.boolean: {
-                    filterFunction = row => row[filterField] === filterValue
-                }
-                case root.filterTypes.text: {
-                    filterFunction = row => String(row[filterField]).toLowerCase()
-                        .includes(String(filterValue).toLowerCase())
-                }
-            }
-            
-            data = data.filter(filterFunction)
-        }
-        
-        return data
-    },
-    
-    
-     addAdminPanel: async () => {
-        const adminRow = new UITableRow()
-        
-        adminRow.isHeader = true
-        adminRow.cellSpacing = 0.1
-        adminRow.backgroundColor = root.__configStore.get("header.backgroundColor")
-        
-        const label = adminRow.addText(tr("headerTitle"))
-        label.widthWeight = 410
-        label.titleColor = root.__configStore.get("header.titleColor")
-        
-        if (root.__configStore.get("filterFields").length > 0) {
-            
-            const filterCell = adminRow.addButton(tr("headerFilterButton"))
-            filterCell.widthWeight = 40
-            filterCell.onTap = root.openFilterPopup
-        }
-        
-        const addNewCell = adminRow.addButton(tr("headerCreateButton"))
-        addNewCell.widthWeight = 40
-        addNewCell.onTap = async () => {
-            const record = await root.createNewRecord()
-            
-            if (record != -1) {
-                root.tableData.push(record)
-                await root.reloadTable()
-            }
-        }
-        
-        root.table.addRow(adminRow)
-    },
-    
-    
-    openFilterPopup: async () => {
-        
-        let clearAllAction = tr("clearAllFiltersAction")
-        let appliedFilters = Object.keys(root.getAppliedFilters())
-        
-        let filterAppliedLabel = tr("filterAppliedIndicator")
-        let filterFields = root.__configStore.get("filterFields")
-            .map(field => {
-                let prefix = ""
-                
-                if (appliedFilters.includes(field.var)) {
-                    prefix = filterAppliedLabel + " "
-                }
-                
-                let popupLabel = prefix + field.label
-                return {...field, popupLabel}
-            })
-        
-        let actions = filterFields.map(field => field.popupLabel)
-        actions.push(clearAllAction)
-        
-        const result = await modal()
-            .title(tr("filterSelectionPopupTitle"))
-            .actions(actions)
-            .present();
-        
-        if (result.isCancelled()) {
-            return
-        }
-        
-        if (result.choice() === clearAllAction) {
-            root.updateFilters({})
-            
-        } else {
-            let selectedField = filterFields.find(field => field.popupLabel === result.choice())
-            let handler = root.filterTypeHandlers()[selectedField.type]
-            
-            await handler(selectedField)
-        }
-        
-        await root.reloadTable()
-    },
-    
-    
-    handleBooleanFilter: async (field) => {
-        
-        let filters = root.getAppliedFilters();
-        let filter = filters[field.var];
-        
-        const getAction = (condition, key) => {
+    constructor(name, defaultValue = null) {
+        this.__fieldName = name;
+        this.__defaultValue = defaultValue;
+    }
 
-            let filterAppliedLabel = tr("filterAppliedIndicator");
-            let indicator = (condition ? filterAppliedLabel : "");
+    getName() {
+        return this.__fieldName;
+    }
 
-            return tr(key, indicator).trim();
+    getDefault() {
+        return this.__defaultValue;
+    }
+}
+
+class TextDataField extends DataField {
+}
+
+class BoolDataField extends DataField {
+}
+
+class NumberDataField extends DataField {
+}
+
+class UIField {
+
+    constructor(fieldLabelFunction, weight) {
+        this.__fieldLabelFunction = fieldLabelFunction;
+        this.__weight = weight;
+
+        if (typeof fieldLabelFunction === 'string') {
+            this.__fieldLabelFunction = () => fieldLabelFunction;
         }
-        
-        let yesAction = getAction(filter === true, "yesBooleanAction");
-        let noAction = getAction(filter === false, "noBooleanAction");
-        let clearAction = tr("clearFilterAction");
-        
-        const result = await modal()
-            .title(tr("filterPopupTitle", field.label))
-            .actions([yesAction, noAction, clearAction])
-            .present();
-        
-        if (result.isCancelled()) {
+    }
+}
+
+class UIFormReadOnly extends UIField {
+
+    constructor(fieldLabelFunction, weight) {
+        super(fieldLabelFunction, weight);
+    }
+}
+
+class UIDatePicker extends UIField {
+
+    constructor(fieldLabelFunction, weight) {
+        super(fieldLabelFunction, weight);
+        this.__hourField = null;
+        this.__minuteField = null;
+    }
+
+    setHourField(dataField) {
+        this.__hourField = dataField;
+    }
+
+    setMinuteField(dataField) {
+        this.__minuteField = dataField;
+    }
+}
+
+class UIDeleteRowField extends UIField {
+
+    constructor(fieldLabelFunction, weight) {
+        super(fieldLabelFunction, weight);
+        this.__message = tr("deleteFieldMessage");
+        this.__confirmAction = tr("deleteFieldConfirmAction");
+    }
+
+    setMessage(message) {
+        this.__message = message;
+    }
+
+    setConfirmAction(action) {
+        this.__confirmAction = action;
+    }
+}
+
+class UIForm extends UIField {
+
+    constructor(fieldLabelFunction, weight) {
+        super(fieldLabelFunction, weight);
+        this.__formTitleFunction = () => "";
+        this.__fields = [];
+        this.__actions = [];
+        this.__defaultAction = null;
+    }
+
+    setFormTitleFunction(formTitleFunction) {
+        this.__formTitleFunction = formTitleFunction;
+    }
+
+    addFormField(formField) {
+        this.__fields.push(formField);
+    }
+
+    addDefaultAction(actionLabel) {
+
+        if (this.__defaultAction) {
             return;
         }
+
+        const defaultAction = new UIDefaultFormAction(actionLabel);
+        this.__defaultAction = this.addFormAction(defaultAction);
+
+        return this.__defaultAction;
+    }
+
+    addFormAction(action) {
         
-        if (result.choice() === clearAction) {
-            delete filters[field.var];
-            
-        } else {
-            filters[field.var] = result.choice() === yesAction;
-        }
-        
-        await root.updateFilters(filters);
-    },
-    
-    
-    handleTextFilter: async (field) => {
-        
-        let filters = root.getAppliedFilters();
-        let filter = filters[field.var];
-        
-        let applyFilterAction = tr("applyFilterAction");
-        let clearFilterAction = tr("clearFilterAction");
-        
-        const result = await modal()
-            .title(tr("filterPopupTitle", field.label))
-            .actions([applyFilterAction, clearFilterAction])
-            .field()
-                .name(field.var)
-                .label(field.label)
-                .initial(filter)
-                .add()
-            .present();
+        let actionId = this.__actions.length;
+        action.setId(actionId);
+
+        this.__actions.push(action);
+        return action;
+    }
+}
+
+class UIFormField {
+
+    constructor(dataField, label) {
+        this.__dataField = dataField;
+        this.__label = label;
+    }
+}
+
+class UIFormAction {
+
+    constructor(label) {
+        this.__id = null;
+        this.__label = label;
+        this.__actionCallbacks = [];
+    }
+
+    setId(id) {
+        this.__id = id;
+    }
+
+    addCallback(dataField, callback) {
+        this.__actionCallbacks.push({
+            dataField,
+            callback
+        });
+    }
+}
+
+class UIDefaultFormAction extends UIFormAction {
+
+    constructor(label) {
+        super(label);
+    }
+}
+
+class UIFilterField {
+
+    constructor(dataField, label) {
+        this.__dataField = dataField;
+        this.__label = label;
+    }
+}
+
+class UIFieldMetadata {
+
+    constructor(tableRow, tableRecord, uiField) {
+        this.tableRow = tableRow;
+        this.tableRecord = tableRecord;
+        this.uiField = uiField;
+    }
+}
+
+class UIFieldHandler {
+
+    async handle(uiTable, metadata) {}
+}
+
+class UIFormHandler extends UIFieldHandler {
+
+    async handle(uiTable, metadata) {
+
+        this.__tableRecord = metadata.tableRecord;
+        this.__uiField = metadata.uiField;
+        this.__uiTable = uiTable;
+
+        const result = await this.__presentForm();
 
         if (result.isCancelled()) {
             return;
         }
-        
-        if (result.choice() === applyFilterAction) {
-            filters[field.var] = result.get(field.var);
-            
-        } else if (result.choice() === clearFilterAction) {
-            delete filters[field.var];
-        }
-        
-        await root.updateFilters(filters);
-    },
-    
-    
-    getAppliedFilters: () => {
-        return FileUtil.readLocalJson(
-            root.__configStore.get("filterStorageFile"),
-            {}
-        );
-    },
-    
-    
-    updateFilters: async content => {
-        await FileUtil.updateLocalJson(
-            root.__configStore.get("filterStorageFile"),
-            content
-        );
-    },
-    
-    
-    addEntryRow: async (rowData) => {
-        let row = new UITableRow()
-        
-        let fields = root.__configStore.get("fields")
-        
-        for (let field of fields) {
-            let btnLabel = field.label
-            let handler = root.getHandler(field, rowData)
-            
-            if (typeof btnLabel == "function") {
-                btnLabel = field.label(rowData)
-            }
-            
-            let btn = row.addButton(btnLabel)
-            btn.widthWeight = field.weight
-            btn.onTap = async () => {
-                
-                const handlerFunction = root.getHandlerFunction(handler)
-                
-                updatedData = await handlerFunction(field, rowData, handler)
-                
-                if (updatedData == -1) {
-                    updatedData = {}
-                }
-                
-                let foundRowData = root.tableData.find(r => r.id == rowData.id)
-                root.mergeData(updatedData, foundRowData)
-                
-                await root.reloadTable()
-            }
-        }
-        
-        await root.addDeleteField(row, rowData)
-        root.table.addRow(row)
-    },
-    
-    
-    addDeleteField: async (row, rowData) => {
-        
-        let deleteBtn = row.addButton(tr("deleteFieldLabel"))
-        deleteBtn.widthWeight = root.__configStore.get("deleteField.weight")
-        deleteBtn.onTap = async () => {
-            let res = await root.deleteRecord(row, rowData)
-            
-            if (res) {
-                root.tableData = root.tableData.filter(r => r.id !== rowData.id)
-            
-                root.table.removeRow(row)
-                root.table.reload()
-                root.saveData()
-            }
-        }
-    },
-    
-    
-    handleForm: async (field, rowData, handler) => {
-        
-        let handlerActions = [];
-        let updatedData = {};
-        let actions = [];
-        
-        let title = handler.title;
-        let fields = handler.fields;
-        
-        if (fields === undefined) {
-            fields = [];
-        }
-        
-        if (typeof title == "function") {
-            title = title(rowData);
-        }
-        
-        if (handler.defaultAction !== undefined) {
-            actions.push(handler.defaultAction);
-        }
-        
-        if (handler.actions !== undefined) {
-            
-            handlerActions = handler.actions;
-            
-            if (typeof handler.actions == "function") {
-                handlerActions = handler.actions(rowData);
-            }
-            
-            actions = actions.concat(handlerActions.map(a => a.name));
-        }
-        
-        if (actions.length == 0) {
-            
-            let defaultUpdateLabel = tr("formDefaultUpdateLabel");
-            
-            handler.defaultAction = defaultUpdateLabel;
-            actions = [defaultUpdateLabel];
-        }
 
-        const modalBuilder = modal();
+        const selectedAction = this.__uiField.__actions.find(action => 
+            action.__label === result.choice()
+        );
         
-        fields.forEach(field =>
+        // Handle default action
+        if (selectedAction instanceof UIDefaultFormAction) {
+            this.__processFieldChanges(result);
 
+        // Handle custom actions
+        } else {
+            this.__processCustomAction(selectedAction);
+        }
+        
+        this.__uiTable.__upsertTableRecord(this.__tableRecord);
+    }
+
+    async __presentForm() {
+
+        const formTitle = this.__uiField.__formTitleFunction(this.__tableRecord);
+
+        const modalBuilder = modal()
+            .title(formTitle)
+            .actions(this.__uiField.__actions.map(action => action.__label));
+        
+        this.__uiField.__fields.forEach(field => {
+
+            const fieldName = field.__dataField.__fieldName;
             modalBuilder.field()
-                .name(field.var)
-                .label(field.label)
-                .initial(rowData[field.var])
-                .add()
-        );
+                .name(fieldName)
+                .label(field.__label)
+                .initial(this.__tableRecord[fieldName])
+                .add();
+        });
         
-        const result = await modalBuilder
-            .title(title)
-            .actions(actions)
-            .present();
-        
-        if (result.isCancelled()) {
-            return -1;
-        }
-        
-        let onChangeCallback = root.__configStore.get("onChange");
-        
-        if (handler.defaultAction == result.choice()) {
-            
-            for (let i = 0; i < fields.length; i++) {
+        return await modalBuilder.present();
+    }
 
-                let varName = fields[i].var;
-                let newValue = result.get(varName);
-                
-                let oldValue = rowData[varName];
-        
-                if (onChangeCallback != undefined && oldValue != newValue) {
-                    onChangeCallback(rowData, varName, newValue, oldValue);
-                }
-                
-                updatedData[varName] = newValue;
-            }
-            
-        } else {
-            
-            let actionRecord = handlerActions
-                .find(action => action.name == result.choice());
-            
-            if (actionRecord?.onChoose != undefined) {
-                
-                let callback = actionRecord.onChoose;
-                let varName = callback.var;
-                
-                let newValue = callback.callback;
-                
-                if (typeof callback.callback == "function") {
-                    newValue = callback.callback(rowData, result.choice());
-                }
-                
-                let oldValue = rowData[varName];
-        
-                if (onChangeCallback != undefined && oldValue != newValue) {
-                    onChangeCallback(rowData, varName, newValue, oldValue);
-                }
-                
-                updatedData[varName] = newValue;
-            }
-        }
-        
-        return updatedData;
-    },
-    
-    
-    handleDatePicker: async (field, rowData, handler) => {
-        
-        const onChangeCallback = root.__configStore.get("onChange")
-        const datePicker = new DatePicker()
-        
-        let updatedData = {}
-        let initialSeconds = 0
-        
-        const hField = handler.hourField
-        const mField = handler.minuteField
-        
-        const initialMinutes = rowData[mField]
-        const initialHour = rowData[hField]
-        
-        if (initialHour !== undefined) {
-            initialSeconds += rowData[hField] * 3600
-        }
-        
-        if (initialMinutes !== undefined) {
-            initialSeconds += rowData[mField] * 60
-        }
-        
-        datePicker.countdownDuration = initialSeconds
-        const seconds = await datePicker.pickCountdownDuration()
-        
-        const hour = Math.floor(seconds / 3600)
-        const minute = seconds / 60 - (hour * 60)
-        
-        updatedData[hField] = hour
-        updatedData[mField] = minute
-        
-        if (onChangeCallback != undefined && initialMinutes != minute) {
-            onChangeCallback(rowData, mField, minute, initialMinutes)
-        }
-        
-        if (onChangeCallback != undefined && initialHour != hour) {
-            onChangeCallback(rowData, hField, hour, initialHour)
-        }
-        
-        return updatedData
-    },
-    
-    
-    handleListForm: async (field, rowData, handler) => {
-        
-        let data = {};
-        data[field.var] = [];
-        
-        let lastChoice = "";
-        
-        do {
+    async __processFieldChanges(result) {
 
-            let result = await modal()
-                .title(field.title)
-                .actions(["Add", "Done"])
-                .field()
-                    .name("tmpField")
-                    .label(field.fieldLabel)
-                    .validations(field.validations)
-                    .add()
-                .present();
-            
-            if (result.isCancelled()) {
-                return -1;
-            }
-            
-            lastChoice = result.choice();
-            data[field.var].push(result.get("tmpField"));
-            
-        } while (lastChoice == "Add")
-        
-        return data;
-    },
-    
-    
-    createNewRecord: async () => {
-        
-        let data = {
-            id: await root.getAndIncreaseSequence()
-        }
-        
-        const dataDefaults = root.__configStore.get("dataDefaults")
-        const creationFields = root.__configStore.get("creationFields")
-        
-        for (let rec of dataDefaults) {
-            data[rec.var] = rec.default
-        }
-        
-        for (let field of creationFields) {
-            
-            if (field.triggerWhen != undefined &&
-                !field.triggerWhen(data)) {
-                
-                continue
-            }
-            
-            let handler = root.getHandlerFunction(field)
-            let updatedData = await handler(field, data, field)
-            
-            if (updatedData == -1) {
-                return -1
-            }
-            
-            root.mergeData(updatedData, data)
-        }
-        
-        return data
-    },
-    
-    getHandler: (field, rowData) => {
-        let handlers = field.handlers
-        let handler = undefined
-        
-        if (Array.isArray(handlers)) {
-            
-            if (handlers.length != 0 &&
-                handlers.length > 1) {
-                
-                for (let handlerObj of handlers) {
-                    
-                    if (handlerObj.useWhen(rowData)) {
-                        handler = handlerObj
-                    }
-                }
-            }
-            
-        } else {
-            handler = handlers
-        }
-        
-        return handler
-    },
-    
-    getHandlerFunction: handler => {
-        if (handler.type == root.inputs.form) {
-            return root.handleForm
-            
-        } else if (handler.type == root.inputs.datePicker) {
-            return root.handleDatePicker
-            
-        } else if (handler.type == root.inputs.listForm) {
-            return root.handleListForm
-        }
-    },
-    
-    getData: () => {
-        return FileUtil.readJson(
-            root.__configStore.get("storageScript"),
-            root.__configStore.get("storageFile"),
-            []
-        );
-    },
-    
-    getAndIncreaseSequence: async () => {
+        for (let formField of this.__uiField.__fields) {
 
-        let sequence = FileUtil.readLocalJson("sequence.json", {next: 0});
+            let dataField = formField.__dataField;
+            let originalValue = this.__tableRecord[dataField.__fieldName];
+            let updatedValue = result.get(dataField.__fieldName);
 
-        sequence.next += 1
+            this.__uiTable.__onChangeFunction(this.__tableRecord, dataField, updatedValue, originalValue);
+            this.__tableRecord[dataField.__fieldName] = updatedValue;
+        }
+    }
+
+    async __processCustomAction(action) {
+
+        for (let actionCallback of action.__actionCallbacks) {
+
+            let {
+                dataField,
+                callback
+            } = actionCallback;
+
+            let originalValue = this.__tableRecord[dataField.__fieldName];
+            let updatedValue = callback(this.__tableRecord, action);
+
+            this.__uiTable.__onChangeFunction(this.__tableRecord, dataField, updatedValue, originalValue);
+            this.__tableRecord[dataField.__fieldName] = updatedValue;
+        }
+    }
+}
+
+class UIDatePickerHandler extends UIFieldHandler {
+
+    async handle(uiTable, metadata) {
+
+        this.__tableRecord = metadata.tableRecord;
+        this.__uiField = metadata.uiField;
+        this.__uiTable = uiTable;
+
+        const hourField = this.__uiField.__hourField;
+        const minuteField = this.__uiField.__minuteField;
+
+        const originalHours = this.__tableRecord[hourField.__fieldName];
+        const originalMinutes = this.__tableRecord[minuteField.__fieldName];
+
+        const resultSeconds = await this.__presentDatePicker(originalHours, originalMinutes);
+  
+        const updatedHours = Math.floor(resultSeconds / 3600);
+        const updatedMinutes = resultSeconds / 60 - (updatedHours * 60);
         
-        await FileUtil.updateLocalJson("sequence.json", sequence);
-        return sequence.next;
-    },
-    
-    
-    saveData: async () => {
-        await FileUtil.updateLocalJson(
-            root.__configStore.get("storageFile"),
-            root.tableData
-        );
-    },
-    
-    
-    deleteRecord: async (rowData, row) => {
+        if (originalHours !== updatedHours) {
+            this.__uiTable.__onChangeFunction(
+                this.__tableRecord, 
+                hourField, 
+                updatedHours, 
+                originalHours
+            );
+        }
+
+        if (originalMinutes !== updatedMinutes) {
+            this.__uiTable.__onChangeFunction(
+                this.__tableRecord, 
+                minuteField, 
+                updatedMinutes, 
+                originalMinutes
+            );
+        }
+
+        this.__tableRecord[hourField.__fieldName] = updatedHours;
+        this.__tableRecord[minuteField.__fieldName] = updatedMinutes;
+        
+        this.__uiTable.__upsertTableRecord(this.__tableRecord);
+    }
+
+    async __presentDatePicker(hours, minutes) {
+
+        let seconds = 0;
+
+        if (hours) {
+            seconds += hours * 3600;
+        }
+
+        if (minutes) {
+            seconds += minutes * 60;
+        }
+
+        const datePicker = new DatePicker();
+        datePicker.countdownDuration = seconds;
+
+        return await datePicker.pickCountdownDuration();
+    }
+}
+
+class UIDeleteRowFieldHandler extends UIFieldHandler {
+
+    async handle(uiTable, metadata) {
+
+        const shouldRemove = await this.__presentDeleteModal(metadata.uiField);
+
+        if (shouldRemove) {
+
+            // Remove record
+            uiTable.__tableData = uiTable.__tableData.filter(record => 
+                record.id !== metadata.tableRecord.id
+            );
+            
+            uiTable.__table.removeRow(metadata.tableRow);
+            uiTable.__table.reload();
+            uiTable.__onDataModificationFunction(uiTable.__tableData);
+        }
+    }
+
+    async __presentDeleteModal(uiField) {
         
         const result = await modal()
-            .title(tr("deleteFieldMessage"))
-            .actions([tr("deleteFieldConfirmAction")])
+            .title(uiField.__message)
+            .actions([uiField.__confirmAction])
             .present();
         
         if (!result.isCancelled()) {
@@ -622,29 +356,444 @@ const root = {
         }
         
         return false;
-    },
-    
-    reloadTable: async () => {
-        root.saveData()
-        await root.syncTable()
-        root.table.reload()
-    },
-    
-    
-    mergeData: (dataIn, objToMerge) => {
-        
-        if (objToMerge == undefined) {
-            objToMerge = {}
-        }
-        
-        for (let key of Object.keys(dataIn)) {
-            objToMerge[key] = dataIn[key]
-        }
-        
-        return objToMerge
     }
 }
 
-module.exports.filterTypes = root.filterTypes
-module.exports.inputs = root.inputs
-module.exports.buildTable = root.buildTable
+class UIFieldHandlerFactory {
+
+    static getHandler(uiField) {
+        
+        if (uiField instanceof UIForm) {
+            return new UIFormHandler();
+
+        } else if (uiField instanceof UIDatePicker) {
+            return new UIDatePickerHandler();
+
+        } else if (uiField instanceof UIDeleteRowField) {
+            return new UIDeleteRowFieldHandler();
+            
+        } else if (uiField instanceof UIFormReadOnly) {
+            return null;
+        }
+
+        return null;
+    }
+}
+
+class FilterMetadata {
+
+    constructor(filterField, appliedFilters) {
+        this.label = filterField.__label;
+        this.dataField = filterField.__dataField;
+        this.appliedFilters = appliedFilters;
+    }
+}
+
+class FilterHandler {
+
+    async handle(uiTable, metadata) {}
+
+    getFilterFunction() {}
+}
+
+class TextFilterHandler extends FilterHandler {
+
+    async handle(uiTable, metadata) {
+
+        const dataField = metadata.dataField;
+        const fieldName = dataField.__fieldName;
+        const filterValue = uiTable.__appliedFilters[fieldName];
+
+        const result = await modal()
+            .title(tr("filterPopupTitle", metadata.label))
+            .actions([tr("applyFilterAction"), tr("clearFilterAction")])
+            .field()
+                .name(fieldName)
+                .label(metadata.label)
+                .initial(filterValue)
+                .add()
+            .present();
+
+        if (result.isCancelled()) {
+            return;
+        }
+        
+        if (result.choice() === tr("applyFilterAction")) {
+            await uiTable.__upsertFilter(fieldName, result.get(fieldName));
+
+        } else if (result.choice() === tr("clearFilterAction")) {
+            await uiTable.__deleteFilter(fieldName);
+        }
+    }
+
+    getFilterFunction() {
+        return (recordValue, filterValue) => 
+            this.__toLower(recordValue).includes(this.__toLower(filterValue));
+    }
+
+    __toLower(value) {
+        return String(value).toLowerCase();
+    }
+}
+
+class BoolFilterHandler extends FilterHandler {
+
+    async handle(uiTable, metadata) {
+
+        const dataField = metadata.dataField;
+        const fieldName = dataField.__fieldName;
+        const filterValue = uiTable.__appliedFilters[fieldName];
+
+        const yesAction = this.__getYesNoAction(filterValue === true, "yesBooleanAction");
+        const noAction = this.__getYesNoAction(filterValue === false, "noBooleanAction");
+
+        const result = await modal()
+            .title(tr("filterPopupTitle", metadata.label))
+            .actions([yesAction, noAction, tr("clearFilterAction")])
+            .present();
+
+        if (result.isCancelled()) {
+            return;
+        }
+        
+        if (result.choice() === tr("clearFilterAction")) {
+            await uiTable.__deleteFilter(fieldName);
+            
+        } else {
+
+            const newFilterValue = result.choice() === yesAction;
+            await uiTable.__upsertFilter(fieldName, newFilterValue);
+        }
+    }
+
+    getFilterFunction() {
+        return (recordValue, filterValue) => recordValue === filterValue;
+    }
+
+    __getYesNoAction(isEnabled, actionKey) {
+
+        let enabledIndicator = "";
+
+        if (isEnabled) {
+            enabledIndicator = tr("filterAppliedIndicator");
+        }
+
+        return tr(actionKey, enabledIndicator).trim();
+    }
+}
+
+class NumberFilterHandler extends FilterHandler {
+
+    async handle(uiTable, metadata) {
+        throw new Error("Number filtering not implemented.");
+    }
+
+    getFilterFunction() {
+        throw new Error("Number filtering not implemented.");
+    }
+}
+
+class FilterHandlerFactory {
+
+    static getHandler(filterField) {
+
+        const dataField = filterField.__dataField;
+
+        if (dataField instanceof TextDataField) {
+            return new TextFilterHandler();
+
+        } else if (dataField instanceof NumberDataField) {
+            return new NumberFilterHandler();
+
+        } else if (dataField instanceof BoolDataField) {
+            return new BoolFilterHandler();
+        }
+
+        return null;
+    }
+}
+
+class UIDataTable {
+
+    constructor() {
+        this.__table = new UITable();
+        this.__appliedFilters = {};
+        this.__tableData = [];
+
+        this.__dataFields = [];
+        this.__uiFields = [];
+        this.__filterFields = [];
+
+        this.__sortingFunction = () => 1;
+        this.__onChangeFunction = () => {};
+        this.__onDataModificationFunction = () => {};
+
+        this.__showSeparators = false;
+        this.__allowCreation = false;
+
+        this.headerBackgroundColor = Color.white();
+        this.headerTitleColor = Color.darkGray();
+    }
+
+    allowCreation() {
+        this.__allowCreation = true;
+    }
+
+    showSeparators() {
+        this.__showSeparators = true;
+    }
+
+    setTableData(tableData) {
+        this.__tableData = tableData;
+    }
+
+    setDataFields(dataFields) {
+        this.__dataFields = dataFields;
+    }
+
+    setUIFields(uiFields) {
+        this.__uiFields = uiFields;
+    }
+
+    addFilterField(dataField, label) {
+        this.__filterFields.push(new UIFilterField(dataField, label));
+    }
+
+    setSortingFunction(sortingFunction) {
+        this.__sortingFunction = sortingFunction;
+    }
+
+    onFieldChange(onChangeFunction) {
+        this.__onChangeFunction = onChangeFunction;
+    }
+
+    onDataModification(onDataChangeFunction) {
+        this.__onDataModificationFunction = onDataChangeFunction;
+    }
+
+    async present() {
+        this.__table.showSeparators = this.__showSeparators;
+        this.__tableData = this.__tableData.sort(this.__sortingFunction);
+
+        this.__loadFilters();
+        await this.__reloadTable();
+        await this.__table.present();
+    }
+
+    async __reloadTable() {
+
+        this.__table.removeAllRows();
+        await this.__addHeaderRow();
+
+        for (let tableRecord of this.__getFilteredTableData()) {
+            await this.__addTableRow(tableRecord);
+        }
+
+        this.__table.reload();
+    }
+
+    async __addHeaderRow() {
+
+        const tableHeader = new UITableRow();
+        
+        tableHeader.isHeader = true;
+        tableHeader.cellSpacing = 0.1;
+        tableHeader.backgroundColor = this.headerBackgroundColor;
+
+        const headerTitle = tableHeader.addText(tr("headerTitle"));
+        headerTitle.widthWeight = 410;
+        headerTitle.titleColor = this.headerTitleColor;
+
+        // Add 'Filter' button
+        if (this.__filterFields.length > 0) {
+
+            const filterButton = tableHeader.addButton(tr("headerFilterButton"));
+            filterButton.widthWeight = 40;
+            filterButton.onTap = async () => {
+                await this.__presentFiltersModal();
+                await this.__reloadTable();
+            };
+        }
+
+        // Add 'Create' button
+        if (this.__allowCreation) {
+
+            const createButton = tableHeader.addButton(tr("headerCreateButton"));
+            createButton.widthWeight = 40;
+            createButton.onTap = async () => {
+                await this.__upsertTableRecord();
+                await this.__reloadTable();
+            };
+        }
+
+        this.__table.addRow(tableHeader);
+    }
+
+    async __addTableRow(tableRecord) {
+
+        const tableRow = new UITableRow();
+
+        for (let uiField of this.__uiFields) {
+
+            let handler = UIFieldHandlerFactory.getHandler(uiField);
+            let uiFieldLabel = uiField.__fieldLabelFunction(tableRecord);
+
+            let field = tableRow.addButton(uiFieldLabel);
+            field.widthWeight = uiField.__weight;
+
+            // Don't add on tap callback if there is no
+            // handler for field.
+            if (!handler) {
+                continue;
+            }
+
+            field.onTap = async () => {
+
+                const metadata = new UIFieldMetadata(tableRow, tableRecord, uiField);
+                await handler.handle(this, metadata);
+                await this.__reloadTable();
+            };
+        }
+
+        this.__table.addRow(tableRow);
+    }
+
+    async __upsertTableRecord(updatedRecord) {
+
+        // Handle create
+        if (!updatedRecord?.id) {
+
+            let newRecord = {
+                id: await this.__nextSequenceValue()
+            };
+
+            this.__dataFields.forEach(field => 
+                newRecord[field.__fieldName] = field.__defaultValue
+            );
+            
+            this.__tableData.push(newRecord);
+
+        // Handle update
+        } else {
+            
+            const recordIndex = this.__tableData.findIndex(tableRecord =>
+                tableRecord.id === updatedRecord.id
+            );
+            this.__tableData[recordIndex] = updatedRecord;
+        }
+
+        this.__onDataModificationFunction(this.__tableData);
+    }
+
+    async __nextSequenceValue() {
+
+        let sequence = FileUtil.readLocalJson("sequence.json", {next: 0});
+        sequence.next += 1
+        
+        await FileUtil.updateLocalJson("sequence.json", sequence);
+        return sequence.next;
+    }
+
+    async __presentFiltersModal() {
+
+        const appliedFiltersList = Object.keys(this.__appliedFilters);
+        const labelFilterMap = {};
+
+        this.__filterFields.forEach(field => {
+
+            let popupLabel = "";
+
+            if (appliedFiltersList.includes(field.__dataField.__fieldName)) {
+                popupLabel += tr("filterAppliedIndicator") + " ";
+            }
+
+            popupLabel += field.__label;
+            labelFilterMap[popupLabel] = field;
+        });
+
+        const actions = [...Object.keys(labelFilterMap), tr("clearAllFiltersAction")];
+        const result = await modal()
+            .title(tr("filterSelectionPopupTitle"))
+            .actions(actions)
+            .present();
+        
+        if (result.isCancelled()) {
+            return;
+        }
+        
+        if (result.choice() === tr("clearAllFiltersAction")) {
+            this.__clearFilters();
+            return;   
+        }
+
+        const selectedFilterField = labelFilterMap[result.choice()];
+        const filterHandler = FilterHandlerFactory.getHandler(selectedFilterField);
+
+        if (filterHandler) {
+            const metadata = new FilterMetadata(selectedFilterField, appliedFiltersList);
+            await filterHandler.handle(this, metadata);
+        }
+    }
+
+    __getFilteredTableData() {
+
+        let filteredData = this.__tableData;
+
+        for (let filterField of this.__filterFields) {
+
+            let dataField = filterField.__dataField;
+            let fieldName = dataField.__fieldName;
+            let filterValue = this.__appliedFilters[fieldName];
+
+            // Skip if there is no filtering for this field.
+            if (filterValue === undefined) {
+                continue;
+            }
+
+            let handler = FilterHandlerFactory.getHandler(filterField);
+
+            if (handler) {
+
+                let filterFunction = handler.getFilterFunction();
+                filteredData = filteredData.filter((tableRecord) => 
+                    filterFunction(tableRecord[fieldName], filterValue)
+                );
+            }
+        }
+
+        return filteredData;
+    }
+
+    __loadFilters() {
+        this.__appliedFilters = FileUtil.readLocalJson("filter.json", {});
+    }
+    
+    async __upsertFilter(fieldName, filter) {
+        this.__appliedFilters[fieldName] = filter;
+        await FileUtil.updateLocalJson("filter.json", this.__appliedFilters);
+    }
+
+    async __deleteFilter(fieldName) {
+        delete this.__appliedFilters[fieldName];
+        await FileUtil.updateLocalJson("filter.json", this.__appliedFilters);
+    }
+
+    async __clearFilters() {
+        this.__appliedFilters = {};
+        await FileUtil.updateLocalJson("filter.json", {});
+    }
+}
+
+
+module.exports = {
+    TextDataField,
+    BoolDataField,
+    NumberDataField,
+    UIFormAction,
+    UIFormReadOnly,
+    UIFormField,
+    UIForm,
+    UIDatePicker,
+    UIDeleteRowField,
+    UIDataTable
+};
