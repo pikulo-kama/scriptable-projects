@@ -31,18 +31,20 @@ const conf = {
 
 
 class CalendarChartDataRepository {
+
+    __FIRST_DAY_OF_MONTH = 1;
     
     async getChartData() {
   
         let dateRange = this.__getDateRange();
-        let dataset = [];
+        let eventSet = [];
         
         const calendar = await Calendar.forEventsByTitle(conf.args.calendar);
         
-        for (let i = 0; i + 1 < dateRange.length; i++) {
+        for (let rangeId = 0; rangeId + 1 < dateRange.length; rangeId++) {
                 
-            let startDate = dateRange[i];
-            let endDate = dateRange[i + 1];
+            let startDate = dateRange[rangeId];
+            let endDate = dateRange[rangeId + 1];
             
             const events = await CalendarEvent.between(
                 startDate,
@@ -50,55 +52,54 @@ class CalendarChartDataRepository {
                 [calendar]
             );
             
-            dataset.push({
+            eventSet.push({
                 month: conf.months[startDate.getMonth()],
-                amount: events.length
+                count: events.length
             });
         }
         
         if (conf.args.skipBlank) {
         
-            let datasetCopy = dataset;
+            let eventSetCopy = eventSet;
             
-            for (let i = datasetCopy.length - 1; i >= 0; i--) {
+            for (let eventId = eventSetCopy.length - 1; eventId >= 0; eventId--) {
             
-                if (datasetCopy[i].amount > 0) {
+                let event = eventSetCopy[eventId];
+
+                if (event.count > 0) {
                     break;
                 }
                 
-                let idx = dataset.indexOf(datasetCopy[i]);
-                dataset.splice(idx, 1);
+                let idx = eventSet.indexOf(event);
+                eventSet.splice(idx, 1);
             }
         }
     
-        return dataset;
+        return eventSet;
     }
     
     __getDateRange() {
     
         let currentDate = new Date();
         let dates = new Array();
-        let monthId = currentDate.getMonth();
+        let currentMonth = currentDate.getMonth();
         
-        for (let i = conf.args.period - 1; i >= 0; i--) {
+        for (let monthIdx = conf.args.period - 1; monthIdx >= 0; monthIdx--) {
             
-            let date = new Date(
+            let targetMonth = currentMonth - monthIdx;
+            let monthStartDate = new Date(
                 currentDate.getFullYear(),
-                monthId - i,
-                1
+                targetMonth,
+                CalendarChartDataRepository.__FIRST_DAY_OF_MONTH
             );
 
-            dates.push(date);
+            dates.push(monthStartDate);
         }
         
         dates.push(currentDate);
         
         return dates.map(date => 
-            new Date(date.toLocaleString(
-                'en-US', {
-                    timeZone: conf.timeZone
-                })
-            )
+            new Date(date.toLocaleString('en-US', {timeZone: conf.timeZone}))
         );
     }
 }

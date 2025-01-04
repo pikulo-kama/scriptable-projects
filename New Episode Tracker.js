@@ -75,11 +75,8 @@ class EpisodateApiResource extends ApiResource {
 
     async download() {
 
-        const metadata = this.__getMetadata();
-        const url = this.__getSeriesUrl();
-
-        const request = cacheRequest(metadata);
-        const seriesData = await request.get(url);
+        const request = cacheRequest(this.__getMetadata());
+        const seriesData = await request.get(this.__getSeriesUrl());
 
         const seriesInfo = new SeriesInfo(
             seriesData.title,
