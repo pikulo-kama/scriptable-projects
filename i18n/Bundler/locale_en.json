@@ -1,4 +1,4 @@
 {
-    "bundler_scriptSelectionModalTitle": "Select Script to Bundle",
-    "bundler_bundledScriptName": "%1 (Bundled)"
+    "bundler_bundledScriptName": "%1 (Bundled)",
+    "bundler_scriptSelectionModalTitle": "Select Script to Bundle"
 }

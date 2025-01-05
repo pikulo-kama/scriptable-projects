@@ -143,7 +143,7 @@ class Modal {
         this.__fields.forEach(field => this.__alert.addTextField(field.label, field.previousValue));
     
         const resultCode = await this.__alert.presentAlert();
-        const selectedAction = this.__actions[resultCode];
+        let selectedAction = this.__actions[resultCode];
         let isCancelled = false;
 
         if (!selectedAction) {

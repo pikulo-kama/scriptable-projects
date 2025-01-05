@@ -1,15 +1,15 @@
 {
-    "customerChart_timezone": "Europe/Kiev",
-    "customerChart_january": "Jan",
-    "customerChart_february": "Feb",
-    "customerChart_march": "Mar",
     "customerChart_april": "Apr",
-    "customerChart_may": "May",
-    "customerChart_june": "Jun",
-    "customerChart_july": "Jul",
     "customerChart_august": "Aug",
-    "customerChart_september": "Sep",
-    "customerChart_october": "Oct",
+    "customerChart_december": "Dec",
+    "customerChart_february": "Feb",
+    "customerChart_january": "Jan",
+    "customerChart_july": "Jul",
+    "customerChart_june": "Jun",
+    "customerChart_march": "Mar",
+    "customerChart_may": "May",
     "customerChart_november": "Nov",
-    "customerChart_december": "Dec"
+    "customerChart_october": "Oct",
+    "customerChart_september": "Sep",
+    "customerChart_timezone": "Europe/Kiev"
 }

@@ -233,8 +233,8 @@ class SeriesTableView {
         table.setDataFields(dataFields);
         table.setUIFields(uiFields);
 
-        table.addFilterField(this.__isDoneField, "Completed");
-        table.addFilterField(this.__serieNameField, "Name");
+        table.addFilterField(this.__isDoneField, tr("stopWatcher_isDoneFilterName"));
+        table.addFilterField(this.__serieNameField, tr("stopWatcher_serieNameFilterName"));
 
         table.setSortingFunction((first, second) => 
             second.isDone - first.isDone || first.id - second.id

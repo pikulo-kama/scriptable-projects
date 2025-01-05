@@ -26,7 +26,7 @@ class FileUtil {
         await this.updateFile(
             scriptName,
             localeFileName,
-            JSON.stringify(content),
+            JSON.stringify(content, null, 4),
             this.__LOCALES_DIR
         );
     }
@@ -36,7 +36,7 @@ class FileUtil {
     }
 
     static async updateJson(scriptName, fileName, content) {
-        await this.updateFile(scriptName, fileName, JSON.stringify(content));
+        await this.updateFile(scriptName, fileName, JSON.stringify(content, null, 4));
     }
     
     static async updateLocalFile(fileName, content) {
@@ -58,12 +58,12 @@ class FileUtil {
         await this.__manager.write(targetFile, this.__castToData(content));
     }
 
-    static async localeExists(scriptName, languageCode) {
+    static localeExists(scriptName, languageCode) {
         let localeFileName = `locale_${languageCode}.json`;
         return this.fileExists(scriptName, localeFileName, this.__LOCALES_DIR);
     }
 
-    static async fileExists(scriptName, fileName, directory = this.__RESOURCES_DIR) {
+    static fileExists(scriptName, fileName, directory = this.__RESOURCES_DIR) {
 
         const targetFile = this.joinPaths(
             this.__getScriptableDir(directory), 

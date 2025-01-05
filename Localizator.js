@@ -3,7 +3,7 @@
 // icon-color: purple; icon-glyph: globe;
 
 const { FileUtil } = importModule("File Util");
-const { modal } = importModule("Modal");
+const { modal, ModalRule } = importModule("Modal");
 const { tr } = importModule("Localization");
 
 const {
@@ -38,7 +38,7 @@ class LocalizatorTable {
     constructor(scriptName) {
         this.__scriptName = scriptName;
         this.__translations = [];
-        this.__languageCode = Device.language();
+        this.__languageCode = this.__getLanguageCode();
 
         this.__translationValueField = new TextDataField("value");
     }
@@ -88,6 +88,7 @@ class LocalizatorTable {
             tr("localizator_translationFormFieldTitle")
         );
 
+        translationValueFormField.addRule(ModalRule.NotEmpty);
         translationValueUIField.addDefaultAction(tr("localizator_translationValueUpdateActionName"));
         translationValueUIField.addFormField(translationValueFormField);
 
@@ -116,7 +117,7 @@ class LocalizatorTable {
 
         const translationList = [];
         const translations = await this.__readTranslationFile();
-        // Needed so table will not create a sequence.
+        // Needed so table will not create a sequence
         // which we don't need.
         let id = 1;
 
@@ -142,11 +143,19 @@ class LocalizatorTable {
             .replace(/([a-z])([A-Z])/g, '$1 $2')
             .replace(/\b\w/g, character => character.toUpperCase());
     }
+    
+    __getLanguageCode() {
+        
+        const locale = Device.preferredLanguages()[0];
+        return locale.substring(0, locale.indexOf('-'));
+    }
 
     async __readTranslationFile() {
 
-        if (!FileUtil.localeExists(this.__scriptName, this.__languageCode)) {
-
+        const localeExists = FileUtil.localeExists(this.__scriptName, this.__languageCode);
+        
+        if (!localeExists) {
+            
             let mainLocaleFile = FileUtil.readLocale(this.__scriptName, LocalizatorTable.__DEFAULT_LOCALE);
             await FileUtil.updateLocale(this.__scriptName, this.__languageCode, mainLocaleFile);
         }

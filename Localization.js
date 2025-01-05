@@ -32,7 +32,7 @@ class Locale {
         }
 
         this.__translations = {};
-        const languageCode = Device.language();
+        const languageCode = this.__getLanguageCode();
         const localeDirectories = FileUtil.findLocaleDirectories();
         
         for (let directory of localeDirectories) {
@@ -53,6 +53,12 @@ class Locale {
                 ...localeContent
             };
         }
+    }
+    
+    static __getLanguageCode() {
+        
+        const locale = Device.preferredLanguages()[0];
+        return locale.substring(0, locale.indexOf('-'));
     }
 }
 
