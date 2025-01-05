@@ -8,12 +8,12 @@ const { tr } = importModule("Localization");
 class ModalRule {
 
     static NotEmpty = new ModalRule(
-        field => tr("err_field_cant_be_empty", field.label),
+        field => tr("modal_fieldCantBeEmptyMessage", field.label),
         value => !!value && String(value).length !== 0
     );
 
     static Number = new ModalRule(
-        field => tr("err_field_should_be_number", field.label),
+        field => tr("modal_fieldShouldBeNumberMessage", field.label),
         value => String(value).match("^[0-9]+$")
     );
 
@@ -102,7 +102,7 @@ class Modal {
 
     constructor() {
         this.__title = "";
-        this.__cancelLabel = tr("default_cancel_action");
+        this.__cancelLabel = tr("modal_cancelActionName");
         this.__actions = [];
         this.__fields = [];
 
@@ -203,8 +203,8 @@ class Modal {
 
         let errorAlert = new Alert();
 
-        errorAlert.addAction(tr("error_modal_action"));
-        errorAlert.title = tr("error_modal_title");
+        errorAlert.addAction(tr("modal_errorModalOkActionName"));
+        errorAlert.title = tr("modal_errorModalTitle");
         errorAlert.message = message;
         
         await errorAlert.present();

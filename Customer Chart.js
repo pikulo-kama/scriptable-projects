@@ -12,20 +12,20 @@ const conf = {
         enabled: true
     },
 
-    timeZone: tr("timezone"),
+    timeZone: tr("customerChart_timezone"),
     months: [
-        tr("month_january"),
-        tr("month_february"),
-        tr("month_march"),
-        tr("month_april"),
-        tr("month_may"),
-        tr("month_june"),
-        tr("month_july"),
-        tr("month_august"),
-        tr("month_september"),
-        tr("month_october"),
-        tr("month_november"),
-        tr("month_december")
+        tr("customerChart_january"),
+        tr("customerChart_february"),
+        tr("customerChart_march"),
+        tr("customerChart_april"),
+        tr("customerChart_may"),
+        tr("customerChart_june"),
+        tr("customerChart_july"),
+        tr("customerChart_august"),
+        tr("customerChart_september"),
+        tr("customerChart_october"),
+        tr("customerChart_november"),
+        tr("customerChart_december")
     ]
 };
 
@@ -54,7 +54,7 @@ class CalendarChartDataRepository {
             
             eventSet.push({
                 month: conf.months[startDate.getMonth()],
-                count: events.length
+                eventCount: events.length
             });
         }
         
@@ -66,7 +66,7 @@ class CalendarChartDataRepository {
             
                 let event = eventSetCopy[eventId];
 
-                if (event.count > 0) {
+                if (event.eventCount > 0) {
                     break;
                 }
                 
@@ -133,7 +133,7 @@ const chart = new LinearChart({
     chart: {
         data: await repository.getChartData(),
         xField: "month",
-        yField: "amount",
+        yField: "eventCount",
         showTooltips: true,
         tooltipFontSize: 30,
         gridLineWidth: 1,

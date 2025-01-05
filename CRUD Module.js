@@ -76,8 +76,8 @@ class UIDeleteRowField extends UIField {
 
     constructor(fieldLabelFunction, weight, color) {
         super(fieldLabelFunction, weight);
-        this.__message = tr("deleteFieldMessage");
-        this.__confirmAction = tr("deleteFieldConfirmAction");
+        this.__message = tr("crudModule_deleteFieldMessage");
+        this.__confirmAction = tr("crudModule_deleteFieldConfirmAction");
     }
 
     setMessage(message) {
@@ -416,8 +416,11 @@ class TextFilterHandler extends FilterHandler {
         const filterValue = uiTable.__appliedFilters[fieldName];
 
         const result = await modal()
-            .title(tr("filterPopupTitle", metadata.label))
-            .actions([tr("applyFilterAction"), tr("clearFilterAction")])
+            .title(tr("crudModule_filterModalTitle", metadata.label))
+            .actions([
+                tr("crudModule_applyFilterAction"), 
+                tr("crudModule_clearFilterAction")
+            ])
             .field()
                 .name(fieldName)
                 .label(metadata.label)
@@ -429,10 +432,10 @@ class TextFilterHandler extends FilterHandler {
             return;
         }
         
-        if (result.choice() === tr("applyFilterAction")) {
+        if (result.choice() === tr("crudModule_applyFilterAction")) {
             await uiTable.__upsertFilter(fieldName, result.get(fieldName));
 
-        } else if (result.choice() === tr("clearFilterAction")) {
+        } else if (result.choice() === tr("ccrudModule_learFilterAction")) {
             await uiTable.__deleteFilter(fieldName);
         }
     }
@@ -455,19 +458,19 @@ class BoolFilterHandler extends FilterHandler {
         const fieldName = dataField.__fieldName;
         const filterValue = uiTable.__appliedFilters[fieldName];
 
-        const yesAction = this.__getYesNoAction(filterValue === true, "yesBooleanAction");
-        const noAction = this.__getYesNoAction(filterValue === false, "noBooleanAction");
+        const yesAction = this.__getYesNoAction(filterValue === true, "crudModule_yesBooleanAction");
+        const noAction = this.__getYesNoAction(filterValue === false, "crudModule_noBooleanAction");
 
         const result = await modal()
-            .title(tr("filterPopupTitle", metadata.label))
-            .actions([yesAction, noAction, tr("clearFilterAction")])
+            .title(tr("crudModule_filterModalTitle", metadata.label))
+            .actions([yesAction, noAction, tr("crudModule_clearFilterAction")])
             .present();
 
         if (result.isCancelled()) {
             return;
         }
         
-        if (result.choice() === tr("clearFilterAction")) {
+        if (result.choice() === tr("crudModule_clearFilterAction")) {
             await uiTable.__deleteFilter(fieldName);
             
         } else {
@@ -486,7 +489,7 @@ class BoolFilterHandler extends FilterHandler {
         let enabledIndicator = "";
 
         if (isEnabled) {
-            enabledIndicator = tr("filterAppliedIndicator");
+            enabledIndicator = tr("crudModule_filterAppliedIndicator");
         }
 
         return tr(actionKey, enabledIndicator).trim();
@@ -543,9 +546,14 @@ class UIDataTable {
         this.__allowCreation = false;
 
         this.title = "";
+        this.filterButtonText = tr("crudModule_headerFilterButton");
+        this.createButtonText = tr("crudModule_headerCreateButton");
         this.headerBackgroundColor = Color.white();
         this.headerTitleColor = Color.darkGray();
         this.rowHeight = 44;
+
+        this.sequenceFileName = "sequence.json";
+        this.filtersFileName = "filter.json";
     }
 
     allowCreation() {
@@ -623,7 +631,7 @@ class UIDataTable {
         // Add 'Filter' button
         if (this.__filterFields.length > 0) {
 
-            const filterButton = tableHeader.addButton(tr("headerFilterButton"));
+            const filterButton = tableHeader.addButton(this.filterButtonText);
             filterButton.widthWeight = 40;
             filterButton.onTap = async () => {
                 await this.__presentFiltersModal();
@@ -634,7 +642,7 @@ class UIDataTable {
         // Add 'Create' button
         if (this.__allowCreation) {
 
-            const createButton = tableHeader.addButton(tr("headerCreateButton"));
+            const createButton = tableHeader.addButton(this.createButtonText);
             createButton.widthWeight = 40;
             createButton.onTap = async () => {
                 await this.__upsertTableRecord();
@@ -713,10 +721,10 @@ class UIDataTable {
 
     async __nextSequenceValue() {
 
-        let sequence = FileUtil.readLocalJson("sequence.json", {next: 0});
+        let sequence = FileUtil.readLocalJson(this.sequenceFileName, {next: 0});
         sequence.next += 1
         
-        await FileUtil.updateLocalJson("sequence.json", sequence);
+        await FileUtil.updateLocalJson(this.sequenceFileName, sequence);
         return sequence.next;
     }
 
@@ -730,16 +738,16 @@ class UIDataTable {
             let popupLabel = "";
 
             if (appliedFiltersList.includes(field.__dataField.__fieldName)) {
-                popupLabel += tr("filterAppliedIndicator") + " ";
+                popupLabel += tr("crudModule_filterAppliedIndicator") + " ";
             }
 
             popupLabel += field.__label;
             labelFilterMap[popupLabel] = field;
         });
 
-        const actions = [...Object.keys(labelFilterMap), tr("clearAllFiltersAction")];
+        const actions = [...Object.keys(labelFilterMap), tr("crudModule_clearAllFiltersAction")];
         const result = await modal()
-            .title(tr("filterSelectionPopupTitle"))
+            .title(tr("crudModule_filterSelectionModalTitle"))
             .actions(actions)
             .present();
         
@@ -747,7 +755,7 @@ class UIDataTable {
             return;
         }
         
-        if (result.choice() === tr("clearAllFiltersAction")) {
+        if (result.choice() === tr("crudModule_clearAllFiltersAction")) {
             this.__clearFilters();
             return;   
         }
@@ -791,22 +799,22 @@ class UIDataTable {
     }
 
     __loadFilters() {
-        this.__appliedFilters = FileUtil.readLocalJson("filter.json", {});
+        this.__appliedFilters = FileUtil.readLocalJson(this.filtersFileName, {});
     }
     
     async __upsertFilter(fieldName, filter) {
         this.__appliedFilters[fieldName] = filter;
-        await FileUtil.updateLocalJson("filter.json", this.__appliedFilters);
+        await FileUtil.updateLocalJson(this.filtersFileName, this.__appliedFilters);
     }
 
     async __deleteFilter(fieldName) {
         delete this.__appliedFilters[fieldName];
-        await FileUtil.updateLocalJson("filter.json", this.__appliedFilters);
+        await FileUtil.updateLocalJson(this.filtersFileName, this.__appliedFilters);
     }
 
     async __clearFilters() {
         this.__appliedFilters = {};
-        await FileUtil.updateLocalJson("filter.json", {});
+        await FileUtil.updateLocalJson(this.filtersFileName, {});
     }
 }
 

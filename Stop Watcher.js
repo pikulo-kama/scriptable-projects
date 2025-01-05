@@ -40,6 +40,17 @@ const conf = {
 }
 
 
+function pad(text) {
+    let castedText = String(text);
+
+    if (castedText.length < 2) {
+        castedText = "0" + castedText;
+    }
+
+    return castedText;
+}
+
+
 class WidgetBuilder {
 
     constructor() {
@@ -169,23 +180,13 @@ class WidgetBuilder {
     __getTimeCode(seriesInfo) {
         
         if (!seriesInfo.hour && !seriesInfo.minute) {
-            return tr("t_timecode_unwatched");    
+            return tr("stopWatcher_timeCodePlaceholder");    
         } 
 
-        return tr("t_timecode_watched",
-            this.__pad(seriesInfo.hour),
-            this.__pad(seriesInfo.minute)
+        return tr("stopWatcher_timeCodeLabel",
+            pad(seriesInfo.hour),
+            pad(seriesInfo.minute)
         );
-    }
-
-    __pad(text) {
-        let castedText = String(text);
-
-        if (castedText.length < 2) {
-            castedText = "0" + castedText;
-        }
-
-        return castedText;
     }
 }
 
@@ -198,7 +199,7 @@ class SeriesTableView {
         this.__isDoneField = new BoolDataField("isDone", false);
         this.__seriesIdField = new TextDataField("serieId");
         this.__showInSummaryField = new BoolDataField("showInSummary", false);
-        this.__serieNameField = new TextDataField("serieName", tr("t_serie_name_placeholder"));
+        this.__serieNameField = new TextDataField("serieName", tr("stopWatcher_serieNamePlaceholder"));
         this.__seasonField = new TextDataField("season", "1");
         this.__episodeField = new TextDataField("episode", "1");
         this.__hourField = new NumberDataField("hour");
@@ -220,7 +221,7 @@ class SeriesTableView {
         ];
 
         const table = new UIDataTable();
-        table.title = tr("headerTitle");
+        table.title = tr("stopWatcher_tableTitle");
         table.rowHeight = 50;
         table.showSeparators()
 
@@ -247,42 +248,42 @@ class SeriesTableView {
         // Status Field
         const statusUIField = new UIForm(this.__getStatusLabel, 20);
         statusUIField.setFormTitleFunction(this.__getStatusFormTitle);
-        const toggleStatusAction = new UIFormAction(tr("t_completion_status_toggle_action"));
+        const toggleStatusAction = new UIFormAction(tr("stopWatcher_toggleStatusActionName"));
         toggleStatusAction.addCallback(this.__isDoneField, (series) => !series.isDone);
         statusUIField.addFormAction(toggleStatusAction);
 
         // Integration Field
         const apiIntegrationUIField = new UIForm(this.__getApiIntegrationLabel, 20);
         apiIntegrationUIField.setFormTitleFunction(this.__getApiIntegrationFormTitle);
-        const seriesIdFormField = new UIFormField(this.__seriesIdField, tr("t_new_serie_id_label"));
-        const toggleSummaryViewAction = new UIFormAction(tr("t_toggle_summary_view_action"));
+        const seriesIdFormField = new UIFormField(this.__seriesIdField, tr("stopWatcher_apiIntegrationFieldFormLabel"));
+        const toggleSummaryViewAction = new UIFormAction(tr("stopWatcher_toggleSummaryViewActionName"));
         toggleSummaryViewAction.addCallback(this.__showInSummaryField, (series) => !series.showInSummary);
 
-        apiIntegrationUIField.addDefaultAction(tr("t_update_serie_id_action"));
+        apiIntegrationUIField.addDefaultAction(tr("stopWatcher_updateApiIntegrationIdActionName"));
         apiIntegrationUIField.addFormAction(toggleSummaryViewAction);
         apiIntegrationUIField.addFormField(seriesIdFormField);
 
         // Series name field
         const serieNameUIField = new UIForm((series) => series.serieName, 70);
-        serieNameUIField.setFormTitleFunction(() => tr("t_serie_name_update_title"));
+        serieNameUIField.setFormTitleFunction(() => tr("stopWatcher_serieNameFormTitle"));
         serieNameUIField.setColor(Color.white());
-        const serieNameFormField = new UIFormField(this.__serieNameField, tr("t_serie_name_label"));
+        const serieNameFormField = new UIFormField(this.__serieNameField, tr("stopWatcher_serieNameFieldFormLabel"));
 
-        serieNameUIField.addDefaultAction(tr("t_serie_name_update_action"));
+        serieNameUIField.addDefaultAction(tr("stopWatcher_updateSerieNameActionName"));
         serieNameUIField.addFormField(serieNameFormField);
 
         // Season/Episode field
         const tagUIField = new UIForm(this.__getTag, 50);
-        tagUIField.setFormTitleFunction(() => tr("t_season_episode_update_title"));
-        const seasonFormField = new UIFormField(this.__seasonField, tr("t_season_label"));
-        const episodeFormField = new UIFormField(this.__episodeField, tr("t_episode_label"));
-        const nextEpisodeAction = new UIFormAction(tr("t_next_episode_action"));
+        tagUIField.setFormTitleFunction(() => tr("stopWatcher_tagFormTitle"));
+        const seasonFormField = new UIFormField(this.__seasonField, tr("stopWatcher_seasonFieldFormLabel"));
+        const episodeFormField = new UIFormField(this.__episodeField, tr("stopWatcher_episodeFieldFormLabel"));
+        const nextEpisodeAction = new UIFormAction(tr("stopWatcher_nextEpisodeActionName"));
         
         nextEpisodeAction.addCallback(this.__episodeField, (series) => String(Number(series.episode) + 1));
         seasonFormField.addRule(ModalRule.Number);
         episodeFormField.addRule(ModalRule.Number);
 
-        tagUIField.addDefaultAction(tr("t_season_episode_update_action"));
+        tagUIField.addDefaultAction(tr("stopWatcher_updateTagActionName"));
         tagUIField.addFormAction(nextEpisodeAction);
         tagUIField.addFormField(seasonFormField);
         tagUIField.addFormField(episodeFormField);
@@ -293,7 +294,7 @@ class SeriesTableView {
         timeCodeUIField.setMinuteField(this.__minuteField);
 
         // Delete field
-        const deleteUIField = new UIDeleteRowField(() => tr("deleteFieldLabel"), 15);
+        const deleteUIField = new UIDeleteRowField(() => tr("stopWatcher_deleteFieldLabel"), 15);
 
         return [
             statusUIField,
@@ -316,53 +317,47 @@ class SeriesTableView {
 
     __getApiIntegrationLabel(series) {
         return !!series.serieId ? 
-            tr("t_api_integration_serie_set") : 
-            tr("t_api_integration_serie_unset");
+            tr("stopWatcher_integrationIdSetLabel") : 
+            tr("stopWatcher_integrationIdUnsetLabel");
     }
 
     __getApiIntegrationFormTitle(series) {
         return series.showInSummary ? 
-            tr("t_show_in_summary_label") : 
-            tr("t_dont_show_in_summary_label");
+            tr("stopWatcher_integrationTitleWhenInSummary") : 
+            tr("stopWatcher_integrationTitleWhenNotInSummary");
     }
 
     __getStatusLabel(series) {
-        return series.isDone ? tr("t_completion_status_completed") : 
-            tr("t_completion_status_uncompleted")
+        return series.isDone ? tr("stopWatcher_doneStatusLabel") : 
+            tr("stopWatcher_ongoingStatusLabel")
     }
 
     __getStatusFormTitle(series) {
         return series.isDone ? 
-            tr("t_completion_status_label_done") :
-            tr("t_completion_status_label_undone");
+            tr("stopWatcher_statusDoneTitle") :
+            tr("stopWatcher_statusOngoingTitle");
     }
     
     __getTag(series) {
         return series.isDone ? 
-            tr("t_field_completed") :
-            tr("t_season_episode_tag_uncompleted", series.season, series.episode);
+            tr("stopWatcher_doneStatusFieldPlaceholder") :
+            tr("stopWatcher_tagLabel", series.season, series.episode);
     }
         
     __getTimeCode(series) {
-        let value
         
         if (series.isDone) {
-            value = tr("t_field_completed")
-            
-        } else if (!series.hour && !series.minute) {
-            value = tr("t_timecode_unwatched")
-            
-        } else {
-            let hour = String(series.hour).length < 2 ?
-                "0" + series.hour : series.hour
-            
-            let minute = String(series.minute).length < 2 ?
-                "0" + series.minute : series.minute
-            
-            value = tr("t_timecode_watched", hour, minute);
+            return tr("stopWatcher_doneStatusFieldPlaceholder");
         }
-        
-        return value
+
+        if (!series.hour && !series.minute) {
+            return tr("stopWatcher_timeCodePlaceholder");
+        }
+
+        return tr("stopWatcher_timeCodeLabel", 
+            pad(series.hour), 
+            pad(series.minute)
+        );
     }
 }
 
