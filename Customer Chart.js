@@ -74,7 +74,6 @@ class CalendarChartDataRepository {
             }
         }
     
-    console.log(eventSet)
         return eventSet;
     }
     

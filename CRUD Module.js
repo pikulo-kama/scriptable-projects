@@ -37,6 +37,7 @@ class UIField {
         this.__fieldLabelFunction = fieldLabelFunction;
         this.__weight = weight;
         this.__color = null;
+        this.__aligningFunction = (cell) => cell.leftAligned();
 
         if (typeof fieldLabelFunction === 'string') {
             this.__fieldLabelFunction = () => fieldLabelFunction;
@@ -45,6 +46,10 @@ class UIField {
     
     setColor(color) {
         this.__color = color;
+    }
+
+    rightAligned() {
+        this.__aligningFunction = (cell) => cell.rightAligned();
     }
 }
 
@@ -670,6 +675,7 @@ class UIDataTable {
                 tableCell = tableRow.addButton(uiFieldLabel);
             }
 
+            uiField.__aligningFunction(tableCell);
             tableCell.widthWeight = uiField.__weight;
             tableCell.titleColor = uiField.__color;
 

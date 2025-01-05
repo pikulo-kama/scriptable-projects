@@ -60,8 +60,6 @@ class Bundler {
         // Add metadata
         scriptBody += mainScriptMetadata;
 
-        console.log(this.__dependencyScripts);
-        console.log(this.__dependencyScripts.keys());
         // Add all dependencies
         for (let dependencyBody of this.__dependencyScripts.values()) {
             scriptBody += dependencyBody;
@@ -81,8 +79,6 @@ class Bundler {
 
         const scriptDependencies = this.__getScriptDependencies(scriptBody);
         scriptBody = this.__removeDependenciesAndGet(scriptBody);
-        console.log(scriptName);
-        console.log(scriptBody.substring(0, 200));
         this.__dependencyScripts.set(scriptName, scriptBody);
 
         for (let dependencyName of scriptDependencies) {

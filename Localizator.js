@@ -6,175 +6,160 @@ const { FileUtil } = importModule("File Util");
 const { modal } = importModule("Modal");
 const { tr } = importModule("Localization");
 
-class Main {
-    
-    static fm = FileManager.iCloud()
-    
-    constructor() {
-        this.table = new UITable()
-        this.script = null
-        this.locale = null
-    }
-    
-    async main() {
-        
-        let scriptList = Main.fm.listContents(Main.fm.documentsDirectory())
-            .filter(script => script.endsWith(".js"))
-            .map(script => {
-                let tags = Main.fm.allTags(Main.fm.joinPath(Main.fm.documentsDirectory(), script))
-                return new ScriptInfo(script, tags)
-            })
-            .filter(script => script.hasLocales() && !script.isLibrary())
-        
-        this.script = await this.selectScript(scriptList)
-        
-        if (!this.script) {
-            return
+const {
+    UIDataTable,
+    TextDataField,
+    UIFormReadOnly,
+    UIForm,
+    UIFormField
+} = importModule("CRUD Module");
+
+class ScriptSelector {
+
+    static async selectScript() {
+
+        const result = await modal()
+            .title(tr("localizator_scriptSelectionModalTitle"))
+            .actions(FileUtil.findLocaleDirectories())
+            .present();
+
+        if (result.isCancelled()) {
+            return null;
         }
         
-        this.locale = await this.selectLocale(this.script)
-        
-        if (!this.locale) {
-            return
-        }
-        
-        this.loadLabels()
-        this.buildTable()
-        
-        this.table.present()
+        return result.choice();
     }
-    
-    loadLabels() {
-        this.data = FileUtil.readJson(this.script.verboseName, this.locale.fileName, {});
+}
+
+class LocalizatorTable {
+
+    static __DEFAULT_LOCALE = "en";
+
+    constructor(scriptName) {
+        this.__scriptName = scriptName;
+        this.__translations = [];
+        this.__languageCode = Device.language();
+
+        this.__translationValueField = new TextDataField("value");
     }
-    
-    buildTable() {
-        let headerRow = new UITableRow()
-        
-        headerRow.isHeader = true
-        headerRow.backgroundColor = Color.darkGray()
-        headerRow.cellSpacing = 100
-        
-        headerRow.addText(tr("t_header_label", this.script.verboseName));
-        this.table.addRow(headerRow)
-        
-        for (let labelKey of Object.keys(this.data)) {
-            
-            let labelRow = new UITableRow()
-            let labelCell = labelRow.addButton(this.data[labelKey])
-            
-            labelCell.onTap = this.editFieldAndSaveChanges(labelKey)
-            
-            this.table.addRow(labelRow)
-        }
-    }
-    
-    editFieldAndSaveChanges(key) {
-        
-        const that = this;
-        
-        return async () => {
-            
-            let result = await modal()
-                .title(tr("t_label_form_header", key))
-                .actions([tr("t_update_action")])
-                .field()
-                    .name(key)
-                    .label(key)
-                    .initial(that.data[key])
-                    .add()
-                .present();
-            
-            if (!result.isCancelled()) {
-                
-                that.data[key] = result.get(key);
-                await that.saveData();
-                
-                that.table.removeAllRows();
-                that.buildTable();
-                that.table.reload();
+
+    async build() {
+
+        const table = new UIDataTable();
+        table.title = tr("localizator_tableTitle", this.__languageCode, this.__scriptName);
+        table.rowHeight = 55;
+
+        table.setTableData(await this.__loadTranslations());
+        table.onDataModification(this.__getOnLocaleModificationCallback());
+
+        table.setDataFields([this.__translationValueField]);
+        table.setUIFields(this.__getUIFields());
+
+        table.setSortingFunction((first, second) => {
+
+            if (first.key < second.key) {
+                return -1;
             }
-        }
+
+            if (first.key > second.key) {
+                return 1;
+            }
+
+            return 0;
+        })
+
+        return table;
     }
-    
-    async saveData() {
-        await FileUtil.updateJson(
-            this.script.verboseName,
-            this.locale.fileName,
-            this.data
+
+    __getUIFields() {
+        
+        // Translation Key Field
+        const translationKeyUIField = new UIFormReadOnly((translation) => translation.label, 50);
+
+        // Translation Value Field
+        const translationValueUIField = new UIForm((translation) => translation.value, 50);
+        translationValueUIField.setFormTitleFunction((translation) => 
+            tr("localizator_translationValueFormTitle", translation.label)
         );
+        translationValueUIField.rightAligned();
+
+        const translationValueFormField = new UIFormField(
+            this.__translationValueField,
+            tr("localizator_translationFormFieldTitle")
+        );
+
+        translationValueUIField.addDefaultAction(tr("localizator_translationValueUpdateActionName"));
+        translationValueUIField.addFormField(translationValueFormField);
+
+        return [
+            translationKeyUIField,
+            translationValueUIField
+        ];
     }
-    
-    async selectScript(scriptList) {
+
+    __getOnLocaleModificationCallback() {
+
+        const that = this;
+
+        return (translationList) => {
+            const translationsObject = {};
+
+            for (let translation of translationList) {
+                translationsObject[translation.key] = translation.value;
+            }
+
+            FileUtil.updateLocale(that.__scriptName, that.__languageCode, translationsObject);
+        };
+    }
+
+    async __loadTranslations() {
+
+        const translationList = [];
+        const translations = await this.__readTranslationFile();
+        // Needed so table will not create a sequence.
+        // which we don't need.
+        let id = 1;
+
+        for (let translationKey of Object.keys(translations)) {
             
-        const result = await modal()
-            .title(tr("select_script"))
-            .actions(scriptList.map(script => script.verboseName))
-            .present();
-        
-        if (!result.isCancelled()) {
-            return scriptList.find(script => 
-                script.verboseName === result.choice()
-            );
+            translationList.push({
+                id: id++,
+                key: translationKey,
+                value: translations[translationKey],
+                label: this.__translationKeyToText(translationKey)
+            });
         }
-        
-        return null;
+
+        return translationList;
     }
-    
-    async selectLocale(script) {
-        
-        if (script.locales.length === 1) {
-            return script.locales[0]
+
+    __translationKeyToText(translationKey) {
+
+        let keyParts = translationKey.split("_");
+        let key = keyParts[keyParts.length - 1];
+
+        return key
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .replace(/\b\w/g, character => character.toUpperCase());
+    }
+
+    async __readTranslationFile() {
+
+        if (!FileUtil.localeExists(this.__scriptName, this.__languageCode)) {
+
+            let mainLocaleFile = FileUtil.readLocale(this.__scriptName, LocalizatorTable.__DEFAULT_LOCALE);
+            await FileUtil.updateLocale(this.__scriptName, this.__languageCode, mainLocaleFile);
         }
-        
-        const result = await modal()
-            .title(tr("select_locale"))
-            .actions(script.locales.map(localeObj => localeObj.locale))
-            .present();
-        
-        if (!result.isCancelled()) {
-            return script.locales.find(localeObj =>
-                localeObj.locale === result.choice()
-            );
-        }
-        
-        return null;
+
+        return FileUtil.readLocale(this.__scriptName, this.__languageCode);
     }
 }
 
-class ScriptInfo {
-    
-    static localeFileRegex = "locale_\\w+\.json"
-    
-    constructor(fileName, tags) {
-        
-        this.fileName = fileName
-        this.tags = tags
-        this.verboseName = fileName.replace(".js", "")
-        this.locales = this.loadLocales(this.verboseName)
-    }
-    
-    loadLocales(scriptName) {
-        return FileUtil.findFiles(scriptName, ScriptInfo.localeFileRegex)
-            .map(localeFile => new LocaleDto(localeFile))
-    }
-    
-    hasLocales() {
-        return this.locales.length > 0
-    }
-    
-    isLibrary() {
-        return this.tags.includes("Standalone Library")
-    }
-}
+const selectedScript = await ScriptSelector.selectScript();
 
-class LocaleDto {
-    
-    constructor(fileName) {
-        
-        this.fileName = fileName
-        this.locale = fileName.substring("locale_".length, fileName.indexOf(".json"))
-    }
-}
+if (selectedScript) {
 
-await new Main().main()
+    const tableBuilder = new LocalizatorTable(selectedScript);
+    const table = await tableBuilder.build();
+    await table.present();
+}
