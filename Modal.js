@@ -88,7 +88,8 @@ class Field {
             id: modal.__fields.length,
             name: this.__name,
             label: this.__label,
-            previousValue: this.__initialValue,
+            value: this.__initialValue,
+            previousValue: undefined,
             validations: this.__validations
         };
 
@@ -108,7 +109,6 @@ class Modal {
 
         this.__alert = null;
         this.__modalResult = null;
-        this.__internalData = {};
     }
 
     title(title) {
@@ -140,7 +140,7 @@ class Modal {
         this.__alert.addCancelAction(this.__cancelLabel);
 
         // Add fields
-        this.__fields.forEach(field => this.__alert.addTextField(field.label, field.previousValue));
+        this.__fields.forEach(field => this.__alert.addTextField(field.label, field.value));
     
         const resultCode = await this.__alert.presentAlert();
         let selectedAction = this.__actions[resultCode];
@@ -156,7 +156,7 @@ class Modal {
             await this.__processFields();
         }
 
-        return new ModalResult(selectedAction, isCancelled, this.__internalData);
+        return new ModalResult(selectedAction, isCancelled, this.__getFieldData());
     }
 
     async __processFields() {
@@ -164,10 +164,10 @@ class Modal {
         // Save values provided by user.
         for (let field of this.__fields) {
             
-            let fieldValue = this.__alert.textFieldValue(field.id);
+            let newValue = this.__alert.textFieldValue(field.id);
 
-            field.previousValue = fieldValue;
-            this.__internalData[field.name] = fieldValue;
+            field.previousValue = field.value;
+            field.value = newValue;
         }
 
         let hasErrors = false;
@@ -178,18 +178,18 @@ class Modal {
         // since error modal closes main modal we end up losing 
         // data provided by user.
         for (let field of this.__fields) {
-
-            let fieldValue = this.__internalData[field.name];
-
             for (let validation of field.validations) {
 
-                if (validation.ruleFunction(fieldValue)) {
-                    continue;
+                // Don't proceed with validation of field
+                // if one rule already failed.
+                if (validation.ruleFunction(field.value)) {
+                    break;
                 }
 
                 let errorMessage = validation.messageFunction(field);
                 await this.__presentErrorModal(errorMessage);
                 
+                field.value = field.previousValue;
                 hasErrors = true;
             }
         }
@@ -197,6 +197,17 @@ class Modal {
         if (hasErrors) {
             await this.present();
         }
+    }
+
+    __getFieldData() {
+
+        const fieldData = {};
+
+        for (let field of this.__fields) {
+            fieldData[field.name] = field.value;
+        }
+
+        return fieldData;
     }
 
     async __presentErrorModal(message) {
