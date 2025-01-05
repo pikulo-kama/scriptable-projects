@@ -136,7 +136,6 @@ class Bundler {
 
         const scriptDependencies = this.__getScriptDependencies(scriptBody);
         scriptBody = this.__removeDependenciesAndGet(scriptBody);
-        console.log(scriptName)
         this.__dependencyScripts.set(scriptName, scriptBody);
 
         for (let dependencyName of scriptDependencies) {
