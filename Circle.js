@@ -4,6 +4,11 @@
 
 const { ConfigStore } = importModule("Config Util");
 
+/**
+ * Used to generate circular chart.
+ *
+ * @class Circle
+ */
 class Circle {
 
     static __DEFAULT_CONFIG = {
@@ -20,12 +25,24 @@ class Circle {
         ]
     };
 
+    /**
+     * Creates an instance of Circle.
+     * 
+     * @param {Object} userConfig circle configuration
+     * @memberof Circle
+     */
     constructor(userConfig) {
         this.__configStore = new ConfigStore();
         this.__configStore.setConfig(Circle.__DEFAULT_CONFIG);
         this.__configStore.overrideConfig(userConfig);
     }
 
+    /**
+     * Used to generate image with circular chart.
+     *
+     * @return {Image} chart image
+     * @memberof Circle
+     */
     image() {
 
         const context = new DrawContext();
@@ -66,6 +83,14 @@ class Circle {
         return context.getImage();
     }
 
+    /**
+     * Used to generate chart segment.
+     *
+     * @param {Number} from starting percentage
+     * @param {Number} to ending percentage
+     * @return {Path} segment
+     * @memberof Circle
+     */
     __getSegment(from, to) {
 
         let step = Math.PI * 2 / this.__configStore.get("steps");
