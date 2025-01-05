@@ -29,10 +29,9 @@ const conf = {
     ]
 };
 
-
 class CalendarChartDataRepository {
 
-    __FIRST_DAY_OF_MONTH = 1;
+    static __FIRST_DAY_OF_MONTH = 1;
     
     async getChartData() {
   
@@ -45,7 +44,7 @@ class CalendarChartDataRepository {
                 
             let startDate = dateRange[rangeId];
             let endDate = dateRange[rangeId + 1];
-            
+
             const events = await CalendarEvent.between(
                 startDate,
                 endDate, 
@@ -75,28 +74,24 @@ class CalendarChartDataRepository {
             }
         }
     
+    console.log(eventSet)
         return eventSet;
     }
     
     __getDateRange() {
     
-        let currentDate = new Date();
         let dates = new Array();
-        let currentMonth = currentDate.getMonth();
         
         for (let monthIdx = conf.args.period - 1; monthIdx >= 0; monthIdx--) {
             
-            let targetMonth = currentMonth - monthIdx;
-            let monthStartDate = new Date(
-                currentDate.getFullYear(),
-                targetMonth,
-                CalendarChartDataRepository.__FIRST_DAY_OF_MONTH
-            );
+            let monthStartDate = new Date();
+            monthStartDate.setMonth(monthStartDate.getMonth() - monthIdx);
+            monthStartDate.setDate(CalendarChartDataRepository.__FIRST_DAY_OF_MONTH);
 
             dates.push(monthStartDate);
         }
         
-        dates.push(currentDate);
+        dates.push(new Date());
         
         return dates.map(date => 
             new Date(date.toLocaleString('en-US', {timeZone: conf.timeZone}))
