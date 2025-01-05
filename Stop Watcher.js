@@ -404,3 +404,5 @@ if (config.runsInWidget || conf.debug.forceWidget) {
     const tableView = new SeriesTableView();
     await tableView.present();
 }
+
+Script.complete();

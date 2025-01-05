@@ -848,3 +848,5 @@ if (config.runsInWidget || conf.debug.forceWidget) {
 } else {
     await webView.present();
 }
+
+Script.complete();

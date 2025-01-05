@@ -958,3 +958,5 @@ if (conf.debug.enabled) {
 } else {
     present(renderedWidget);
 }
+
+Script.complete();

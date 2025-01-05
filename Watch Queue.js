@@ -255,3 +255,5 @@ if (config.runsInWidget || conf.debug.forceWidget) {
     const table = await TableBuilder.build(seriesData);
     await table.present();
 }
+
+Script.complete();

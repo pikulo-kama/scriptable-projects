@@ -136,3 +136,5 @@ if (scriptName) {
     const bundler = new Bundler(scriptName);
     await bundler.bundle();
 }
+
+Script.complete();

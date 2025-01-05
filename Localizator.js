@@ -172,3 +172,5 @@ if (selectedScript) {
     const table = await tableBuilder.build();
     await table.present();
 }
+
+Script.complete();
