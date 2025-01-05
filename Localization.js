@@ -14,7 +14,7 @@ class Locale {
         let translation = this.__translations[key];
 
         if (!translation) {
-            logger.warn(`Translation with key '${key}' doesn't exist.`);
+            console.warn(`Translation with key '${key}' doesn't exist.`);
             return "";
         }
 

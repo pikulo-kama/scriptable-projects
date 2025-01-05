@@ -36,24 +36,29 @@ class UIField {
     constructor(fieldLabelFunction, weight) {
         this.__fieldLabelFunction = fieldLabelFunction;
         this.__weight = weight;
+        this.__color = null;
 
         if (typeof fieldLabelFunction === 'string') {
             this.__fieldLabelFunction = () => fieldLabelFunction;
         }
     }
+    
+    setColor(color) {
+        this.__color = color;
+    }
 }
 
 class UIFormReadOnly extends UIField {
 
-    constructor(fieldLabelFunction, weight) {
+    constructor(fieldLabelFunction, weight, color) {
         super(fieldLabelFunction, weight);
     }
 }
 
 class UIDatePicker extends UIField {
 
-    constructor(fieldLabelFunction, weight) {
-        super(fieldLabelFunction, weight);
+    constructor(fieldLabelFunction, weight, color) {
+        super(fieldLabelFunction, weight, color);
         this.__hourField = null;
         this.__minuteField = null;
     }
@@ -69,7 +74,7 @@ class UIDatePicker extends UIField {
 
 class UIDeleteRowField extends UIField {
 
-    constructor(fieldLabelFunction, weight) {
+    constructor(fieldLabelFunction, weight, color) {
         super(fieldLabelFunction, weight);
         this.__message = tr("deleteFieldMessage");
         this.__confirmAction = tr("deleteFieldConfirmAction");
@@ -86,7 +91,7 @@ class UIDeleteRowField extends UIField {
 
 class UIForm extends UIField {
 
-    constructor(fieldLabelFunction, weight) {
+    constructor(fieldLabelFunction, weight, color) {
         super(fieldLabelFunction, weight);
         this.__formTitleFunction = () => "";
         this.__fields = [];
@@ -537,8 +542,10 @@ class UIDataTable {
         this.__showSeparators = false;
         this.__allowCreation = false;
 
+        this.title = "";
         this.headerBackgroundColor = Color.white();
         this.headerTitleColor = Color.darkGray();
+        this.rowHeight = 44;
     }
 
     allowCreation() {
@@ -581,7 +588,10 @@ class UIDataTable {
         this.__table.showSeparators = this.__showSeparators;
         this.__tableData = this.__tableData.sort(this.__sortingFunction);
 
-        this.__loadFilters();
+        if (this.__filterFields.length > 0) {
+            this.__loadFilters();
+        }
+
         await this.__reloadTable();
         await this.__table.present();
     }
@@ -606,7 +616,7 @@ class UIDataTable {
         tableHeader.cellSpacing = 0.1;
         tableHeader.backgroundColor = this.headerBackgroundColor;
 
-        const headerTitle = tableHeader.addText(tr("headerTitle"));
+        const headerTitle = tableHeader.addText(this.title);
         headerTitle.widthWeight = 410;
         headerTitle.titleColor = this.headerTitleColor;
 
@@ -638,14 +648,24 @@ class UIDataTable {
     async __addTableRow(tableRecord) {
 
         const tableRow = new UITableRow();
+        tableRow.height = this.rowHeight;
 
         for (let uiField of this.__uiFields) {
 
-            let handler = UIFieldHandlerFactory.getHandler(uiField);
             let uiFieldLabel = uiField.__fieldLabelFunction(tableRecord);
+            let tableCell;
 
-            let field = tableRow.addButton(uiFieldLabel);
-            field.widthWeight = uiField.__weight;
+            if (uiField instanceof UIFormReadOnly) {
+                tableCell = tableRow.addText(uiFieldLabel);
+
+            } else {
+                tableCell = tableRow.addButton(uiFieldLabel);
+            }
+
+            tableCell.widthWeight = uiField.__weight;
+            tableCell.titleColor = uiField.__color;
+
+            let handler = UIFieldHandlerFactory.getHandler(uiField);
 
             // Don't add on tap callback if there is no
             // handler for field.
@@ -653,7 +673,7 @@ class UIDataTable {
                 continue;
             }
 
-            field.onTap = async () => {
+            tableCell.onTap = async () => {
 
                 const metadata = new UIFieldMetadata(tableRow, tableRecord, uiField);
                 await handler.handle(this, metadata);

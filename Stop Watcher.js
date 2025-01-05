@@ -35,7 +35,7 @@ const conf = {
         forceWidget: false,
 
         forceSeriesName: false,
-        seriesName: "AoT"
+        seriesName: "Naruto"
     }
 }
 
@@ -220,6 +220,9 @@ class SeriesTableView {
         ];
 
         const table = new UIDataTable();
+        table.title = tr("headerTitle");
+        table.rowHeight = 50;
+        table.showSeparators()
 
         table.allowCreation();
         table.setTableData(FileUtil.readLocalJson(SeriesTableView.__STORAGE_FILE, []));
@@ -262,6 +265,7 @@ class SeriesTableView {
         // Series name field
         const serieNameUIField = new UIForm((series) => series.serieName, 70);
         serieNameUIField.setFormTitleFunction(() => tr("t_serie_name_update_title"));
+        serieNameUIField.setColor(Color.white());
         const serieNameFormField = new UIFormField(this.__serieNameField, tr("t_serie_name_label"));
 
         serieNameUIField.addDefaultAction(tr("t_serie_name_update_action"));
