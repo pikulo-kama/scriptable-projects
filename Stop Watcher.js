@@ -3,6 +3,7 @@
 // icon-color: pink; icon-glyph: stopwatch;
 
 const { FileUtil } = importModule("File Util");
+const { ModalRule } = importModule("Modal");
 const { tr } = importModule("Localization");
 
 const {
@@ -198,8 +199,8 @@ class SeriesTableView {
         this.__seriesIdField = new TextDataField("serieId");
         this.__showInSummaryField = new BoolDataField("showInSummary", false);
         this.__serieNameField = new TextDataField("serieName", tr("t_serie_name_placeholder"));
-        this.__seasonField = new NumberDataField("season", "1");
-        this.__episodeField = new NumberDataField("episode", "1");
+        this.__seasonField = new TextDataField("season", "1");
+        this.__episodeField = new TextDataField("episode", "1");
         this.__hourField = new NumberDataField("hour");
         this.__minuteField = new NumberDataField("minute");
     }
@@ -272,7 +273,10 @@ class SeriesTableView {
         const seasonFormField = new UIFormField(this.__seasonField, tr("t_season_label"));
         const episodeFormField = new UIFormField(this.__episodeField, tr("t_episode_label"));
         const nextEpisodeAction = new UIFormAction(tr("t_next_episode_action"));
+        
         nextEpisodeAction.addCallback(this.__episodeField, (series) => String(Number(series.episode) + 1));
+        seasonFormField.addRule(ModalRule.Number);
+        episodeFormField.addRule(ModalRule.Number);
 
         tagUIField.addDefaultAction(tr("t_season_episode_update_action"));
         tagUIField.addFormAction(nextEpisodeAction);

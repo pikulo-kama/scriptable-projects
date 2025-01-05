@@ -26,10 +26,10 @@ class ModalRule {
 
 class ModalResult {
 
-    constructor(choice, isCancelled) {
+    constructor(choice, isCancelled, data) {
         this.__choice = choice;
         this.__isCancelled = isCancelled;
-        this.__data = {};
+        this.__data = data;
     }
 
     choice() {
@@ -38,10 +38,6 @@ class ModalResult {
 
     isCancelled() {
         return this.__isCancelled;
-    }
-
-    set(name, value) {
-        this.__data[name] = value;
     }
 
     get(name) {
@@ -75,8 +71,8 @@ class Field {
         return this;
     }
 
-    addValidation(modalRule) {
-        this.__validations.push(modalRule);
+    addValidation(validation) {
+        this.__validations.push(validation);
         return this;
     }
 
@@ -105,13 +101,14 @@ class Field {
 class Modal {
 
     constructor() {
-        this.__alert = new Alert();
         this.__title = "";
         this.__cancelLabel = tr("default_cancel_action");
         this.__actions = [];
         this.__fields = [];
 
+        this.__alert = null;
         this.__modalResult = null;
+        this.__internalData = {};
     }
 
     title(title) {
@@ -135,6 +132,7 @@ class Modal {
 
     async present() {
 
+        this.__alert = new Alert();
         this.__alert.title = this.__title;
 
         // Add actions
@@ -153,40 +151,51 @@ class Modal {
             isCancelled = true;
         }
 
-        this.__modalResult = new ModalResult(selectedAction, isCancelled);
-        // Process modal field changes.
-        this.__processFields();
+        if (!isCancelled) {
+            // Process modal field changes.
+            await this.__processFields();
+        }
 
-        return this.__modalResult;
+        return new ModalResult(selectedAction, isCancelled, this.__internalData);
     }
 
     async __processFields() {
 
+        // Save values provided by user.
         for (let field of this.__fields) {
             
             let fieldValue = this.__alert.textFieldValue(field.id);
+
             field.previousValue = fieldValue;
+            this.__internalData[field.name] = fieldValue;
+        }
 
-            if (fieldValue === "") {
-                fieldValue = undefined;
-            }
+        let hasErrors = false;
 
-            this.__modalResult.set(field.name, fieldValue);
-                
-            if (this.__modalResult.isCancelled()) {
-                continue;
-            }
-            
-            // Process field validations.
+        // Perform validations.
+        // Validation should happen after all data from form
+        // fields have been taken, otherwise it's being lost
+        // since error modal closes main modal we end up losing 
+        // data provided by user.
+        for (let field of this.__fields) {
+
+            let fieldValue = this.__internalData[field.name];
+
             for (let validation of field.validations) {
 
-                if (!validation.ruleFunction(fieldValue)) {
-                    
-                    let errorMessage = validation.messageFunction(field);
-                    await this.__presentErrorModal(errorMessage);
-                    await this.present();
+                if (validation.ruleFunction(fieldValue)) {
+                    continue;
                 }
+
+                let errorMessage = validation.messageFunction(field);
+                await this.__presentErrorModal(errorMessage);
+                
+                hasErrors = true;
             }
+        }
+
+        if (hasErrors) {
+            await this.present();
         }
     }
 

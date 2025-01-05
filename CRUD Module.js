@@ -129,6 +129,11 @@ class UIFormField {
     constructor(dataField, label) {
         this.__dataField = dataField;
         this.__label = label;
+        this.__rules = [];
+    }
+
+    addRule(rule) {
+        this.__rules.push(rule);
     }
 }
 
@@ -226,6 +231,7 @@ class UIFormHandler extends UIFieldHandler {
                 .name(fieldName)
                 .label(field.__label)
                 .initial(this.__tableRecord[fieldName])
+                .validations(field.__rules)
                 .add();
         });
         
