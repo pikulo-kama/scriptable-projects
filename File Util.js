@@ -8,6 +8,17 @@ class FileUtil {
     
     static __RESOURCES_DIR = "Resources";
     static __LOCALES_DIR = "i18n";
+    static __JS_EXTENSION = ".js";
+
+    static async updateScript(scriptName, script) {
+
+        const scriptPath = this.joinPaths(
+            this.__manager.documentsDirectory(),
+            scriptName
+        );
+
+        await this.__manager.write(scriptPath, Data.fromString(script));
+    }
 
     static async updateLocale(scriptName, languageCode, content) {
         
@@ -61,6 +72,12 @@ class FileUtil {
         );
         
         return this.__manager.fileExists(targetFile);
+    }
+
+    static readScript(scriptName) {
+
+        const scriptPath = this.joinPaths(this.__manager.documentsDirectory(), scriptName);
+        return this.__manager.readString(scriptPath);
     }
 
     static readLocale(scriptName, languageCode) {
@@ -117,6 +134,11 @@ class FileUtil {
     static findLocaleDirectories() {
         const scriptDirectory = this.__getScriptableDir(this.__LOCALES_DIR);
         return this.__manager.listContents(scriptDirectory);
+    }
+
+    static findScripts() {
+        return this.__manager.listContents(this.__manager.documentsDirectory())
+            .filter((script) => script.endsWith(this.__JS_EXTENSION));
     }
     
     static findFiles(scriptName, fileNameRegex) {

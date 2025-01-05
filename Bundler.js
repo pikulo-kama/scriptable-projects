@@ -2,145 +2,141 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-archive;
 
+const { FileUtil } = importModule("File Util");
 const { modal } = importModule("Modal");
 const { tr } = importModule("Localization");
 
 
-const NOT_BUNDLEABLE_TAG = "Not Bundleable";
-const IMPORT_SCRIPTS_REGEXP = /\s*(?:const|var|let)\s+\w+\s+=\s+importModule\((?:"|')(?<name>.+)(?:"|')\)/g;
-const IMPORT_REGEXP = (importName) => new RegExp("importModule\\((\"|\')" + importName + "(\"|\')\\)", "g");
-
-
-const fm = FileManager.iCloud()
-
-if (config.runsInApp) {
-    
-    let userInput = await selectScript()
-    let scriptName = userInput.selectedScript
-    
-    if (userInput.selectedScript == undefined) return
-    
-    let bundledScript = bundleScript(userInput.selectedScript)
-    saveScript(userInput.selectedScript, bundledScript.scriptContent)
+const conf = {
+    jsExtension: ".js",
+    emptyString: ""
 }
 
-async function selectScript() {
-    
-    let inputData = {}
-    
-    let scriptList = fm.listContents(fm.documentsDirectory())
-        .filter(script => script.endsWith(".js") && isBundleable(script))
-        .map(script => script.replace(".js", ""))
-        .sort()
 
-    let result = await modal()
-        .title(tr("select_script_to_bundle"))
-        .actions(scriptList)
-        .present();
-    
-    if (!result.isCancelled()) {
-        inputData.selectedScript = result.choice();
-    }
-    
-    return inputData;
-}
+class ScriptSelector {
 
-function bundleScript(script, parentScript, dataIn) {
-    
-    let scriptData = {
-        scriptContent: "",
-        moduleName: getModuleName(script, parentScript)
-    }
-    
-    if (dataIn != undefined) {
-        scriptData.scriptContent = dataIn.scriptContent
-    }
-    
-    let content = readScript(script)
-    let importMatches = [...content.matchAll(IMPORT_SCRIPTS_REGEXP)]
-    
-    for (let importMatch of importMatches) {
+    static async selectScript() {
+
+        const scriptList = FileUtil.findScripts()
+            .map((script) => script.replace(conf.jsExtension, conf.emptyString))
+            .sort();
+
+        const result = await modal()
+            .title(tr("bundler_scriptSelectionModalTitle"))
+            .actions(scriptList)
+            .present();
         
-        let importScript = importMatch[1]
-        let importRegex = IMPORT_REGEXP(importScript)
+        if (result.isCancelled()) {
+            return null;
+        }
         
-        scriptData = bundleScript(importScript, script, scriptData)
-        content = content.replace(importRegex, scriptData.moduleName)
-    }
-    
-    // extract Scriptable metadata.
-    // it should be stored so when root
-    // script would be processed it will 
-    // add metadata on the beginning of file.
-    let metadata = removeMetadata(content)
-    
-    content = metadata.content
-    scriptData.moduleName = getModuleName(script, parentScript)
-    
-    // If this is import script
-    // then replace following areas
-    if (parentScript != undefined) {
-        content = content
-                    .replace(/root\./g, scriptData.moduleName + ".")
-                    .replace(/const root/g, "const " + scriptData.moduleName)
-                    .replace(/module\.exports\..+/g, "")
-    } else {
-        // Add metadata on the beginning
-        // if this is root script
-        scriptData.scriptContent = metadata.metadata + scriptData.scriptContent
-    }
-    
-    // Add current script content to overall
-    scriptData.scriptContent += content
-    return scriptData
-}
-
-function removeMetadata(content) {
-    let lines = content.split('\n')
-    let metadata = lines.splice(0, 3)
-    
-    return {
-        metadata: metadata,
-        content: lines.join('\n')
+        return result.choice();
     }
 }
 
-function getModuleName(script, caller) {
-    
-    if (caller == undefined) {
-        return undefined
+
+class Bundler {
+
+    static __DEPENDENCY_REGEXP = new RegExp(/const\s*\{[^}]+\}\s*=\s*importModule\(["']([^"']+)["']\);?/g);
+    static __MODULE_EXPORTS_REGEXP = new RegExp(/module\.exports\s*=\s*{[^}]+};?/g);
+
+    constructor(scriptName) {
+        this.__scriptName = scriptName;
+        this.__scriptMetadata = new Map();
+        this.__dependencyScripts = new Map();
     }
-    
-    caller = caller.trim().replace(/\s+/g, "")
-    script = script.trim().replace(/\s+/g, "")
-    
-    return  caller + "_" + script + "_" + Math.floor(Math.random() * 10_000)
+
+    async bundle() {
+
+        this.__processDependencies(this.__scriptName);
+        
+        let scriptBody = "";
+        const mainScriptMetadata = this.__scriptMetadata.get(this.__scriptName);
+        const mainScriptBody = this.__dependencyScripts.get(this.__scriptName);
+
+        // Delete main script from dependencies
+        this.__dependencyScripts.delete(this.__scriptName);
+
+        // Add metadata
+        scriptBody += mainScriptMetadata;
+
+        console.log(this.__dependencyScripts);
+        console.log(this.__dependencyScripts.keys());
+        // Add all dependencies
+        for (let dependencyBody of this.__dependencyScripts.values()) {
+            scriptBody += dependencyBody;
+        }
+
+        // Add main script
+        scriptBody += mainScriptBody;
+
+        const targetFileName = tr("bundler_bundledScriptName", this.__scriptName);
+        await FileUtil.updateScript(targetFileName + conf.jsExtension, scriptBody)
+    }
+
+    __processDependencies(scriptName) {
+
+        let scriptBody = FileUtil.readScript(scriptName + conf.jsExtension);
+        scriptBody = this.__extractMetadataAndGet(scriptName, scriptBody);
+
+        const scriptDependencies = this.__getScriptDependencies(scriptBody);
+        scriptBody = this.__removeDependenciesAndGet(scriptBody);
+        console.log(scriptName);
+        console.log(scriptBody.substring(0, 200));
+        this.__dependencyScripts.set(scriptName, scriptBody);
+
+        for (let dependencyName of scriptDependencies) {
+
+            // Don't process if it was already processed
+            // in previous scripts.
+            if (this.__dependencyScripts.has(dependencyName)) {
+                continue;
+            }
+
+            this.__processDependencies(dependencyName);
+        }
+    }
+
+    __getScriptDependencies(scriptBody) {
+
+        const dependencyMatches = [...scriptBody.matchAll(Bundler.__DEPENDENCY_REGEXP)];
+        return dependencyMatches.map(match => match[1]);
+    }
+
+    __removeDependenciesAndGet(scriptBody) {
+
+        const dependencyMatches = [...scriptBody.matchAll(Bundler.__DEPENDENCY_REGEXP)];
+
+        for (let match of dependencyMatches) {
+
+            let importModuleBlock = match[0];
+            scriptBody = scriptBody.replaceAll(importModuleBlock, conf.emptyString);
+        }
+
+        const exportMatches = [...scriptBody.matchAll(Bundler.__MODULE_EXPORTS_REGEXP)];
+
+        for (let match of exportMatches) {
+
+            let exportBlock = match[0];
+            scriptBody = scriptBody.replaceAll(exportBlock, conf.emptyString);
+        }
+
+        return scriptBody;
+    }
+
+    __extractMetadataAndGet(scriptName, scriptBody) {
+        let scriptBodyLines = scriptBody.split('\n')
+        let metadataLines = scriptBodyLines.splice(0, 3)
+
+        this.__scriptMetadata.set(scriptName, metadataLines.join('\n'));
+        return scriptBodyLines.join('\n');
+    }
 }
 
-function readScript(scriptName) {
-    return fm.readString(
-        fm.joinPath(
-            fm.documentsDirectory(),
-            scriptName + ".js"
-        )
-    )
-}
 
-function saveScript(scriptName, content) {
-    
-    let newFileName = scriptName + tr("select_script_to_bundle") + ".js"
-    let newFilePath = fm.joinPath(
-        fm.documentsDirectory(),
-        newFileName
-    )
-    
-    fm.write(newFilePath, Data.fromString(content))
-    fm.addTag(newFilePath, NOT_BUNDLEABLE_TAG)
-}
+const scriptName = await ScriptSelector.selectScript();
 
-function isBundleable(script) {
-    let filePath = fm.joinPath(fm.documentsDirectory(), script)
-    let allTags = fm.allTags(filePath)
-    
-    return !allTags.includes(NOT_BUNDLEABLE_TAG)
+if (scriptName) {
+    const bundler = new Bundler(scriptName);
+    await bundler.bundle();
 }
