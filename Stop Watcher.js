@@ -40,6 +40,47 @@ const conf = {
 }
 
 
+/**
+ * ENTRY POINT
+ */
+async function main() {
+
+    if (config.runsInWidget || conf.debug.forceWidget) {
+    
+        conf.seriesName = getSeriesName();
+        const repository = new SeriesRepository();
+        const seriesInfo = repository.retrieve();
+    
+        if (seriesInfo) {
+    
+            const builder = new WidgetBuilder();
+            const widget = builder.build(seriesInfo);
+    
+            present(widget);
+        }
+    
+    // Runs in app - show table
+    } else {
+        const tableView = new SeriesTableView();
+        await tableView.present();
+    }
+}
+
+
+function getSeriesName() {
+
+    let seriesName = conf.debug.forceSeriesName ? 
+        conf.debug.seriesName :
+        args.widgetParameter;
+
+    if (!seriesName) {
+        throw new Error("Series name was not provided.");
+    }
+
+    return seriesName;
+}
+
+
 function pad(text) {
     let castedText = String(text);
 
@@ -370,39 +411,5 @@ class SeriesRepository {
     }
 }
 
-
-function getSeriesName() {
-
-    let seriesName = conf.debug.forceSeriesName ? 
-        conf.debug.seriesName :
-        args.widgetParameter;
-
-    if (!seriesName) {
-        throw new Error("Series name was not provided.");
-    }
-
-    return seriesName;
-}
-
-
-if (config.runsInWidget || conf.debug.forceWidget) {
-    
-    conf.seriesName = getSeriesName();
-    const repository = new SeriesRepository();
-    const seriesInfo = repository.retrieve();
-
-    if (seriesInfo) {
-
-        const builder = new WidgetBuilder();
-        const widget = builder.build(seriesInfo);
-
-        present(widget);
-    }
-
-// Runs in app - show table
-} else {
-    const tableView = new SeriesTableView();
-    await tableView.present();
-}
-
+await main();
 Script.complete();

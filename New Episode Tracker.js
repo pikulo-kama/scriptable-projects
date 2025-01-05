@@ -39,6 +39,50 @@ const conf = {
 
 
 /**
+ * ENTRY POINT
+ */
+async function main() {
+    conf.seriesName = getSeriesName();
+
+    const apiResource = ApiResourceFactory.getResource();
+    const seriesData = await apiResource.download();
+
+    const widget = new SeriesWidget();
+    const seriesObject = new Series(seriesData);
+    await seriesObject.obtainDominantColor();
+
+    const renderedWidget = widget.create(seriesObject);
+
+    if (conf.debug.enabled) {
+        renderedWidget.presentMedium();
+
+    } else {
+        present(renderedWidget);
+    }
+}
+
+
+/**
+ * Used to get series name for which
+ * data should be provided.
+ * 
+ * @returns {String} series name
+ */
+function getSeriesName() {
+
+    let seriesName = conf.debug.forceSeriesName ?
+        conf.debug.seriesName :
+        args.widgetParameter;
+
+    if (!seriesName) {
+        throw new Error("Series name was not provided")
+    }
+
+    return seriesName;
+}
+
+
+/**
  * Used to obtain TV series information.
  */
 class ApiResource {
@@ -920,43 +964,5 @@ class SeriesWidget {
     }
 }
 
-
-/**
- * Used to get series name for which
- * data should be provided.
- * 
- * @returns {String} series name
- */
-function getSeriesName() {
-
-    let seriesName = conf.debug.forceSeriesName ?
-        conf.debug.seriesName :
-        args.widgetParameter;
-
-    if (!seriesName) {
-        throw new Error("Series name was not provided")
-    }
-
-    return seriesName;
-}
-
-
-conf.seriesName = getSeriesName();
-
-const apiResource = ApiResourceFactory.getResource();
-const seriesData = await apiResource.download();
-
-const widget = new SeriesWidget();
-const seriesObject = new Series(seriesData);
-await seriesObject.obtainDominantColor();
-
-const renderedWidget = widget.create(seriesObject);
-
-if (conf.debug.enabled) {
-    renderedWidget.presentMedium();
-
-} else {
-    present(renderedWidget);
-}
-
+await main();
 Script.complete();

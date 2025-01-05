@@ -29,6 +29,37 @@ const conf = {
     ]
 };
 
+
+/**
+ * ENTRY POINT
+ */
+async function main() {
+
+    conf.args = getArguments();
+    const repository = new CalendarChartDataRepository();
+
+    const chart = new LinearChart({
+        chart: {
+            data: await repository.getChartData(),
+            xField: "month",
+            yField: "eventCount",
+            showTooltips: true,
+            tooltipFontSize: 30,
+            gridLineWidth: 1,
+            gridColor: themed(new Color("FEFBFA10"), new Color("707070")),
+            tooltipColor: new Color("999")
+        }
+    }, conf.args.mode);
+
+    if (conf.debug.enabled) {
+        chart.getWidget().presentMedium();
+
+    } else {
+        present(chart.getWidget());
+    }
+}
+
+
 class CalendarChartDataRepository {
 
     static __FIRST_DAY_OF_MONTH = 1;
@@ -120,27 +151,5 @@ function getArguments() {
     return arguments;
 }
 
-conf.args = getArguments();
-const repository = new CalendarChartDataRepository();
-
-const chart = new LinearChart({
-    chart: {
-        data: await repository.getChartData(),
-        xField: "month",
-        yField: "eventCount",
-        showTooltips: true,
-        tooltipFontSize: 30,
-        gridLineWidth: 1,
-        gridColor: themed(new Color("FEFBFA10"), new Color("707070")),
-        tooltipColor: new Color("999")
-    }
-}, conf.args.mode);
-
-if (conf.debug.enabled) {
-    chart.getWidget().presentMedium();
-
-} else {
-    present(chart.getWidget());
-}
-
+await main();
 Script.complete();

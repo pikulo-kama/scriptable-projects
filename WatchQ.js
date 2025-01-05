@@ -28,6 +28,25 @@ const conf = {
 };
 
 
+/**
+ * ENTRY POINT
+ */
+async function main() {
+
+    const repository = SeriesDataRepositoryFactory.getRepository();
+    const seriesData = await repository.getData();
+
+    if (config.runsInWidget || conf.debug.forceWidget) {
+        const widget = WidgetBuilder.build(seriesData);
+        present(widget);
+
+    } else {
+        const table = await TableBuilder.build(seriesData);
+        await table.present();
+    }
+}
+
+
 function getEpisodeCountLabel(episodeCount) {
     
     let key = "watchQueue_episodeSingle";
@@ -244,16 +263,5 @@ class TableBuilder {
     }
 }
 
-const repository = SeriesDataRepositoryFactory.getRepository();
-const seriesData = await repository.getData();
-
-if (config.runsInWidget || conf.debug.forceWidget) {
-    const widget = WidgetBuilder.build(seriesData);
-    present(widget);
-
-} else {
-    const table = await TableBuilder.build(seriesData);
-    await table.present();
-}
-
+await main();
 Script.complete();

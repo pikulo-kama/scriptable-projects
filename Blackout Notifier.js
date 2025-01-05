@@ -38,6 +38,57 @@ const conf = {
 
 
 /**
+ * ENTRY POINT
+ */
+async function main() {
+
+    conf.address = getAddress();
+    let webView = ScheduleWebViewFactory.getWebView();
+
+    if (config.runsInWidget || conf.debug.forceWidget) {
+        const widget = new ScheduleWidget();
+        
+        await webView.downloadSchedules();
+        await widget.render(webView);
+
+    } else {
+        await webView.present();
+    }
+}
+
+
+function getAddress() {
+
+    let address = conf.debug.forceAddress ?
+        conf.debug.address :
+        args.widgetParameter
+        
+    if (!address) {
+        throw new Error("Address was not provided.");
+    }
+
+    let addressComponents = address.split(",");
+
+    if (addressComponents.length !== 3) {
+        throw new Error("Address should contain city, street and building number separated by comma.");
+    }
+
+    let city = addressComponents[0];
+    let street = addressComponents[1];
+    let buildingNumber = addressComponents[2];
+    let shortAddress = buildingNumber + ", " + street;
+
+    return {
+        address,
+        city,
+        street,
+        buildingNumber,
+        shortAddress
+    };
+}
+
+
+/**
  * Interface.
  * Shouldn't be used directly.
  * 
@@ -804,49 +855,5 @@ class Time {
 }
 
 
-function getAddress() {
-
-    let address = conf.debug.forceAddress ?
-        conf.debug.address :
-        args.widgetParameter
-        
-    if (!address) {
-        throw new Error("Address was not provided.");
-    }
-
-    let addressComponents = address.split(",");
-
-    if (addressComponents.length !== 3) {
-        throw new Error("Address should contain city, street and building number separated by comma.");
-    }
-
-    let city = addressComponents[0];
-    let street = addressComponents[1];
-    let buildingNumber = addressComponents[2];
-    let shortAddress = buildingNumber + ", " + street;
-
-    return {
-        address,
-        city,
-        street,
-        buildingNumber,
-        shortAddress
-    };
-}
-
-
-// Needs to be initialized after config is initialized.
-conf.address = getAddress();
-let webView = ScheduleWebViewFactory.getWebView();
-
-if (config.runsInWidget || conf.debug.forceWidget) {
-    const widget = new ScheduleWidget();
-    
-    await webView.downloadSchedules();
-    await widget.render(webView);
-
-} else {
-    await webView.present();
-}
-
+await main();
 Script.complete();

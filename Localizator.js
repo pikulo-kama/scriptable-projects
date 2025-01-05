@@ -14,6 +14,23 @@ const {
     UIFormField
 } = importModule("CRUD Module");
 
+
+/**
+ * ENTRY POINT
+ */
+async function main() {
+
+    const selectedScript = await ScriptSelector.selectScript();
+
+    if (selectedScript) {
+
+        const tableBuilder = new LocalizatorTable(selectedScript);
+        const table = await tableBuilder.build();
+        await table.present();
+    }
+}
+
+
 class ScriptSelector {
 
     static async selectScript() {
@@ -164,13 +181,5 @@ class LocalizatorTable {
     }
 }
 
-const selectedScript = await ScriptSelector.selectScript();
-
-if (selectedScript) {
-
-    const tableBuilder = new LocalizatorTable(selectedScript);
-    const table = await tableBuilder.build();
-    await table.present();
-}
-
+await main();
 Script.complete();
