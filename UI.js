@@ -2,13 +2,33 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: magic;
 
+/**
+ * Spacer builder.
+ *
+ * @class SpacerWidgetBuilder
+ */
 class SpacerWidgetBuilder {
 
+    /**
+     * Used to render spacer.
+     * If length is not provided -
+     * spacer will take all available space.
+     *
+     * @param {*} parent parent widget
+     * @param {Number} length length of spacer
+     * @return {WidgetSpacer} spacer
+     * @memberof SpacerWidgetBuilder
+     */
     renderFor(parent, length) {
         return parent.addSpacer(length);
     }
 }
 
+/**
+ * Stack builder.
+ *
+ * @class StackWidgetBuilder
+ */
 class StackWidgetBuilder {
 
     __width = 0;
@@ -19,22 +39,49 @@ class StackWidgetBuilder {
     __layoutFunction = (widget) => widget.layoutHorizontally();
     __aligningFunction = (widget) => widget.centerAlignContent();
 
+    /**
+     * Sets stack direction to
+     * be vertical.
+     * 
+     * By default horizontal.
+     *
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     vertical() {
         this.__layoutFunction = (widget) => widget.layoutVertically();
         return this;
     }
     
+    /**
+     * Used to align self on center.
+     *
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     centerAlign() {
         this.leftAlign();
         this.rightAlign();
         return this;
     }
     
+    /**
+     * Used to align self on left.
+     *
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     leftAlign() {
         this.__leftAlign = true;
         return this;
     }
 
+    /**
+     * Used to align self on right.
+     *
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     rightAlign() {
         this.__parentTransform = (parent) => {
 
@@ -46,31 +93,78 @@ class StackWidgetBuilder {
         return this;
     }
     
+    /**
+     * Used to set width of stack.
+     *
+     * @param {Number} width stack width
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     width(width) {
         this.__width = width;
         return this;
     }
     
+    /**
+     * Used to set height of stack.
+     *
+     * @param {Number} height stack height
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     height(height) {
         this.__height = height;
         return this;
     }
 
+    /**
+     * Used to set stack background color.
+     *
+     * @param {Color} color background color
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     color(color) {
         this.__color = color;
         return this;
     }
     
+    /**
+     * Used to set stack border color.
+     *
+     * @param {Color} color border color
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     borderColor(color) {
         this.__borderColor = color;
         return this;
     }
     
+    /**
+     * Used to set stack border width.
+     *
+     * @param {Number} color border width
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     borderWidth(width) {
         this.__borderWidth = width;
         return this;
     }
 
+    /**
+     * Used to paddings for stack.
+     * Only top is mandatory for padding
+     * to take effect.
+     *
+     * @param {Number} top top padding
+     * @param {Number} right right padding
+     * @param {Number} bottom bottom padding
+     * @param {Number} left left padding
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     padding(top, right, bottom, left) {
 
         if (!right) {
@@ -93,11 +187,25 @@ class StackWidgetBuilder {
         return this;
     }
 
+    /**
+     * Used to set corner radius of stack.
+     *
+     * @param {Number} radius stack corner radius
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
     radius(radius) {
         this.__radius = radius;
         return this;
     }
 
+    /**
+     * Used to render stack.
+     *
+     * @param {*} parent stack parent widget
+     * @return {WidgetStack} stack
+     * @memberof StackWidgetBuilder
+     */
     renderFor(parent) {
 
         parent = this.__parentTransform(parent);
@@ -141,48 +249,105 @@ class StackWidgetBuilder {
     }
 }
 
+
+/**
+ * Text widget builder.
+ *
+ * @class TextWidgetBuilder
+ */
 class TextWidgetBuilder {
 
     __parentTransform = (parent) => parent;
     __aligningFunction = (widget) => widget.centerAlignText();
 
+    /**
+     * Used to set widget content.
+     *
+     * @param {String} content widget content
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     content(content) {
         this.__content = content;
         return this;
     }
     
+    /**
+     * Set max length of content.
+     * If content exceeds defined limit
+     * content would be trimmed.
+     *
+     * @param {Number} maxLength max possible content length
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     limit(maxLength) {
         this.__limit = maxLength;
         return this;
     }
     
+    /**
+     * Used to apply 'Black Rounded' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     blackRoundedFont(size) {
         this.__font = Font.blackRoundedSystemFont(size);
         return this;
     }
 
+    /**
+     * Used to apply 'Bold Monospaced' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     boldMonospacedFont(size) {
         this.__font = Font.boldMonospacedSystemFont(size);
         return this;
     }
 
+    /**
+     * Used to apply 'Black Monospaced' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     blackMonospacedFont(size) {
         this.__font = Font.blackMonospacedSystemFont(size);
         return this;
     }
     
+    /**
+     * Used to apply 'Black' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     blackFont(size) {
         this.__font = Font.blackSystemFont(size);
         return this;
     }
     
+    /**
+     * Used to set text color.
+     *
+     * @param {Color} color text color
+     * @return {TextWidgetBuilder} current instance of builder
+     * @memberof TextWidgetBuilder
+     */
     color(color) {
         this.__color = color;
         return this;
-    }
-    
-    yellowColor() {
-        return this.color(Color.yellow());
     }
     
     opacity(opacity) {
@@ -319,10 +484,6 @@ class ImageWidgetBuilder {
         return this;
     }
     
-    yellowColor() {
-        return this.color(Color.yellow());
-    }
-    
     opacity(opacity) {
         this.__opacity = opacity;
         return this;
@@ -398,16 +559,40 @@ class DateWidgetBuilder {
         return this;
     }
 
+    /**
+     * Used to apply 'Black' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {DateWidgetBuilder} current instance of builder
+     * @memberof DateWidgetBuilder
+     */
     blackRoundedFont(size) {
         this.__font = Font.blackRoundedSystemFont(size);
         return this;
     }
 
+    /**
+     * Used to apply 'Black' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {DateWidgetBuilder} current instance of builder
+     * @memberof DateWidgetBuilder
+     */
     boldMonospacedFont(size) {
         this.__font = Font.boldMonospacedSystemFont(size);
         return this;
     }
     
+    /**
+     * Used to apply 'Black' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {DateWidgetBuilder} current instance of builder
+     * @memberof DateWidgetBuilder
+     */
     blackFont(size) {
         this.__font = Font.blackSystemFont(size);
         return this;
@@ -416,10 +601,6 @@ class DateWidgetBuilder {
     color(color) {
         this.__color = color;
         return this;
-    }
-    
-    yellowColor() {
-        return this.color(Color.yellow());
     }
     
     opacity(opacity) {

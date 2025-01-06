@@ -638,7 +638,7 @@ class ScheduleWidget {
             image()
                 .icon("lightbulb.fill")
                 .size(46)
-                .yellowColor()
+                .color(Color.yellow())
                 .heavyWeight()
                 .renderFor(root);
                 
@@ -672,7 +672,7 @@ class ScheduleWidget {
         // Change styling of outages that may not occur.
         if (outageRecord.isProbable()) {
             outageIcon.icon("questionmark.square")
-            outageIcon.yellowColor();
+            outageIcon.color(Color.yellow());
                 
         } else {
             let iconCode = outageRecord.getOrder() + ".square.fill"
