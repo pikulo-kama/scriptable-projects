@@ -22,8 +22,8 @@ const {
 
 const conf = {
     debug: {
-        enabled: true,
-        forceWidget: false
+        enabled: false,
+        forceWidget: f
     }
 };
 
@@ -47,9 +47,17 @@ async function main() {
 }
 
 
+/**
+ * Used to format episode count by
+ * adding suffix 'ep' or 'eps' depending
+ * on count whether it's singular or plural.
+ *
+ * @param {Number} episodeCount episode count
+ * @return {String} formatted episode count
+ */
 function getEpisodeCountLabel(episodeCount) {
     
-    let key = "watchQueue_episodeSingle";
+    let key = "watchQueue_episodeSingular";
     
     if (episodeCount > 1) {
         key = "watchQueue_episodePlural";
@@ -59,18 +67,44 @@ function getEpisodeCountLabel(episodeCount) {
 }
 
 
+/**
+ * Interface.
+ * Used to retrieve series data.
+ *
+ * @class SeriesDataRepository
+ */
 class SeriesDataRepository {
 
+    /**
+     * Used to retrieve series data.
+     * 
+     * @return {Object} data ready to be displayed in both widget and table
+     * @memberof SeriesDataRepository
+     */
     async getData() {}
 }
 
 
+/**
+ * Used to get and process data from Stop Watcher script.
+ *
+ * @class StopWatcherRepository
+ */
 class StopWatcherRepository {
 
-    constructor() {
-        this.__apiURI = "https://episodate.com/api/show-details?q=";
-    }
+    __apiURI = "https://episodate.com/api/show-details?q=";
 
+    /**
+     * Used to get processed Stop Watcher data
+     * with information about current series watch
+     * completion.
+     * 
+     * Additionally data from Episodate API is being
+     * obtained to get how many episodes are still to watch.
+     *
+     * @return {Object} series data
+     * @memberof StopWatcherRepository
+     */
     async getData() {
 
         const processedRecords = [];
@@ -114,6 +148,14 @@ class StopWatcherRepository {
         return processedRecords;
     }
 
+    /**
+     * Used to get additional data from Episodate API.
+     * Gets name of series and amount of unwatched episodes.
+     *
+     * @param {Object} record series record from Stop Watcher script
+     * @return {Object} series record from Stop Watcher script with additional information
+     * @memberof StopWatcherRepository
+     */
     async __fetchAdditionalData(record) {
     
         const request = cacheRequest(this.__getMetadata());
@@ -132,10 +174,25 @@ class StopWatcherRepository {
         };
     }
     
-    __getEpisodeId(info) {
-        return info.season * 1000 + info.episode
+    /**
+     * Used to get unique number
+     * representing series season and episode.
+     *
+     * @param {Object} seriesRecord series record
+     * @return {Number} episode ID
+     * @memberof StopWatcherRepository
+     */
+    __getEpisodeId(seriesRecord) {
+        return seriesRecord.season * 1000 + seriesRecord.episode
     }
 
+    /**
+     * Used to get metadata needed to obtain
+     * information from Episodate API.
+     *
+     * @return {Object} request metadata
+     * @memberof StopWatcherRepository
+     */
     __getMetadata() {
         return metadata()
             .data()
@@ -160,13 +217,26 @@ class StopWatcherRepository {
 }
 
 
+/**
+ * Debug repository used to
+ * obtain mock series data.
+ *
+ * @class DebugRepository
+ */
 class DebugRepository {
 
+    /**
+     * Used to get mock series data
+     *
+     * @return {List<Object>} mock series data
+     * @memberof DebugRepository
+     */
     async getData() {
         return [
             {
                 serieId: "dark-matter-apple-tv",
                 name: "Dark Matter",
+                showInSummary: true,
                 season: 1,
                 episode: 7,
                 count: 10
@@ -174,6 +244,7 @@ class DebugRepository {
             {
                 serieId: "game-of-thrones",
                 name: "Game of Thrones",
+                showInSummary: true,
                 season: 7,
                 episode: 7,
                 count: 15
@@ -181,6 +252,7 @@ class DebugRepository {
             {
                 serieId: "the-last-of-us",
                 name: "The Last of Us",
+                showInSummary: false,
                 season: 1,
                 episode: 2,
                 count: 5
@@ -190,8 +262,21 @@ class DebugRepository {
 }
 
 
+/**
+ * Repository factory.
+ *
+ * @class SeriesDataRepositoryFactory
+ */
 class SeriesDataRepositoryFactory {
 
+    /**
+     * Factory method.
+     * Used to get instance of repository.
+     *
+     * @static
+     * @return {SeriesDataRepository} series data repository
+     * @memberof SeriesDataRepositoryFactory
+     */
     static getRepository() {
 
         if (conf.debug.enabled) {
@@ -203,12 +288,25 @@ class SeriesDataRepositoryFactory {
 }
 
 
+/**
+ * Used to build widget.
+ *
+ * @class WidgetBuilder
+ */
 class WidgetBuilder {
 
+    /**
+     * Used to build widget.
+     *
+     * @static
+     * @param {List<Object>} seriesRecords list of series records
+     * @return {ListWidget} widget with remaining episodes to watch summary
+     * @memberof WidgetBuilder
+     */
     static build(seriesRecords) {
         let totalEpisodeCount = seriesRecords
             .filter(record => record.showInSummary)
-            .reduce((totalEpisodes, record) => totalEpisodes + record.episodeCount, 0);
+            .reduce((totalEpisodes, record) => totalEpisodes + record.count, 0);
             
         let episodeCountWidget = text();
         
@@ -239,8 +337,24 @@ class WidgetBuilder {
 }
 
 
+/**
+ * Used to build detailed table
+ * with how much episodes are left to watch.
+ *
+ * @class TableBuilder
+ */
 class TableBuilder {
 
+    /**
+     * Used to build readonly table
+     * with detailed information on how much
+     * episodes are left to watch.
+     *
+     * @static
+     * @param {List<Object>} seriesRecords list of records
+     * @return {UITable} UI table
+     * @memberof TableBuilder
+     */
     static async build(seriesRecords) {
 
         const uiFields = [
@@ -262,6 +376,7 @@ class TableBuilder {
         return table;
     }
 }
+
 
 await main();
 Script.complete();
