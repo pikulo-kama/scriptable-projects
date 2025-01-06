@@ -2,6 +2,8 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: magic;
 
+const { Classes } = importModule("Core");
+
 /**
  * Spacer builder.
  *
@@ -24,18 +26,183 @@ class SpacerWidgetBuilder {
     }
 }
 
+
+/**
+ * Mixin for setting color.
+ *
+ * @class ColorBuilder
+ */
+class ColorBuilder {
+
+    /**
+     * Used to set widget color.
+     *
+     * @param {Color} color text color
+     * @return {*} current instance of builder
+     * @memberof ColorBuilder
+     */
+    color(color) {
+        this.__color = color;
+        return this;
+    }
+}
+
+/**
+ * Mixin for setting opacity.
+ *
+ * @class OpacityBuilder
+ */
+class OpacityBuilder {
+    
+    /**
+     * Used to set widget opacity.
+     *
+     * @param {Number} opacity widget opacity
+     * @return {*} current instance of builder
+     * @memberof OpacityBuilder
+     */
+    opacity(opacity) {
+        this.__opacity = opacity;
+        return this;
+    }    
+}
+
+/**
+ * Mixing for setting layout
+ *
+ * @class LayoutBuilder
+ */
+class LayoutBuilder {
+
+    __leftAlign = false;
+    __parentTransform = (parent) => parent;
+
+    /**
+     * Used to align self on center.
+     *
+     * @return {*} current instance of builder
+     * @memberof LayoutBuilder
+     */
+    centerAlign() {
+        this.leftAlign();
+        this.rightAlign();
+        return this;
+    }
+    
+    /**
+     * Used to align self on left.
+     *
+     * @return {*} current instance of builder
+     * @memberof LayoutBuilder
+     */
+    leftAlign() {
+        this.__leftAlign = true;
+        return this;
+    }
+
+    /**
+     * Used to align self on right.
+     *
+     * @return {*} current instance of builder
+     * @memberof LayoutBuilder
+     */
+    rightAlign() {
+        this.__parentTransform = (parent) => {
+
+            const stackWrapperStack = parent.addStack();
+            stackWrapperStack.addSpacer();
+
+            return stackWrapperStack;
+        };
+        return this;
+    }
+}
+
+/**
+ * Mixin used to set widget content and font
+ *
+ * @class TextBuilder
+ */
+class TextBuilder {
+
+    __aligningFunction = (widget) => widget.centerAlignText();
+
+    /**
+     * Used to set widget content.
+     *
+     * @param {String} content widget content
+     * @return {*} current instance of builder
+     * @memberof TextBuilder
+     */
+    content(content) {
+        this.__content = content;
+        return this;
+    }
+
+    /**
+     * Used to apply 'Black Rounded' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {*} current instance of builder
+     * @memberof TextBuilder
+     */
+    blackRoundedFont(size) {
+        this.__font = Font.blackRoundedSystemFont(size);
+        return this;
+    }
+
+    /**
+     * Used to apply 'Bold Monospaced' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {*} current instance of builder
+     * @memberof TextBuilder
+     */
+    boldMonospacedFont(size) {
+        this.__font = Font.boldMonospacedSystemFont(size);
+        return this;
+    }
+
+    /**
+     * Used to apply 'Black Monospaced' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {*} current instance of builder
+     * @memberof TextBuilder
+     */
+    blackMonospacedFont(size) {
+        this.__font = Font.blackMonospacedSystemFont(size);
+        return this;
+    }
+    
+    /**
+     * Used to apply 'Black' font
+     * to the text.
+     *
+     * @param {Number} size font size
+     * @return {*} current instance of builder
+     * @memberof TextBuilder
+     */
+    blackFont(size) {
+        this.__font = Font.blackSystemFont(size);
+        return this;
+    }
+}
+
+
 /**
  * Stack builder.
  *
  * @class StackWidgetBuilder
  */
-class StackWidgetBuilder {
+class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
 
     __width = 0;
     __height = 0;
-    __leftAlign = false;
 
-    __parentTransform = (parent) => parent;
     __layoutFunction = (widget) => widget.layoutHorizontally();
     __aligningFunction = (widget) => widget.centerAlignContent();
 
@@ -50,46 +217,6 @@ class StackWidgetBuilder {
      */
     vertical() {
         this.__layoutFunction = (widget) => widget.layoutVertically();
-        return this;
-    }
-    
-    /**
-     * Used to align self on center.
-     *
-     * @return {StackWidgetBuilder} current instance of builder
-     * @memberof StackWidgetBuilder
-     */
-    centerAlign() {
-        this.leftAlign();
-        this.rightAlign();
-        return this;
-    }
-    
-    /**
-     * Used to align self on left.
-     *
-     * @return {StackWidgetBuilder} current instance of builder
-     * @memberof StackWidgetBuilder
-     */
-    leftAlign() {
-        this.__leftAlign = true;
-        return this;
-    }
-
-    /**
-     * Used to align self on right.
-     *
-     * @return {StackWidgetBuilder} current instance of builder
-     * @memberof StackWidgetBuilder
-     */
-    rightAlign() {
-        this.__parentTransform = (parent) => {
-
-            const stackWrapperStack = parent.addStack();
-            stackWrapperStack.addSpacer();
-
-            return stackWrapperStack;
-        };
         return this;
     }
     
@@ -114,18 +241,6 @@ class StackWidgetBuilder {
      */
     height(height) {
         this.__height = height;
-        return this;
-    }
-
-    /**
-     * Used to set stack background color.
-     *
-     * @param {Color} color background color
-     * @return {StackWidgetBuilder} current instance of builder
-     * @memberof StackWidgetBuilder
-     */
-    color(color) {
-        this.__color = color;
         return this;
     }
     
@@ -255,22 +370,12 @@ class StackWidgetBuilder {
  *
  * @class TextWidgetBuilder
  */
-class TextWidgetBuilder {
-
-    __parentTransform = (parent) => parent;
-    __aligningFunction = (widget) => widget.centerAlignText();
-
-    /**
-     * Used to set widget content.
-     *
-     * @param {String} content widget content
-     * @return {TextWidgetBuilder} current instance of builder
-     * @memberof TextWidgetBuilder
-     */
-    content(content) {
-        this.__content = content;
-        return this;
-    }
+class TextWidgetBuilder extends Classes(
+    TextBuilder, 
+    LayoutBuilder,
+    ColorBuilder, 
+    OpacityBuilder
+) {
     
     /**
      * Set max length of content.
@@ -287,96 +392,12 @@ class TextWidgetBuilder {
     }
     
     /**
-     * Used to apply 'Black Rounded' font
-     * to the text.
+     * Used to render text widget.
      *
-     * @param {Number} size font size
-     * @return {TextWidgetBuilder} current instance of builder
+     * @param {*} parent parent widget
+     * @return {WidgetText} text widget
      * @memberof TextWidgetBuilder
      */
-    blackRoundedFont(size) {
-        this.__font = Font.blackRoundedSystemFont(size);
-        return this;
-    }
-
-    /**
-     * Used to apply 'Bold Monospaced' font
-     * to the text.
-     *
-     * @param {Number} size font size
-     * @return {TextWidgetBuilder} current instance of builder
-     * @memberof TextWidgetBuilder
-     */
-    boldMonospacedFont(size) {
-        this.__font = Font.boldMonospacedSystemFont(size);
-        return this;
-    }
-
-    /**
-     * Used to apply 'Black Monospaced' font
-     * to the text.
-     *
-     * @param {Number} size font size
-     * @return {TextWidgetBuilder} current instance of builder
-     * @memberof TextWidgetBuilder
-     */
-    blackMonospacedFont(size) {
-        this.__font = Font.blackMonospacedSystemFont(size);
-        return this;
-    }
-    
-    /**
-     * Used to apply 'Black' font
-     * to the text.
-     *
-     * @param {Number} size font size
-     * @return {TextWidgetBuilder} current instance of builder
-     * @memberof TextWidgetBuilder
-     */
-    blackFont(size) {
-        this.__font = Font.blackSystemFont(size);
-        return this;
-    }
-    
-    /**
-     * Used to set text color.
-     *
-     * @param {Color} color text color
-     * @return {TextWidgetBuilder} current instance of builder
-     * @memberof TextWidgetBuilder
-     */
-    color(color) {
-        this.__color = color;
-        return this;
-    }
-    
-    opacity(opacity) {
-        this.__opacity = opacity;
-        return this;
-    }
-    
-    centerAlign() {
-        this.leftAlign();
-        this.rightAlign()
-        return this;
-    }
-    
-    leftAlign() {
-        this.__leftAlign = true;
-        return this;
-    }
-
-    rightAlign() {
-        this.__parentTransform = (parent) => {
-
-            const textWrapperStack = parent.addStack();
-            textWrapperStack.addSpacer();
-
-            return textWrapperStack;
-        };
-        return this;
-    }
-    
     renderFor(parent) {
 
         if (!parent) {
@@ -431,22 +452,52 @@ class TextWidgetBuilder {
     }
 }
 
-class ImageWidgetBuilder {
+/**
+ * Used to build image widget.
+ *
+ * @class ImageWidgetBuilder
+ */
+class ImageWidgetBuilder extends Classes(
+    LayoutBuilder, 
+    ColorBuilder, 
+    OpacityBuilder
+) {
 
-    __parentTransform = (parent) => parent;
     __aligningFunction = (widget) => widget.centerAlignImage();
     __applyIconWeight = () => {};
 
+    /**
+     * Used to set SF symbol code.
+     * For scenarios when icon should
+     * be displayed as image.
+     *
+     * @param {String} iconCode SF symbol code
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     icon(iconCode) {
         this.__iconCode = iconCode;
         return this;
     }
     
+    /**
+     * Used to set image that should be displayed.
+     *
+     * @param {Image} image image to display
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     image(image) {
         this.__image = image;
         return this;
     }
     
+    /**
+     * Used to set SF symbol icon weight to light.
+     *
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     lightWeight() {
         this.__applyIconWeight = icon => {
             icon.applyLightWeight();
@@ -454,6 +505,12 @@ class ImageWidgetBuilder {
         return this;
     }
     
+    /**
+     * Used to set SF symbol icon weight to regular.
+     *
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     regularWeight() {
         this.__applyIconWeight = icon => {
             icon.applyRegularWeight();
@@ -461,6 +518,12 @@ class ImageWidgetBuilder {
         return this;
     }
     
+    /**
+     * Used to set SF symbol icon weight to heavy.
+     *
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     heavyWeight() {
         this.__applyIconWeight = icon => {
             icon.applyHeavyWeight();
@@ -468,6 +531,17 @@ class ImageWidgetBuilder {
         return this;
     }
     
+    /**
+     * Used to set size of image.
+     * If height is not provided
+     * width would be used for both
+     * dimensions.
+     *
+     * @param {Number} width image width
+     * @param {Number} height image height
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     size(width, height) {
 
         if (!height) {
@@ -478,33 +552,26 @@ class ImageWidgetBuilder {
         this.__height = height;
         return this;
     }
-    
-    color(color) {
-        this.__color = color;
-        return this;
-    }
-    
-    opacity(opacity) {
-        this.__opacity = opacity;
-        return this;
-    }
 
+    /**
+     * Used to set image corner radius.
+     *
+     * @param {Number} radius image corner radius
+     * @return {ImageWidgetBuilder} current instance of builder
+     * @memberof ImageWidgetBuilder
+     */
     radius(radius) {
         this.__radius = radius;
         return this;
     }
     
-    rightAlign() {
-        this.__parentTransform = (parent) => {
-
-            const imageWrapperStack = parent.addStack();
-            imageWrapperStack.addSpacer();
-
-            return imageWrapperStack;
-        };
-        return this;
-    }
-    
+    /**
+     * Used to render image widget.
+     *
+     * @param {*} parent parent widget
+     * @return {WidgetImage} image widget
+     * @memberof ImageWidgetBuilder
+     */
     renderFor(parent) {
 
         if (!parent) {
@@ -548,77 +615,25 @@ class ImageWidgetBuilder {
     }
 }
 
-class DateWidgetBuilder {
-
-    __parentTransform = (parent) => parent;
-    __aligningFunction = (widget) => widget.centerAlignText();
-    __applyIconWeight = () => {};
-
-    content(date) {
-        this.__date = date;
-        return this;
-    }
-
-    /**
-     * Used to apply 'Black' font
-     * to the text.
-     *
-     * @param {Number} size font size
-     * @return {DateWidgetBuilder} current instance of builder
-     * @memberof DateWidgetBuilder
-     */
-    blackRoundedFont(size) {
-        this.__font = Font.blackRoundedSystemFont(size);
-        return this;
-    }
+/**
+ * Used to render date as text widget.
+ *
+ * @class DateWidgetBuilder
+ */
+class DateWidgetBuilder extends Classes(
+    TextBuilder, 
+    LayoutBuilder, 
+    ColorBuilder, 
+    OpacityBuilder
+) {
 
     /**
-     * Used to apply 'Black' font
-     * to the text.
+     * Used to render date as text widget.
      *
-     * @param {Number} size font size
-     * @return {DateWidgetBuilder} current instance of builder
+     * @param {*} parent parent widget
+     * @return {WidgetDate} date widget
      * @memberof DateWidgetBuilder
      */
-    boldMonospacedFont(size) {
-        this.__font = Font.boldMonospacedSystemFont(size);
-        return this;
-    }
-    
-    /**
-     * Used to apply 'Black' font
-     * to the text.
-     *
-     * @param {Number} size font size
-     * @return {DateWidgetBuilder} current instance of builder
-     * @memberof DateWidgetBuilder
-     */
-    blackFont(size) {
-        this.__font = Font.blackSystemFont(size);
-        return this;
-    }
-    
-    color(color) {
-        this.__color = color;
-        return this;
-    }
-    
-    opacity(opacity) {
-        this.__opacity = opacity;
-        return this;
-    }
-
-    rightAlign() {
-        this.__parentTransform = (parent) => {
-
-            const dateWrapperStack = parent.addStack();
-            dateWrapperStack.addSpacer();
-
-            return dateWrapperStack;
-        };
-        return this;
-    }
-
     renderFor(parent) {
 
         if (!parent) {
@@ -626,7 +641,7 @@ class DateWidgetBuilder {
         }
         
         parent = this.__parentTransform(parent);
-        let dateWidget = parent.addDate(this.__date);
+        let dateWidget = parent.addDate(this.__content);
 
         if (this.__font) {
             dateWidget.font = this.__font;
@@ -645,32 +660,70 @@ class DateWidgetBuilder {
     }
 }
 
+/**
+ * Used to create LinearGradient.
+ *
+ * @class GradientBuilder
+ */
 class GradientBuilder {
 
+    /**
+     * Creates an instance of GradientBuilder.
+     * 
+     * @param {*} parentBuilder builder to which gradient should be set
+     * @memberof GradientBuilder
+     */
     constructor(parentBuilder) {
         this.__parentBuilder = parentBuilder;
         this.__locations = [];
         this.__colors = [];
     }
 
+    /**
+     * Used to set gradient color and its location.
+     *
+     * @param {Number} location gradient location (0..1)
+     * @param {Color} color gradient color
+     * @return {GradientBuilder} current instance of builder
+     * @memberof GradientBuilder
+     */
     color(location, color) {
         this.__locations.push(location);
         this.__colors.push(color);
         return this;
     }
 
+    /**
+     * Used to set gradient direction from left to right.
+     *
+     * @return {GradientBuilder} current instance of builder
+     * @memberof GradientBuilder
+     */
     leftToRight() {
         this.__startPoint = new Point(0, 1);
         this.__endPoint = new Point(1, 1);
         return this;
     }
     
+    /**
+     * Used to set gradient direction from top to bottom.
+     *
+     * @return {GradientBuilder} current instance of builder
+     * @memberof GradientBuilder
+     */
     topToBottom() {
         this.__startPoint = new Point(1, 0);
         this.__endPoint = new Point(1, 1);
         return this;
     }
 
+    /**
+     * Used to build linear gradient
+     * and set it into parent builder.
+     *
+     * @return {*} parent builder
+     * @memberof GradientBuilder
+     */
     create() {
 
         const gradient = new LinearGradient();
@@ -693,19 +746,32 @@ class GradientBuilder {
     }
 }
 
-class RootWidgetBuilder {
+/**
+ * Used to build root widget.
+ *
+ * @class RootWidgetBuilder
+ * @extends {ColorBuilder}
+ */
+class RootWidgetBuilder extends ColorBuilder {
 
     __gradient;
 
-    color(color) {
-        this.__color = color;
-        return this;
-    }
-
+    /**
+     * Used to add linear gradient to root widget.
+     *
+     * @return {RootWidgetBuilder} current instance of builder
+     * @memberof RootWidgetBuilder
+     */
     gradient() {
         return new GradientBuilder(this);
     }
 
+    /**
+     * Used to create root widget.
+     *
+     * @return {ListWidget} root widget
+     * @memberof RootWidgetBuilder
+     */
     render() {
 
         const rootWidget = new ListWidget();
