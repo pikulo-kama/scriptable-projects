@@ -60,10 +60,57 @@ async function main() {
 }
 
 
+/**
+ * Used to get arguments provided by user.
+ *
+ * period - amount of months that should be shown in chart
+ * calendar - name of calendar from which events should be pulled
+ * mode - color mode, used for color changing
+ * trimBlank - whether trailing months without events should be displayed
+ * 
+ * @return {Object} user defined script configuration 
+ */
+function getArguments() {
+
+    let arguments = JSON.parse(args.widgetParameter);
+
+    if (conf.debug.enabled) {
+        arguments = {
+            // Period in months
+            period: 5,
+            calendar: "Робочий",
+            mode: ColorMode.Dark,
+            trimBlank: true
+        };
+    }
+
+    if (!arguments.trimBlank) {
+        arguments.trimBlank = false;
+    }
+
+    return arguments;
+}
+
+
+/**
+ * Used to retrieve events from
+ * calendar.
+ *
+ * @class CalendarChartDataRepository
+ */
 class CalendarChartDataRepository {
 
     static __FIRST_DAY_OF_MONTH = 1;
     
+
+    /**
+     * Used to get data from calendar
+     * and then format it into a 
+     * month name -> amount of event map.
+     *
+     * @return {Map<String, Number>} month -> amount map
+     * @memberof CalendarChartDataRepository
+     */
     async getChartData() {
   
         let dateRange = this.__getDateRange();
@@ -108,6 +155,17 @@ class CalendarChartDataRepository {
         return eventSet;
     }
     
+    /**
+     * Used to get list of dates
+     * which are always first day of a
+     * certain month.
+     * 
+     * Dates are generated based on the 
+     * provided configuration by user.
+     *
+     * @return {List<Date>} list of dates for which events should be found
+     * @memberof CalendarChartDataRepository
+     */
     __getDateRange() {
     
         let dates = new Array();
@@ -129,27 +187,6 @@ class CalendarChartDataRepository {
     }
 }
 
-
-function getArguments() {
-
-    let arguments = JSON.parse(args.widgetParameter);
-
-    if (conf.debug.enabled) {
-        arguments = {
-            // Period in months
-            period: 5,
-            calendar: "Робочий",
-            mode: ColorMode.Dark,
-            trimBlank: true
-        };
-    }
-
-    if (!arguments.trimBlank) {
-        arguments.trimBlank = false;
-    }
-
-    return arguments;
-}
 
 await main();
 Script.complete();

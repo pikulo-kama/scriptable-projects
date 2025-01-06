@@ -57,6 +57,17 @@ async function main() {
 }
 
 
+/**
+ * Used to get arguments provided by user.
+ * 
+ * address - full addres which is city, stree and building number separated by comma.
+ * city - name of the city (obtained from address).
+ * street - name of street (obtained from address).
+ * buildingNumber - number of building (obtained from address).
+ * shortAddress - short version of address which is displayed as widget title (created based on the address).
+ *
+ * @return {Object} used defined script configurations
+ */
 function getAddress() {
 
     let address = conf.debug.forceAddress ?
