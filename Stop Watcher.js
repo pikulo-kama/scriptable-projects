@@ -104,6 +104,7 @@ class WidgetBuilder {
             .gradient()
                 .color(0.05, this.__getDarkColor())
                 .color(0.7, new Color("a9a9a9"))
+                .color(0.9, Color.white())
                 .topToBottom()
                 .create()
             .render();
