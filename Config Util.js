@@ -3,10 +3,24 @@
 // icon-color: deep-purple; icon-glyph: cogs;
 
 
+/**
+ * Enumeration for color mode.
+ *
+ * @class ColorMode
+ */
 class ColorMode {
     static Light = "light";
     static Dark = "dark";
 
+    /**
+     * Used to get color mode based on
+     * the provided string.
+     *
+     * @static
+     * @param {String} colorModeString color mode as string
+     * @return {ColorMode} color mode
+     * @memberof ColorMode
+     */
     static of(colorModeString) {
 
         const colorModes = [
@@ -24,16 +38,38 @@ class ColorMode {
     }
 }
 
+/**
+ * Property with two values.
+ * One is used for white mode and
+ * another for dark mode.
+ *
+ * @class ThemedProperty
+ */
 class ThemedProperty {
 
+    /**
+     * Creates an instance of ThemedProperty.
+     * 
+     * @param {Object} darkModeProperty dark mode property
+     * @param {Object} lightModeProperty light mode property
+     * @memberof ThemedProperty
+     */
     constructor(darkModeProperty, lightModeProperty) {
         this.__darkModeProperty = darkModeProperty;
         this.__lightModelProperty = lightModeProperty;
     }
 
+    /**
+     * Used to get value based on
+     * the provided color mode.
+     *
+     * @param {ColorMode} colorMode color mode
+     * @return {Object} value corresponding provided color mode
+     * @memberof ThemedProperty
+     */
     get(colorMode) {
-        switch (colorMode) {
 
+        switch (colorMode) {
             case ColorMode.Dark:
                 return this.__darkModeProperty;
 
@@ -44,18 +80,40 @@ class ThemedProperty {
 }
 
 
+/**
+ * Main component.
+ * Used to work with configurations.
+ *
+ * @class ConfigStore
+ */
 class ConfigStore {
 
+    /**
+     * Creates an instance of ConfigStore.
+     * @memberof ConfigStore
+     */
     constructor() {
         this.__config = {};
         this.__userConfig = {};
         this.__colorMode = ColorMode.Dark;
     }
 
+    /**
+     * Used to set default config.
+     *
+     * @param {Object} config default config
+     * @memberof ConfigStore
+     */
     setConfig(config) {
         this.__config = config;
     }
 
+    /**
+     * Used to set user-provided config.
+     *
+     * @param {Object} config user-provided config
+     * @memberof ConfigStore
+     */
     overrideConfig(config) {
 
         if (config) {
@@ -63,20 +121,24 @@ class ConfigStore {
         }
     }
 
+    /**
+     * Used to set color mode.
+     *
+     * @param {ColorMode} colorMode color mode
+     * @memberof ConfigStore
+     */
     setColorMode(colorMode) {
         this.__colorMode = colorMode;
     }
 
-    /*
+    /**
     * Used to return configuration value.
     * If value is present in config
     * provided by user, it would be used
-    * otherwise default one will be returned
+    * otherwise default one will be returned.
     *
-    * @param fieldStr - configuration key
-    *
-    * @return user-provided or default 
-    * configuration value
+    * @param {String} composedProperty composed proeprty
+    * @return {Object} user-provided or default configuration value
     */
     get(composedProperty) {
       
@@ -94,17 +156,14 @@ class ConfigStore {
         return value;
     }
 
-    /*
+    /**
     * Used to get value from provided
-    * object by iterating through nested 
-    * properties
+    * configuration by iterating through 
+    * property chain.
     *
-    * @param c - config object
-    *
-    * @param property - list of config recursive
-    * properties
-    *
-    * @return field from config
+    * @param {Object} config configuration
+    * @param {List<String>} propertyChain list of configuration recursive properties
+    * @return {Object} field from config
     */
     __getField(config, propertyChain) {
 
