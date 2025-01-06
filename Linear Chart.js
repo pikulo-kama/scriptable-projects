@@ -5,6 +5,12 @@
 const { ConfigStore, ColorMode, themed } = importModule("Config Util");
 const { rootWidget, image } = importModule("UI");
 
+
+/**
+ * Used to generate linear charts.
+ *
+ * @class LinearChart
+ */
 class LinearChart {
 
     static __DEFAULT_CONFIG = {
@@ -45,6 +51,13 @@ class LinearChart {
         }
     };
 
+    /**
+     * Creates an instance of LinearChart.
+     * 
+     * @param {Object} userConfig JSON configuration of the chart
+     * @param {ColorMode} colorMode color mode in which chart should be created
+     * @memberof LinearChart
+     */
     constructor(userConfig, colorMode) {
         this.__configStore = new ConfigStore();
         this.__configStore.setConfig(LinearChart.__DEFAULT_CONFIG);
@@ -52,19 +65,13 @@ class LinearChart {
         this.__configStore.setColorMode(ColorMode.of(colorMode));
     }
 
+    
     /**
-     * Used to generate chart in widget
-     * Almost the same as generateChartImage
-     * but here image is being wrapped in 
-     * ListWidget
+     * Used to create widget with chart image in it.
+     * Image takes all available space.
      *
-     * @param configIn Custom config that
-     * will be used to overwrite default one
-     *
-     * @param modeIn - name of color mode
-     * of chart
-     *
-     * @return rendered chart inside widget
+     * @return {ListWidget} root widget with chart
+     * @memberof LinearChart
      */
     getWidget() {
 
@@ -79,29 +86,13 @@ class LinearChart {
         return root;
     }
 
+    
     /**
      * Used to generate chart image
+     * using provided and default configurations.
      *
-     * @param configIn - Custom config that
-     * will be used to overwrite default one
-     *
-     * Required config parameters:
-     *
-     * - chart.data = JSON containing dataset
-     * that should be rendered on chart. Each element 
-     * should contain at least one number field (Y axis field)
-     * and at least one string field (X axis field)
-     * 
-     * - chart.xField = name of field in dataset
-     * that should be used as X axis field
-     * 
-     * - chart.yField = name of field in dataset
-     * that should be used as Y axis field
-     *
-     * @param modeIn - name of color mode
-     * of chart
-     *
-     * @return rendered graph
+     * @return {Image} image of linear chart
+     * @memberof LinearChart
      */
     getImage() {
         
@@ -155,11 +146,13 @@ class LinearChart {
         return context.getImage();
     }
 
-    /*
-    * Used to get background rectangle
-    *
-    * @return rectangle
-    */
+    
+    /**
+     * Used to create chart canvas.
+     *
+     * @return {Rect} chart canvas
+     * @memberof LinearChart
+     */
     __getBackground() { 
         return new Rect(0, 0, 
             this.__configStore.get("widget.width"), 
@@ -167,18 +160,15 @@ class LinearChart {
         );
     }
 
-    /*
-    * Used to get chart grid along with
-    * axis labels
+    /**
+    * Used to create chart grid along with
+    * axis labels.
     *
-    * @param context - instance of DrawContext
-    * where grid should be written
-    *
-    * @param chartPoints - list of points
-    * that represent data on chart (they are
+    * @param {DrawContext} context instance of DrawContext where grid should be written
+    * @param {List<Point>} chartPoints list of points that represent data on chart (they are
     * used as orienters when building grid)
-    *
-    * @return grid
+    * @return {Path} grid
+    * @memberof LinearChart
     */
     __getGridPath(context, chartPoints) {
         
@@ -240,16 +230,16 @@ class LinearChart {
         return path;
     }
 
-    /*
+    /**
     * Used to get dots that will be 
     * displayed on the same place as
     * chart data points
     *
-    * @param chartPoints - list of points
+    * @param {List<Point>} chartPoints list of points
     * that represent data on chart (they are
     * used as orienters when adding dots)
-    * 
-    * @return dots
+    * @return {Path} dots
+    * @memberof LinearChart
     */
     __getDotsPath(chartPoints) {
 
@@ -269,7 +259,7 @@ class LinearChart {
         return path;
     }
 
-    /*
+    /**
     * Used to draw tooltips above chart
     * points. 
     *
@@ -278,12 +268,12 @@ class LinearChart {
     * by setting chart.hideAxisPlacedTooltips
     * to true
     *
-    * @param context - instance of DrawContext
+    * @param {DrawContext} context instance of DrawContext
     * where tooltips should be written
-    *
-    * @param chartPoints - list of points
+    * @param {List<Point>} chartPoints list of points
     * that represent data on chart (they are
     * used as orienters when adding tooltips)
+    * @memberof LinearChart
     */
     __drawTooltips(context, chartPoints) {
 
@@ -314,10 +304,11 @@ class LinearChart {
         }
     }
 
-    /*
-    * Used to get chart data poins
+    /**
+    * Used to get chart data poins.
     *
-    * @return list of points
+    * @return {List<Point>} list of points
+    * @memberof LinearChart
     */
     __getDataLocations() {
 
@@ -347,14 +338,14 @@ class LinearChart {
         return points;
     }
 
-    /*
+    /**
     * Used to calculate and return
     * array of values that should be
-    * displayed on Y axis
+    * displayed on Y axis.
     *
-    * @param data - array of objects
-    *
-    * @return Y axis fields
+    * @param {List<Object>} data chart data
+    * @return {List<Number>} Y axis fields
+    * @memberof LinearChart
     */
     __getYAxisValues(data) {
 
@@ -372,16 +363,15 @@ class LinearChart {
         return axisValues;
     }
 
-    /*
+    /**
     * Used to get max property from 
-    * array of objects
+    * chart data array.
     *
-    * @param data - array of objects
-    *
-    * @param property - name of property for 
+    * @param {List<Object>} data chart data
+    * @param {String} property name of property for 
     * which max value should be returned
-    *
-    * @return max value in array
+    * @return {Number} max value in array
+    * @memberof LinearChart
     */
     __getMaxProperty(data, property) {
         return Math.max.apply(
@@ -390,6 +380,7 @@ class LinearChart {
         );
     }
 }
+
 
 module.exports = {
     LinearChart

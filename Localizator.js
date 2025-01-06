@@ -31,8 +31,20 @@ async function main() {
 }
 
 
+/**
+ * Used to select script for localization.
+ *
+ * @class ScriptSelector
+ */
 class ScriptSelector {
 
+    /**
+     * Used to select script for localization.
+     *
+     * @static
+     * @return {Promise<String>} promise with script name
+     * @memberof ScriptSelector
+     */
     static async selectScript() {
 
         const result = await modal()
@@ -48,10 +60,21 @@ class ScriptSelector {
     }
 }
 
+
+/**
+ * Used to build and maintain localization UI table.
+ *
+ * @class LocalizatorTable
+ */
 class LocalizatorTable {
 
     static __DEFAULT_LOCALE = "en";
 
+    /**
+     * Creates an instance of LocalizatorTable.
+     * @param {String} scriptName name of script which translations should be updated
+     * @memberof LocalizatorTable
+     */
     constructor(scriptName) {
         this.__scriptName = scriptName;
         this.__translations = [];
@@ -60,6 +83,14 @@ class LocalizatorTable {
         this.__translationValueField = new TextDataField("value");
     }
 
+    /**
+     * Used to build UI table 
+     * which should be used for translation
+     * update.
+     *
+     * @return {Promise<UITable>} promise of the UI table
+     * @memberof LocalizatorTable
+     */
     async build() {
 
         const table = new UIDataTable();
@@ -88,6 +119,14 @@ class LocalizatorTable {
         return table;
     }
 
+    /**
+     * Used to get list of UI table column
+     * configurations. These are needed to
+     * configure UI data table.
+     *
+     * @return {List<UIField>} 
+     * @memberof LocalizatorTable
+     */
     __getUIFields() {
         
         // Translation Key Field
@@ -115,6 +154,15 @@ class LocalizatorTable {
         ];
     }
 
+    /**
+     * Used to get onSave callback for UI table.
+     * 
+     * Before saving changes will transform list data
+     * into single object with translations.
+     *
+     * @return {Function} onSave table callback
+     * @memberof LocalizatorTable
+     */
     __getOnLocaleModificationCallback() {
 
         const that = this;
@@ -130,6 +178,15 @@ class LocalizatorTable {
         };
     }
 
+    /**
+     * Used to read translations from storage
+     * and then transform then into list so that
+     * table will be able to work with data in
+     * tabular format.
+     *
+     * @return {List<Object>} translations as list
+     * @memberof LocalizatorTable
+     */
     async __loadTranslations() {
 
         const translationList = [];
@@ -151,6 +208,18 @@ class LocalizatorTable {
         return translationList;
     }
 
+    /**
+     * Will transform translation key
+     * to readeable text by stripping script
+     * prefix and swapping camelCase to regular
+     * text.
+     * 
+     * Example: testScript_translateKeyToText -> Translate Key To Text
+     *
+     * @param {String} translationKey translation key to transform
+     * @return {String} transformed translation key
+     * @memberof LocalizatorTable
+     */
     __translationKeyToText(translationKey) {
 
         let keyParts = translationKey.split("_");
@@ -161,12 +230,32 @@ class LocalizatorTable {
             .replace(/\b\w/g, character => character.toUpperCase());
     }
     
+    /**
+     * Used to get current system
+     * language code.
+     * 
+     * Value is taken by analyzing user preferred
+     * languages.
+     *
+     * @return {String} language code
+     * @memberof Localizator
+     */
     __getLanguageCode() {
         
         const locale = Device.preferredLanguages()[0];
         return locale.substring(0, locale.indexOf('-'));
     }
 
+    /**
+     * Used to read and store translation file using
+     * selected script and system language.
+     * 
+     * If file doesn't exists new one would be created
+     * using 'en' locale translation as template.
+     *
+     * @return {Object} translations object
+     * @memberof LocalizatorTable
+     */
     async __readTranslationFile() {
 
         const localeExists = FileUtil.localeExists(this.__scriptName, this.__languageCode);
@@ -180,6 +269,7 @@ class LocalizatorTable {
         return FileUtil.readLocale(this.__scriptName, this.__languageCode);
     }
 }
+
 
 await main();
 Script.complete();

@@ -4,11 +4,27 @@
 
 const { FileUtil } = importModule("File Util");
 
+/**
+ * Helper class used to get translations
+ * for the key based on the current system language.
+ *
+ * @class Locale
+ */
 class Locale {
 
     static __DEFAULT_LOCALE = "en";
     static __translations = null;
 
+    /**
+     * Used to retrieve translation for provided key 
+     * based on the current system language.
+     *
+     * @static
+     * @param {String} key text resource key
+     * @param {String} args text resource argument list
+     * @return {String} translation corresponding provided key
+     * @memberof Locale
+     */
     static tr(key, args) {
         this.__ensureTranslationsLoaded();
         let translation = this.__translations[key];
@@ -18,6 +34,7 @@ class Locale {
             return "";
         }
 
+        // Update all value placeholders.
         for (let argId = 0; argId < args.length; argId++) {
             translation = translation.replaceAll(`%${argId + 1}`, args[argId]);
         }
@@ -25,6 +42,16 @@ class Locale {
         return translation;
     }
 
+    /**
+     * Loads all available translations
+     * for user locale (or default - en - if doesn't exists).
+     * 
+     * This is invoked only once after that all translations
+     * would be in memory until script is completed or stopped.
+     *
+     * @static
+     * @memberof Locale
+     */
     static __ensureTranslationsLoaded() {
 
         if (this.__translations) {
@@ -55,6 +82,17 @@ class Locale {
         }
     }
     
+    /**
+     * Used to get current system
+     * language code.
+     * 
+     * Value is taken by analyzing user preferred
+     * languages.
+     *
+     * @static
+     * @return {String} language code
+     * @memberof Locale
+     */
     static __getLanguageCode() {
         
         const locale = Device.preferredLanguages()[0];
@@ -62,9 +100,11 @@ class Locale {
     }
 }
 
+
 function tr(key, ...args) {
     return Locale.tr(key, args);
 }
+
 
 module.exports = {
     tr
