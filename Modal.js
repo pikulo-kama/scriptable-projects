@@ -3,6 +3,7 @@
 // icon-color: deep-purple; icon-glyph: exclamation-triangle;
 
 const { tr } = importModule("Localization");
+const { addToState, getFromState } = importModule("Core");
 
 
 /**
@@ -55,6 +56,10 @@ class ModalRule {
  */
 class ModalResult {
 
+    #choice;
+    #isCancelled;
+    #data;
+
     /**
      * Creates an instance of ModalResult.
      * @param {String} choice name of action that was selected in modal
@@ -63,9 +68,9 @@ class ModalResult {
      * @memberof ModalResult
      */
     constructor(choice, isCancelled, data) {
-        this.__choice = choice;
-        this.__isCancelled = isCancelled;
-        this.__data = data;
+        this.#choice = choice;
+        this.#isCancelled = isCancelled;
+        this.#data = data;
     }
 
     /**
@@ -75,7 +80,7 @@ class ModalResult {
      * @memberof ModalResult
      */
     choice() {
-        return this.__choice;
+        return this.#choice;
     }
 
     /**
@@ -85,7 +90,7 @@ class ModalResult {
      * @memberof ModalResult
      */
     isCancelled() {
-        return this.__isCancelled;
+        return this.#isCancelled;
     }
 
     /**
@@ -96,7 +101,7 @@ class ModalResult {
      * @memberof ModalResult
      */
     get(name) {
-        return this.__data[name];
+        return this.#data[name];
     }
 }
 
@@ -108,17 +113,23 @@ class ModalResult {
  */
 class Field {
 
+    #modal;
+    #name;
+    #label;
+    #initialValue;
+    #validations;
+
     /**
      * Creates an instance of Field.
      * @param {Modal} modal instance of modal builder
      * @memberof Field
      */
     constructor(modal) {
-        this.__modal = modal;
-        this.__name = undefined;
-        this.__label = undefined;
-        this.__initialValue = undefined;
-        this.__validations = [];
+        this.#modal = modal;
+        this.#name = undefined;
+        this.#label = undefined;
+        this.#initialValue = undefined;
+        this.#validations = [];
     }
 
     /**
@@ -131,7 +142,7 @@ class Field {
      * @memberof Field
      */
     name(name) {
-        this.__name = name;
+        this.#name = name;
         return this;
     }
 
@@ -144,7 +155,7 @@ class Field {
      * @memberof Field
      */
     label(label) {
-        this.__label = label;
+        this.#label = label;
         return this;
     }
 
@@ -156,7 +167,7 @@ class Field {
      * @memberof Field
      */
     initial(initialValue) {
-        this.__initialValue = initialValue;
+        this.#initialValue = initialValue;
         return this;
     }
 
@@ -168,7 +179,7 @@ class Field {
      * @memberof Field
      */
     addValidation(validation) {
-        this.__validations.push(validation);
+        this.#validations.push(validation);
         return this;
     }
 
@@ -193,18 +204,19 @@ class Field {
      * @memberof Field
      */
     add() {
-        const modal = this.__modal;
+        const modal = this.#modal;
+        const fields = getFromState(modal, "fields");
 
         const field = {
-            id: modal.__fields.length,
-            name: this.__name,
-            label: this.__label,
-            value: this.__initialValue,
+            id: fields.length,
+            name: this.#name,
+            label: this.#label,
+            value: this.#initialValue,
             previousValue: undefined,
-            validations: this.__validations
+            validations: this.#validations
         };
 
-        modal.__fields.push(field);
+        fields.push(field);
         return modal;
     }
 }
@@ -219,18 +231,23 @@ class Field {
  */
 class Modal {
 
+    #title;
+    #cancelLabel;
+    #actions;
+    #fields;
+    #alert;
+
     /**
      * Creates an instance of Modal.
      * @memberof Modal
      */
     constructor() {
-        this.__title = "";
-        this.__cancelLabel = tr("modal_cancelActionName");
-        this.__actions = [];
-        this.__fields = [];
+        this.#title = "";
+        this.#cancelLabel = tr("modal_cancelActionName");
+        this.#actions = [];
+        this.#fields = [];
 
-        this.__alert = null;
-        this.__modalResult = null;
+        this.#alert = null;
     }
 
     /**
@@ -241,7 +258,7 @@ class Modal {
      * @memberof Modal
      */
     title(title) {
-        this.__title = title;
+        this.#title = title;
         return this;
     }
 
@@ -254,7 +271,7 @@ class Modal {
      * @memberof Modal
      */
     cancelLabel(cancelLabel) {
-        this.__cancelLabel = cancelLabel;
+        this.#cancelLabel = cancelLabel;
         return this;
     }
 
@@ -266,7 +283,7 @@ class Modal {
      * @memberof Modal
      */
     actions(actions) {
-        this.__actions = actions;
+        this.#actions = actions;
         return this;
     }
 
@@ -279,6 +296,7 @@ class Modal {
      * @memberof Modal
      */
     field() {
+        addToState(this, {"fields": this.#fields});
         return new Field(this);
     }
 
@@ -291,31 +309,32 @@ class Modal {
      */
     async present() {
 
-        this.__alert = new Alert();
-        this.__alert.title = this.__title;
+        this.#alert = new Alert();
+        this.#alert.title = this.#title;
+        this.#fields = getFromState(this, "fields");
 
         // Add actions
-        this.__actions.forEach(action => this.__alert.addAction(action));
-        this.__alert.addCancelAction(this.__cancelLabel);
+        this.#actions.forEach(action => this.#alert.addAction(action));
+        this.#alert.addCancelAction(this.#cancelLabel);
 
         // Add fields
-        this.__fields.forEach(field => this.__alert.addTextField(field.label, field.value));
+        this.#fields.forEach(field => this.#alert.addTextField(field.label, field.value));
     
-        const resultCode = await this.__alert.presentAlert();
-        let selectedAction = this.__actions[resultCode];
+        const resultCode = await this.#alert.presentAlert();
+        let selectedAction = this.#actions[resultCode];
         let isCancelled = false;
 
         if (!selectedAction) {
-            selectedAction = this.__cancelLabel;
+            selectedAction = this.#cancelLabel;
             isCancelled = true;
         }
 
         if (!isCancelled) {
             // Process modal field changes.
-            await this.__processFields();
+            await this.#processFields();
         }
 
-        return new ModalResult(selectedAction, isCancelled, this.__getFieldData());
+        return new ModalResult(selectedAction, isCancelled, this.#getFieldData());
     }
 
     /**
@@ -326,12 +345,12 @@ class Modal {
      *
      * @memberof Modal
      */
-    async __processFields() {
+    async #processFields() {
 
         // Save values provided by user.
-        for (let field of this.__fields) {
+        for (let field of this.#fields) {
             
-            let newValue = this.__alert.textFieldValue(field.id);
+            let newValue = this.#alert.textFieldValue(field.id);
 
             field.previousValue = field.value;
             field.value = newValue;
@@ -344,7 +363,7 @@ class Modal {
         // fields have been taken, otherwise it's being lost
         // since error modal closes main modal we end up losing 
         // data provided by user.
-        for (let field of this.__fields) {
+        for (let field of this.#fields) {
             for (let validation of field.validations) {
 
                 // Don't proceed with validation of field
@@ -354,7 +373,7 @@ class Modal {
                 }
 
                 let errorMessage = validation.messageFunction(field);
-                await this.__presentErrorModal(errorMessage);
+                await this.#presentErrorModal(errorMessage);
                 
                 field.value = field.previousValue;
                 hasErrors = true;
@@ -373,11 +392,11 @@ class Modal {
      * @return {Map<String, String>} modal field results
      * @memberof Modal
      */
-    __getFieldData() {
+    #getFieldData() {
 
         const fieldData = {};
 
-        for (let field of this.__fields) {
+        for (let field of this.#fields) {
             fieldData[field.name] = field.value;
         }
 
@@ -394,7 +413,7 @@ class Modal {
      * @param {String} message error message
      * @memberof Modal
      */
-    async __presentErrorModal(message) {
+    async #presentErrorModal(message) {
 
         let errorAlert = new Alert();
 
