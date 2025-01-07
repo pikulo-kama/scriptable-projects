@@ -337,7 +337,7 @@ class WidgetBuilder {
         text()
             .content(tr("watchQueue_toBeWatchedLabel"))
             .blackMonospacedFont(14)
-            .opacity(0.5)
+            .opacity(0.3)
             .renderFor(root);
 
         return root;
