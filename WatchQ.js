@@ -322,7 +322,8 @@ class WidgetBuilder {
         
         const root = rootWidget()
             .gradient()
-                .color(0, new Color("8b0000", 0.4))
+                .color(0, new Color("8b0000", 0.75))
+                .color(0.2, new Color("8b0000", 0.4))
                 .color(0.6, new Color("0f0f0f"))
                 .create()
             .render();
