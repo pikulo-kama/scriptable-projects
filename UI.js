@@ -48,7 +48,7 @@ class ColorBuilder {
      */
     color(color) {
         addToState(this, {color});
-        // this.__color = color;
+        // this.#color = color;
         return this;
     }
 }
@@ -131,7 +131,7 @@ class LayoutBuilder {
  */
 class TextBuilder {
 
-    __aligningFunction = (widget) => widget.centerAlignText();
+    #aligningFunction = (widget) => widget.centerAlignText();
 
     /**
      * Used to set widget content.
@@ -206,11 +206,18 @@ class TextBuilder {
  */
 class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
 
-    __width = 0;
-    __height = 0;
+    #width = 0;
+    #height = 0;
+    #borderColor;
+    #borderWidth;
+    #paddingTop;
+    #paddingRight;
+    #paddingBottom;
+    #paddingLeft;
+    #radius;
 
-    __layoutFunction = (widget) => widget.layoutHorizontally();
-    __aligningFunction = (widget) => widget.centerAlignContent();
+    #layoutFunction = (widget) => widget.layoutHorizontally();
+    #aligningFunction = (widget) => widget.centerAlignContent();
 
     /**
      * Sets stack direction to
@@ -222,7 +229,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      * @memberof StackWidgetBuilder
      */
     vertical() {
-        this.__layoutFunction = (widget) => widget.layoutVertically();
+        this.#layoutFunction = (widget) => widget.layoutVertically();
         return this;
     }
     
@@ -234,7 +241,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      * @memberof StackWidgetBuilder
      */
     width(width) {
-        this.__width = width;
+        this.#width = width;
         return this;
     }
     
@@ -246,7 +253,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      * @memberof StackWidgetBuilder
      */
     height(height) {
-        this.__height = height;
+        this.#height = height;
         return this;
     }
     
@@ -258,7 +265,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      * @memberof StackWidgetBuilder
      */
     borderColor(color) {
-        this.__borderColor = color;
+        this.#borderColor = color;
         return this;
     }
     
@@ -270,7 +277,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      * @memberof StackWidgetBuilder
      */
     borderWidth(width) {
-        this.__borderWidth = width;
+        this.#borderWidth = width;
         return this;
     }
 
@@ -300,10 +307,10 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
             left = right;
         }
 
-        this.__paddingTop = top;
-        this.__paddingRight = right;
-        this.__paddingBottom = bottom;
-        this.__paddingLeft = left;
+        this.#paddingTop = top;
+        this.#paddingRight = right;
+        this.#paddingBottom = bottom;
+        this.#paddingLeft = left;
 
         return this;
     }
@@ -316,7 +323,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      * @memberof StackWidgetBuilder
      */
     radius(radius) {
-        this.__radius = radius;
+        this.#radius = radius;
         return this;
     }
 
@@ -336,39 +343,39 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
         parent = parentTransform(parent);
 
         let stack = parent.addStack();
-        stack.size = new Size(this.__width, this.__height);
+        stack.size = new Size(this.#width, this.#height);
         
         if (leftAlign) {
             parent.addSpacer();
         }
 
-        if (this.__paddingTop) {
+        if (this.#paddingTop) {
             stack.setPadding(
-                this.__paddingTop, 
-                this.__paddingRight, 
-                this.__paddingBottom, 
-                this.__paddingLeft
+                this.#paddingTop, 
+                this.#paddingRight, 
+                this.#paddingBottom, 
+                this.#paddingLeft
             );
         }
 
-        if (this.__radius) {
-            stack.cornerRadius = this.__radius;
+        if (this.#radius) {
+            stack.cornerRadius = this.#radius;
         }
 
         if (color) {
             stack.backgroundColor = color;
         }
         
-        if (this.__borderColor) {
-            stack.borderColor = this.__borderColor;
+        if (this.#borderColor) {
+            stack.borderColor = this.#borderColor;
         }
         
-        if (this.__borderWidth) {
-            stack.borderWidth = this.__borderWidth;
+        if (this.#borderWidth) {
+            stack.borderWidth = this.#borderWidth;
         }
         
-        this.__aligningFunction(stack);
-        this.__layoutFunction(stack);
+        this.#aligningFunction(stack);
+        this.#layoutFunction(stack);
 
         return stack;
     }
@@ -386,6 +393,8 @@ class TextWidgetBuilder extends Classes(
     ColorBuilder, 
     OpacityBuilder
 ) {
+
+    #limit;
     
     /**
      * Set max length of content.
@@ -397,7 +406,7 @@ class TextWidgetBuilder extends Classes(
      * @memberof TextWidgetBuilder
      */
     limit(maxLength) {
-        this.__limit = maxLength;
+        this.#limit = maxLength;
         return this;
     }
     
@@ -428,8 +437,8 @@ class TextWidgetBuilder extends Classes(
         let text = content;
         parent = parentTransform(parent);
         
-        if (this.__limit) {
-            text = this.__truncate(text, this.__limit);
+        if (this.#limit) {
+            text = this.#truncate(text, this.#limit);
         }
 
         let textWidget = parent.addText(text);
@@ -461,7 +470,7 @@ class TextWidgetBuilder extends Classes(
      * @param {Number} maxLength maximum final text length.
      * @returns {String} truncated text.
      */
-    __truncate(text, maxLength) {
+    #truncate(text, maxLength) {
 
         if (text.length > maxLength) {
             
@@ -484,8 +493,14 @@ class ImageWidgetBuilder extends Classes(
     OpacityBuilder
 ) {
 
-    __aligningFunction = (widget) => widget.centerAlignImage();
-    __applyIconWeight = () => {};
+    #aligningFunction = (widget) => widget.centerAlignImage();
+    #applyIconWeight = () => {};
+
+    #iconCode;
+    #image;
+    #width;
+    #height;
+    #radius;
 
     /**
      * Used to set SF symbol code.
@@ -497,7 +512,7 @@ class ImageWidgetBuilder extends Classes(
      * @memberof ImageWidgetBuilder
      */
     icon(iconCode) {
-        this.__iconCode = iconCode;
+        this.#iconCode = iconCode;
         return this;
     }
     
@@ -509,7 +524,7 @@ class ImageWidgetBuilder extends Classes(
      * @memberof ImageWidgetBuilder
      */
     image(image) {
-        this.__image = image;
+        this.#image = image;
         return this;
     }
     
@@ -520,7 +535,7 @@ class ImageWidgetBuilder extends Classes(
      * @memberof ImageWidgetBuilder
      */
     lightWeight() {
-        this.__applyIconWeight = icon => {
+        this.#applyIconWeight = icon => {
             icon.applyLightWeight();
         };
         return this;
@@ -533,7 +548,7 @@ class ImageWidgetBuilder extends Classes(
      * @memberof ImageWidgetBuilder
      */
     regularWeight() {
-        this.__applyIconWeight = icon => {
+        this.#applyIconWeight = icon => {
             icon.applyRegularWeight();
         };
         return this;
@@ -546,7 +561,7 @@ class ImageWidgetBuilder extends Classes(
      * @memberof ImageWidgetBuilder
      */
     heavyWeight() {
-        this.__applyIconWeight = icon => {
+        this.#applyIconWeight = icon => {
             icon.applyHeavyWeight();
         };
         return this;
@@ -569,8 +584,8 @@ class ImageWidgetBuilder extends Classes(
             height = width;
         }
 
-        this.__width = width;
-        this.__height = height;
+        this.#width = width;
+        this.#height = height;
         return this;
     }
 
@@ -582,7 +597,7 @@ class ImageWidgetBuilder extends Classes(
      * @memberof ImageWidgetBuilder
      */
     radius(radius) {
-        this.__radius = radius;
+        this.#radius = radius;
         return this;
     }
     
@@ -607,12 +622,12 @@ class ImageWidgetBuilder extends Classes(
         const leftAlign = getFromState(this, "leftAlign", false);
         const parentTransform = getFromState(this, "parentTransform", (parent) => parent);
         
-        let image = this.__image;
-        let iconCode = this.__iconCode;
+        let image = this.#image;
+        let iconCode = this.#iconCode;
         
         if (!image && iconCode) {
             let icon = SFSymbol.named(iconCode);
-            this.__applyIconWeight(icon);
+            this.#applyIconWeight(icon);
             
             image = icon.image;
         }
@@ -624,10 +639,10 @@ class ImageWidgetBuilder extends Classes(
             parent.addSpacer();
         }
         
-        if (this.__width) {
+        if (this.#width) {
             imageWidget.imageSize = new Size(
-                this.__width,
-                this.__height
+                this.#width,
+                this.#height
             );
         }
         
@@ -639,11 +654,11 @@ class ImageWidgetBuilder extends Classes(
             imageWidget.imageOpacity = opacity;
         }
 
-        if (this.__radius) {
-            imageWidget.cornerRadius = this.__radius;
+        if (this.#radius) {
+            imageWidget.cornerRadius = this.#radius;
         }
         
-        this.__aligningFunction(imageWidget);
+        this.#aligningFunction(imageWidget);
         return imageWidget;
     }
 }
@@ -715,6 +730,12 @@ class DateWidgetBuilder extends Classes(
  */
 class GradientBuilder {
 
+    #parentBuilder;
+    #locations = [];
+    #colors = [];
+    #startPoint;
+    #endPoint;
+
     /**
      * Creates an instance of GradientBuilder.
      * 
@@ -722,9 +743,7 @@ class GradientBuilder {
      * @memberof GradientBuilder
      */
     constructor(parentBuilder) {
-        this.__parentBuilder = parentBuilder;
-        this.__locations = [];
-        this.__colors = [];
+        this.#parentBuilder = parentBuilder;
     }
 
     /**
@@ -736,8 +755,8 @@ class GradientBuilder {
      * @memberof GradientBuilder
      */
     color(location, color) {
-        this.__locations.push(location);
-        this.__colors.push(color);
+        this.#locations.push(location);
+        this.#colors.push(color);
         return this;
     }
 
@@ -748,8 +767,8 @@ class GradientBuilder {
      * @memberof GradientBuilder
      */
     leftToRight() {
-        this.__startPoint = new Point(0, 1);
-        this.__endPoint = new Point(1, 1);
+        this.#startPoint = new Point(0, 1);
+        this.#endPoint = new Point(1, 1);
         return this;
     }
     
@@ -760,8 +779,8 @@ class GradientBuilder {
      * @memberof GradientBuilder
      */
     topToBottom() {
-        this.__startPoint = new Point(1, 0);
-        this.__endPoint = new Point(1, 1);
+        this.#startPoint = new Point(1, 0);
+        this.#endPoint = new Point(1, 1);
         return this;
     }
 
@@ -776,21 +795,21 @@ class GradientBuilder {
 
         const gradient = new LinearGradient();
 
-        if (this.__colors.length > 0) {
-            gradient.colors = this.__colors;
-            gradient.locations = this.__locations;
+        if (this.#colors.length > 0) {
+            gradient.colors = this.#colors;
+            gradient.locations = this.#locations;
         }
 
-        if (this.__startPoint) {
-            gradient.startPoint = this.__startPoint;
+        if (this.#startPoint) {
+            gradient.startPoint = this.#startPoint;
         }
 
-        if (this.__endPoint) {
-            gradient.endPoint = this.__endPoint;
+        if (this.#endPoint) {
+            gradient.endPoint = this.#endPoint;
         }
 
-        this.__parentBuilder.__gradient = gradient;
-        return this.__parentBuilder;
+        addToState(this.#parentBuilder, {gradient});
+        return this.#parentBuilder;
     }
 }
 
@@ -801,8 +820,6 @@ class GradientBuilder {
  * @extends {ColorBuilder}
  */
 class RootWidgetBuilder extends ColorBuilder {
-
-    __gradient;
 
     /**
      * Used to add linear gradient to root widget.
@@ -822,15 +839,19 @@ class RootWidgetBuilder extends ColorBuilder {
      */
     render() {
 
-        const color = getFromState(this, "color");
+        const {
+            color,
+            gradient
+        } = getState(this);
+
         const rootWidget = new ListWidget();
 
         if (color) {
             rootWidget.backgroundColor = color;
         }
 
-        if (this.__gradient) {
-            rootWidget.backgroundGradient = this.__gradient;
+        if (gradient) {
+            rootWidget.backgroundGradient = gradient;
         }
 
         return rootWidget;
