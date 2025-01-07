@@ -340,6 +340,7 @@ class SeriesTableView {
     #episodeField = new TextDataField("episode", "1");
     #hourField = new NumberDataField("hour");
     #minuteField = new NumberDataField("minute");
+    #dateUpdateField = new NumberDataField("dateUpdate", () => Number(new Date()));
 
     #seriesList;
 
@@ -368,7 +369,8 @@ class SeriesTableView {
             this.#seasonField,
             this.#episodeField,
             this.#hourField,
-            this.#minuteField
+            this.#minuteField,
+            this.#dateUpdateField
         ];
 
         const table = new UIDataTable();
@@ -388,7 +390,7 @@ class SeriesTableView {
         table.addFilterField(this.#serieNameField, tr("stopWatcher_serieNameFilterName"));
 
         table.setSortingFunction((first, second) => 
-            second.isDone - first.isDone || first.id - second.id
+            first.dateUpdate - second.dateUpdate
         );
 
         await table.present();
@@ -480,6 +482,9 @@ class SeriesTableView {
             series.hour = null;
             series.minute = null;
         }
+
+        // Always update date of last data modification
+        series.dateUpdate = Number(new Date());
     }
 
     /**
