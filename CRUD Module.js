@@ -24,7 +24,8 @@ class DataField {
      * Creates an instance of DataField.
      * 
      * @param {String} name name of field in JSON record
-     * @param {Object} defaultValue default value of field, used during creation
+     * @param {Object|Function} defaultValue default value of field, used during creation.
+     * Could be a function if value should be dynamic.
      * @memberof DataField
      */
     constructor(name, defaultValue = null) {
@@ -49,6 +50,11 @@ class DataField {
      * @memberof DataField
      */
     getDefault() {
+
+        if (typeof this.#defaultValue === 'function') {
+            return this.#defaultValue();
+        }
+
         return this.#defaultValue;
     }
 }
