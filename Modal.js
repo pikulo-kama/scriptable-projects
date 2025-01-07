@@ -142,7 +142,7 @@ class Field {
     #name;
     #label;
     #initialValue;
-    #validations;
+    #validations = [];
 
     /**
      * Creates an instance of Field.
@@ -151,10 +151,6 @@ class Field {
      */
     constructor(modal) {
         this.#modal = modal;
-        this.#name = undefined;
-        this.#label = undefined;
-        this.#initialValue = undefined;
-        this.#validations = [];
     }
 
     /**
@@ -256,24 +252,11 @@ class Field {
  */
 class Modal {
 
-    #title;
-    #cancelLabel;
-    #actions;
-    #fields;
-    #alert;
-
-    /**
-     * Creates an instance of Modal.
-     * @memberof Modal
-     */
-    constructor() {
-        this.#title = "";
-        this.#cancelLabel = tr("modal_cancelActionName");
-        this.#actions = [];
-        this.#fields = [];
-
-        this.#alert = null;
-    }
+    #title = "";
+    #cancelLabel = tr("modal_cancelActionName");
+    #actions = [];
+    #fields = [];
+    #alert = null;
 
     /**
      * Used to set modal title.

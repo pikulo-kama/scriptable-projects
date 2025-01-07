@@ -126,7 +126,7 @@ class PropertyMetadata {
      * @memberof PropertyMetadata
      */
     add() {
-        this.#callback(this._getPropertyMetadata());
+        this.#callback(this.__getPropertyMetadata());
         return this.#builder;
     }
 
@@ -137,7 +137,7 @@ class PropertyMetadata {
      * @return {Object} field metadata
      * @memberof PropertyMetadata
      */
-    _getPropertyMetadata() {
+    __getPropertyMetadata() {
         return {
             property: this.#property,
             alias: this.#propertyAlias,
@@ -207,9 +207,9 @@ class ListMetadata extends PropertyMetadata {
         );
     }
 
-    _getPropertyMetadata() {
+    __getPropertyMetadata() {
 
-        let metadata = super._getPropertyMetadata();
+        let metadata = super.__getPropertyMetadata();
         metadata.listPropertyMetadata = this.#listPropertyMetadata;
         
         return metadata;

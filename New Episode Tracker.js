@@ -17,7 +17,7 @@ const {
 
 const conf = {
     debug: {
-        enabled: false,
+        enabled: true,
         
         mockData: false,
         forceCountdownMonths: false,
@@ -112,10 +112,7 @@ class ApiResource {
  */
 class EpisodateApiResource extends ApiResource {
 
-    constructor() {
-        super();
-        this._webUrl = "https://episodate.com/api/show-details?q=";
-    }
+    #webUrl = "https://episodate.com/api/show-details?q=";
 
     async download() {
 
@@ -149,7 +146,7 @@ class EpisodateApiResource extends ApiResource {
      * @returns {String} URL
      */
     #getSeriesUrl() {
-        return this._webUrl + conf.seriesName;
+        return this.#webUrl + conf.seriesName;
     }
 
     /**
@@ -348,6 +345,12 @@ class ApiResourceFactory {
  * DTO with series information.
  */
 class SeriesInfo {
+
+    #title;
+    #status;
+    #image;
+    #imageURI;
+    #episodes = [];
     
     /**
      * @param {String} title series title
@@ -356,13 +359,10 @@ class SeriesInfo {
      * @param {String} imageURI URI to series image
      */
     constructor(title, status, image, imageURI) {
-        
-        this._title = title;
-        this._status = status;
-        this._image = image;
-        this._imageURI = imageURI;
-        
-        this._episodes = [];
+        this.#title = title;
+        this.#status = status;
+        this.#image = image;
+        this.#imageURI = imageURI;
     }
     
     /**
@@ -371,7 +371,7 @@ class SeriesInfo {
      * @returns {String} series title
      */
     getTitle() {
-        return this._title;
+        return this.#title;
     }
     
     /**
@@ -380,7 +380,7 @@ class SeriesInfo {
      * @returns {Status} series status
      */
     getStatus() {
-        return this._status;
+        return this.#status;
     }
     
     /**
@@ -389,7 +389,7 @@ class SeriesInfo {
      * @returns {String} series image path
      */
     getImage() {
-        return this._image;
+        return this.#image;
     }
     
     /**
@@ -398,7 +398,7 @@ class SeriesInfo {
      * @returns {String} series image URI
      */
     getImageURI() {
-        return this._imageURI;
+        return this.#imageURI;
     }
     
     /**
@@ -407,7 +407,7 @@ class SeriesInfo {
      * @returns {Array<Episode>} list of series episodes
      */
     getEpisodes() {
-        return this._episodes;
+        return this.#episodes;
     }
     
     /**
@@ -416,7 +416,7 @@ class SeriesInfo {
      * @param {EpisodeInfo} episode episode that should be added
      */
     addEpisode(episode) {
-        this._episodes.push(episode);
+        this.#episodes.push(episode);
     }
 }
 
@@ -429,17 +429,19 @@ class Series {
     static #formatter = new RelativeDateTimeFormatter();
     static #REGEXP_COUNTDOWN = /in\s(\d+)\s(\w+)/;
 
+    #seriesInfo;
+    #image;
+    #countdown = null;
+    #nextEpisode = null;
+    #dominantColor = null;
+
     /**
      * @param {SeriesInfo} seriesInfo series information
      */
     constructor(seriesInfo) {
         
-        this._seriesInfo = seriesInfo;
-        this._image = this.#processImage(seriesInfo.getImage());
-
-        this._countdown = null;
-        this._nextEpisode = null;
-        this._dominantColor = null;
+        this.#seriesInfo = seriesInfo;
+        this.#image = this.#processImage(seriesInfo.getImage());
 
         this.#processCountdown(seriesInfo);
     }
@@ -450,7 +452,7 @@ class Series {
      * @returns {String} series title
      */
     getTitle() {
-        return this._seriesInfo.getTitle();
+        return this.#seriesInfo.getTitle();
     }
 
     /**
@@ -460,7 +462,7 @@ class Series {
      * @returns {Image} TV series image
      */
     getImage() {
-        return this._image;
+        return this.#image;
     }
 
     /**
@@ -474,7 +476,7 @@ class Series {
      * @returns {Color} series image dominant color
      */
     getDominantColor() {
-        return this._dominantColor;
+        return this.#dominantColor;
     }
 
     /**
@@ -484,7 +486,7 @@ class Series {
      * @returns {Boolean} True if ended, otherwise False
      */
     isEnded() {
-        return this._seriesInfo.getStatus() == Status.Ended;
+        return this.#seriesInfo.getStatus() == Status.Ended;
     }
 
     /**
@@ -494,7 +496,7 @@ class Series {
      * @returns {Boolean} True if has countdown, otherwise False
      */
     hasCountdown() {
-        return !!this._countdown;
+        return !!this.#countdown;
     }
 
     /**
@@ -504,11 +506,11 @@ class Series {
      * @returns {Date} air date of next episode
      */
     getNextEpisodeDate() {
-        return this._nextEpisode?.getAirDate();
+        return this.#nextEpisode?.getAirDate();
     }
     
     getNextEpisode() {
-        return this._nextEpisode?.toString();
+        return this.#nextEpisode?.toString();
     }
 
     /**
@@ -520,8 +522,8 @@ class Series {
      */
     getCountdown() {
 
-        let time = this._countdown.time;
-        let type = this._countdown.type;
+        let time = this.#countdown.time;
+        let type = this.#countdown.type;
 
         switch (type) {
 
@@ -554,10 +556,10 @@ class Series {
     async obtainDominantColor() {
         
         const fileName = "dominant_colors.json";
-        const imageURI = this._seriesInfo.getImageURI();
+        const imageURI = this.#seriesInfo.getImageURI();
         
         if (!imageURI) {
-            this._dominantColor = Color.gray();
+            this.#dominantColor = Color.gray();
             return;
         }
 
@@ -573,7 +575,7 @@ class Series {
             FileUtil.updateLocalJson(fileName, colorMap);
         }
 
-        this._dominantColor = new Color(colorFromFile.color);
+        this.#dominantColor = new Color(colorFromFile.color);
     }
 
     /**
@@ -623,8 +625,8 @@ class Series {
         let time = Number(match[1]);
         let type = match[2];
 
-        this._nextEpisode = nextEpisode;
-        this._countdown = {
+        this.#nextEpisode = nextEpisode;
+        this.#countdown = {
             time,
             type
         };
@@ -689,7 +691,7 @@ class Series {
                 "requests": [{
                     "image": {
                         "source": {
-                            "imageUri": "${this._seriesInfo.getImageURI()}"
+                            "imageUri": "${this.#seriesInfo.getImageURI()}"
                         }
                     },
                     "features": [{
@@ -719,6 +721,10 @@ class Series {
  * Episode DTO
  */
 class EpisodeInfo {
+
+    #season;
+    #episode;
+    #airDate;
     
     /**
      * @param {Number} season season
@@ -726,9 +732,9 @@ class EpisodeInfo {
      * @param {Date} airDate episode release date
      */
     constructor(season, episode, airDate) {
-        this._season = season;
-        this._episode = episode;
-        this._airDate = airDate;
+        this.#season = season;
+        this.#episode = episode;
+        this.#airDate = airDate;
     }
     
     /**
@@ -737,7 +743,7 @@ class EpisodeInfo {
      * @returns {Number} season
      */
     getSeason() {
-        return this._season;
+        return this.#season;
     }
     
     /**
@@ -746,7 +752,7 @@ class EpisodeInfo {
      * @returns {Number} episode number
      */
     getEpisode() {
-        return this._episode;
+        return this.#episode;
     }
     
     /**
@@ -755,7 +761,7 @@ class EpisodeInfo {
      * @returns {Date} release date
      */
     getAirDate() {
-        return this._airDate;
+        return this.#airDate;
     }
     
     /**
@@ -770,8 +776,8 @@ class EpisodeInfo {
         
         let episodeString = "";
         
-        let season = this._season;
-        let episode = this._episode;
+        let season = this.#season;
+        let episode = this.#episode;
         
         if (season && episode) {
             episodeString = `s${season}e${episode}`;

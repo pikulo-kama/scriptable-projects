@@ -535,10 +535,6 @@ class UIFormAction {
  * @extends {UIFormAction}
  */
 class UIDefaultFormAction extends UIFormAction {
-
-    constructor(label) {
-        super(label);
-    }
 }
 
 
