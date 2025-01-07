@@ -23,7 +23,7 @@ const {
 const conf = {
     debug: {
         enabled: false,
-        forceWidget: false
+        forceWidget: true
     }
 };
 
@@ -92,7 +92,7 @@ class SeriesDataRepository {
  */
 class StopWatcherRepository {
 
-    __apiURI = "https://episodate.com/api/show-details?q=";
+    #apiURI = "https://episodate.com/api/show-details?q=";
 
     /**
      * Used to get processed Stop Watcher data
@@ -137,7 +137,7 @@ class StopWatcherRepository {
                 episode
             };
 
-            let additionalInformation = await this.__fetchAdditionalData(processedRecord);
+            let additionalInformation = await this.#fetchAdditionalData(processedRecord);
             processedRecord = {...processedRecord, ...additionalInformation};
 
             if (processedRecord.count > 0) {
@@ -156,15 +156,15 @@ class StopWatcherRepository {
      * @return {Object} series record from Stop Watcher script with additional information
      * @memberof StopWatcherRepository
      */
-    async __fetchAdditionalData(record) {
+    async #fetchAdditionalData(record) {
     
-        const request = cacheRequest(this.__getMetadata());
+        const request = cacheRequest(this.#getMetadata());
         
-        let response = await request.get(this.__apiURI + record.serieId);
-        let episodeQualifier = this.__getEpisodeId(record);
+        let response = await request.get(this.#apiURI + record.serieId);
+        let episodeQualifier = this.#getEpisodeId(record);
         
         const unwatchedEpisodeCount = response.episodes
-            .filter(episode => this.__getEpisodeId(episode) > episodeQualifier)
+            .filter(episode => this.#getEpisodeId(episode) > episodeQualifier)
             .filter(episode => new Date(episode.airDate) < Date.now())
             .length;
 
@@ -182,7 +182,7 @@ class StopWatcherRepository {
      * @return {Number} episode ID
      * @memberof StopWatcherRepository
      */
-    __getEpisodeId(seriesRecord) {
+    #getEpisodeId(seriesRecord) {
         return seriesRecord.season * 1000 + seriesRecord.episode
     }
 
@@ -193,7 +193,7 @@ class StopWatcherRepository {
      * @return {Object} request metadata
      * @memberof StopWatcherRepository
      */
-    __getMetadata() {
+    #getMetadata() {
         return metadata()
             .data()
                 .property("tvShow.name")
@@ -336,7 +336,7 @@ class WidgetBuilder {
         text()
             .content(tr("watchQueue_toBeWatchedLabel"))
             .blackMonospacedFont(14)
-            .color(new Color("8b0000"))
+            .opacity(0.5)
             .renderFor(root);
 
         return root;
