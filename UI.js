@@ -2,7 +2,12 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: magic;
 
-const { Classes } = importModule("Core");
+const { 
+    Classes, 
+    addToState, 
+    getFromState, 
+    getState 
+} = importModule("Core");
 
 /**
  * Spacer builder.
@@ -42,7 +47,8 @@ class ColorBuilder {
      * @memberof ColorBuilder
      */
     color(color) {
-        this.__color = color;
+        addToState(this, {color});
+        // this.__color = color;
         return this;
     }
 }
@@ -62,20 +68,17 @@ class OpacityBuilder {
      * @memberof OpacityBuilder
      */
     opacity(opacity) {
-        this.__opacity = opacity;
+        addToState(this, {opacity});
         return this;
     }    
 }
 
 /**
- * Mixing for setting layout
+ * Mixin for setting layout
  *
  * @class LayoutBuilder
  */
 class LayoutBuilder {
-
-    __leftAlign = false;
-    __parentTransform = (parent) => parent;
 
     /**
      * Used to align self on center.
@@ -96,7 +99,7 @@ class LayoutBuilder {
      * @memberof LayoutBuilder
      */
     leftAlign() {
-        this.__leftAlign = true;
+        addToState(this, {leftAlign: true})
         return this;
     }
 
@@ -107,13 +110,16 @@ class LayoutBuilder {
      * @memberof LayoutBuilder
      */
     rightAlign() {
-        this.__parentTransform = (parent) => {
 
-            const stackWrapperStack = parent.addStack();
-            stackWrapperStack.addSpacer();
+        addToState(this, {
+            parentTransform: (parent) => {
 
-            return stackWrapperStack;
-        };
+                const stackWrapperStack = parent.addStack();
+                stackWrapperStack.addSpacer();
+
+                return stackWrapperStack;
+            }
+        });
         return this;
     }
 }
@@ -135,7 +141,7 @@ class TextBuilder {
      * @memberof TextBuilder
      */
     content(content) {
-        this.__content = content;
+        addToState(this, {content});
         return this;
     }
 
@@ -148,7 +154,7 @@ class TextBuilder {
      * @memberof TextBuilder
      */
     blackRoundedFont(size) {
-        this.__font = Font.blackRoundedSystemFont(size);
+        addToState(this, {font: Font.blackRoundedSystemFont(size)});
         return this;
     }
 
@@ -161,7 +167,7 @@ class TextBuilder {
      * @memberof TextBuilder
      */
     boldMonospacedFont(size) {
-        this.__font = Font.boldMonospacedSystemFont(size);
+        addToState(this, {font: Font.boldMonospacedSystemFont(size)});
         return this;
     }
 
@@ -174,7 +180,7 @@ class TextBuilder {
      * @memberof TextBuilder
      */
     blackMonospacedFont(size) {
-        this.__font = Font.blackMonospacedSystemFont(size);
+        addToState(this, {font: Font.blackMonospacedSystemFont(size)});
         return this;
     }
     
@@ -187,7 +193,7 @@ class TextBuilder {
      * @memberof TextBuilder
      */
     blackFont(size) {
-        this.__font = Font.blackSystemFont(size);
+        addToState(this, {font: Font.blackSystemFont(size)});
         return this;
     }
 }
@@ -323,12 +329,16 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
      */
     renderFor(parent) {
 
-        parent = this.__parentTransform(parent);
+        const color = getFromState(this, "color");
+        const leftAlign = getFromState(this, "leftAlign", false);
+        const parentTransform = getFromState(this, "parentTransform", (parent) => parent);
+
+        parent = parentTransform(parent);
 
         let stack = parent.addStack();
         stack.size = new Size(this.__width, this.__height);
         
-        if (this.__leftAlign) {
+        if (leftAlign) {
             parent.addSpacer();
         }
 
@@ -345,8 +355,8 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
             stack.cornerRadius = this.__radius;
         }
 
-        if (this.__color) {
-            stack.backgroundColor = this.__color;
+        if (color) {
+            stack.backgroundColor = color;
         }
         
         if (this.__borderColor) {
@@ -404,8 +414,19 @@ class TextWidgetBuilder extends Classes(
             throw new Error("Invalid parent widget provided.");
         }
         
-        let text = this.__content;
-        parent = this.__parentTransform(parent);
+        const {
+            color,
+            opacity,
+            content,
+            font
+        } = getState(this);
+
+        const leftAlign = getFromState(this, "leftAlign", false);
+        const parentTransform = getFromState(this, "parentTransform", (parent) => parent);
+        const aligningFunction = getFromState(this, "aligningFunction", (widget) => widget.centerAlignText());
+
+        let text = content;
+        parent = parentTransform(parent);
         
         if (this.__limit) {
             text = this.__truncate(text, this.__limit);
@@ -413,23 +434,23 @@ class TextWidgetBuilder extends Classes(
 
         let textWidget = parent.addText(text);
         
-        if (this.__leftAlign) {
+        if (leftAlign) {
             parent.addSpacer();
         }
         
-        if (this.__font) {
-            textWidget.font = this.__font;
+        if (font) {
+            textWidget.font = font;
         }
 
-        if (this.__color) {
-            textWidget.textColor = this.__color;
+        if (color) {
+            textWidget.textColor = color;
         }
 
-        if (this.__opacity) {
-            textWidget.textOpacity = this.__opacity;
+        if (opacity) {
+            textWidget.textOpacity = opacity;
         }
         
-        this.__aligningFunction(textWidget);
+        aligningFunction(textWidget);
         return textWidget;
     }
     
@@ -577,6 +598,14 @@ class ImageWidgetBuilder extends Classes(
         if (!parent) {
             throw new Error("Invalid parent widget provided.");
         }
+
+        const {
+            color,
+            opacity
+        } = getState(this);
+
+        const leftAlign = getFromState(this, "leftAlign", false);
+        const parentTransform = getFromState(this, "parentTransform", (parent) => parent);
         
         let image = this.__image;
         let iconCode = this.__iconCode;
@@ -588,8 +617,12 @@ class ImageWidgetBuilder extends Classes(
             image = icon.image;
         }
 
-        parent = this.__parentTransform(parent);
+        parent = parentTransform(parent);
         let imageWidget = parent.addImage(image);
+
+        if (leftAlign) {
+            parent.addSpacer();
+        }
         
         if (this.__width) {
             imageWidget.imageSize = new Size(
@@ -598,12 +631,12 @@ class ImageWidgetBuilder extends Classes(
             );
         }
         
-        if (this.__color) {
-            imageWidget.tintColor = this.__color;
+        if (color) {
+            imageWidget.tintColor = color;
         }
 
-        if (this.__opacity) {
-            imageWidget.imageOpacity = this.__opacity;
+        if (opacity) {
+            imageWidget.imageOpacity = opacity;
         }
 
         if (this.__radius) {
@@ -639,23 +672,38 @@ class DateWidgetBuilder extends Classes(
         if (!parent) {
             throw new Error("Invalid parent widget provided.");
         }
-        
-        parent = this.__parentTransform(parent);
-        let dateWidget = parent.addDate(this.__content);
 
-        if (this.__font) {
-            dateWidget.font = this.__font;
-        }
+        const {
+            color,
+            opacity,
+            content,
+            font
+        } = getState(this);
+
+        const leftAlign = getFromState(this, "leftAlign", false);
+        const parentTransform = getFromState(this, "parentTransform", (parent) => parent);
+        const aligningFunction = getFromState(this, "aligningFunction", (widget) => widget.centerAlignText());
         
-        if (this.__color) {
-            dateWidget.textColor = this.__color;
+        parent = parentTransform(parent);
+        let dateWidget = parent.addDate(content);
+
+        if (leftAlign) {
+            parent.addSpacer();
         }
 
-        if (this.__opacity) {
-            dateWidget.textOpacity = this.__opacity;
+        if (font) {
+            dateWidget.font = font;
         }
         
-        this.__aligningFunction(dateWidget);
+        if (color) {
+            dateWidget.textColor = color;
+        }
+
+        if (opacity) {
+            dateWidget.textOpacity = opacity;
+        }
+        
+        aligningFunction(dateWidget);
         return dateWidget;
     }
 }
@@ -774,10 +822,11 @@ class RootWidgetBuilder extends ColorBuilder {
      */
     render() {
 
+        const color = getFromState(this, "color");
         const rootWidget = new ListWidget();
 
-        if (this.__color) {
-            rootWidget.backgroundColor = this.__color;
+        if (color) {
+            rootWidget.backgroundColor = color;
         }
 
         if (this.__gradient) {
