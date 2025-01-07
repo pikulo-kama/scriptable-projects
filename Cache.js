@@ -54,6 +54,14 @@ class CacheDataType {
  */
 class PropertyMetadata {
 
+    #transformFunction = (value) => value;
+
+    #builder;
+    #callback;
+    #propertyType;
+    #property;
+    #propertyAlias;
+
     /**
      * Creates an instance of PropertyMetadata.
      * 
@@ -63,12 +71,9 @@ class PropertyMetadata {
      * @memberof PropertyMetadata
      */
     constructor(builder, type, callback) {
-        this.__builder = builder;
-        this.__callback = callback;
-        this.__propertyType = type
-        this.__property = undefined;
-        this.__propertyAlias = undefined;
-        this.__transformFunction = (value) => value;
+        this.#builder = builder;
+        this.#callback = callback;
+        this.#propertyType = type
     }
 
     /**
@@ -84,7 +89,7 @@ class PropertyMetadata {
      * @memberof PropertyMetadata
      */
     property(property) {
-        this.__property = property;
+        this.#property = property;
         return this;
     }
 
@@ -96,7 +101,7 @@ class PropertyMetadata {
      * @memberof PropertyMetadata
      */
     alias(alias) {
-        this.__propertyAlias = alias;
+        this.#propertyAlias = alias;
         return this;
     }
 
@@ -110,7 +115,7 @@ class PropertyMetadata {
      * @memberof PropertyMetadata
      */
     transformFunction(transofrmFunction) {
-        this.__transformFunction = transofrmFunction;
+        this.#transformFunction = transofrmFunction;
         return this;
     }
 
@@ -121,8 +126,8 @@ class PropertyMetadata {
      * @memberof PropertyMetadata
      */
     add() {
-        this.__callback(this._getPropertyMetadata());
-        return this.__builder;
+        this.#callback(this._getPropertyMetadata());
+        return this.#builder;
     }
 
     /**
@@ -134,10 +139,10 @@ class PropertyMetadata {
      */
     _getPropertyMetadata() {
         return {
-            property: this.__property,
-            alias: this.__propertyAlias,
-            type: this.__propertyType,
-            transformFunction: this.__transformFunction
+            property: this.#property,
+            alias: this.#propertyAlias,
+            type: this.#propertyType,
+            transformFunction: this.#transformFunction
         };
     }
 }
@@ -151,6 +156,8 @@ class PropertyMetadata {
  */
 class ListMetadata extends PropertyMetadata {
 
+    #listPropertyMetadata = [];
+
     /**
      * Creates an instance of ListMetadata.
      * 
@@ -160,7 +167,6 @@ class ListMetadata extends PropertyMetadata {
      */
     constructor(parentBuilder, callback) {
         super(parentBuilder, CacheDataType.List, callback);
-        this.__listPropertyMetadata = [];
     }
 
     /**
@@ -172,7 +178,7 @@ class ListMetadata extends PropertyMetadata {
     data() {
         return new PropertyMetadata(this, 
             CacheDataType.Data, 
-            (fieldMetadata) => this.__listPropertyMetadata.push(fieldMetadata)
+            (fieldMetadata) => this.#listPropertyMetadata.push(fieldMetadata)
         );
     }
 
@@ -185,7 +191,7 @@ class ListMetadata extends PropertyMetadata {
     image() {
         return new PropertyMetadata(this, 
             CacheDataType.Image, 
-            (fieldMetadata) => this.__listPropertyMetadata.push(fieldMetadata)
+            (fieldMetadata) => this.#listPropertyMetadata.push(fieldMetadata)
         );
     }
 
@@ -197,14 +203,14 @@ class ListMetadata extends PropertyMetadata {
      */
     list() {
         return new ListMetadata(this,
-            (fieldMetadata) => this.__listPropertyMetadata.push(fieldMetadata)
+            (fieldMetadata) => this.#listPropertyMetadata.push(fieldMetadata)
         );
     }
 
     _getPropertyMetadata() {
 
         let metadata = super._getPropertyMetadata();
-        metadata.listPropertyMetadata = this.__listPropertyMetadata;
+        metadata.listPropertyMetadata = this.#listPropertyMetadata;
         
         return metadata;
     }
@@ -219,6 +225,10 @@ class ListMetadata extends PropertyMetadata {
  */
 class Metadata {
 
+    #parentBuilder;
+    #callback;
+    #fields = [];
+
     /**
      * Creates an instance of Metadata.
      * 
@@ -227,9 +237,8 @@ class Metadata {
      * @memberof Metadata
      */
     constructor(parentBuilder, callback) {
-        this.__parentBuilder = parentBuilder;
-        this.__callback = callback;
-        this.__fields = [];
+        this.#parentBuilder = parentBuilder;
+        this.#callback = callback;
     }
 
     /**
@@ -241,7 +250,7 @@ class Metadata {
     data() {
         return new PropertyMetadata(this, 
             CacheDataType.Data, 
-            (fieldMetadata) => this.__fields.push(fieldMetadata)
+            (fieldMetadata) => this.#fields.push(fieldMetadata)
         );
     }
 
@@ -254,7 +263,7 @@ class Metadata {
     image() {
         return new PropertyMetadata(this, 
             CacheDataType.Image, 
-            (fieldMetadata) => this.__fields.push(fieldMetadata)
+            (fieldMetadata) => this.#fields.push(fieldMetadata)
         );
     }
 
@@ -266,7 +275,7 @@ class Metadata {
      */
     list() {
         return new ListMetadata(this,
-            (fieldMetadata) => this.__fields.push(fieldMetadata)
+            (fieldMetadata) => this.#fields.push(fieldMetadata)
         );
     }
 
@@ -278,15 +287,15 @@ class Metadata {
      */
     create() {
 
-        if (this.__callback) {
-            this.__callback(this.__fields);
+        if (this.#callback) {
+            this.#callback(this.#fields);
         }
 
-        if (this.__parentBuilder) {
-            return this.__parentBuilder;
+        if (this.#parentBuilder) {
+            return this.#parentBuilder;
         }
 
-        return this.__fields;
+        return this.#fields;
     }
 }
 
@@ -299,11 +308,13 @@ class Metadata {
  */
 class CacheRequest {
 
-    static __FILE_NAME = "cache.json";
-    static __manager = FileManager.local();
+    static #FILE_NAME = "cache.json";
+    static #manager = FileManager.local();
+    
+    #metadata;
 
     constructor(metadata) {
-        this.__metadata = metadata;
+        this.#metadata = metadata;
     }
 
     /**
@@ -321,13 +332,13 @@ class CacheRequest {
         try {
             let responseData = await new Request(url).loadJSON();
 
-            processedResponse = await this.__processResponse(this.__metadata, responseData);
-            await this.__cacheResponse(url, processedResponse);
+            processedResponse = await this.#processResponse(this.#metadata, responseData);
+            await this.#cacheResponse(url, processedResponse);
 
         } catch (error) {
             console.log(error);
             console.warn("Getting data from cache");
-            processedResponse = this.__getResponseFromCache(url);
+            processedResponse = this.#getResponseFromCache(url);
         }
 
         return processedResponse;
@@ -341,13 +352,13 @@ class CacheRequest {
      * @return {Object} processed response data
      * @memberof CacheRequest
      */
-    async __processResponse(metadata, responseData) {
+    async #processResponse(metadata, responseData) {
 
         let processedResponse = {};
 
         for (let fieldMetadata of metadata) {
 
-            let property = this.__getPropertyFromResponse(fieldMetadata.property, responseData);
+            let property = this.#getPropertyFromResponse(fieldMetadata.property, responseData);
             let propertyName = property.name;
             let propertyValue;
 
@@ -362,11 +373,11 @@ class CacheRequest {
                     break;
 
                 case CacheDataType.Image:
-                    propertyValue = await this.__processImage(property.value);
+                    propertyValue = await this.#processImage(property.value);
                     break;
 
                 case CacheDataType.List:
-                    propertyValue = await this.__processList(fieldMetadata.listPropertyMetadata, property.value);
+                    propertyValue = await this.#processList(fieldMetadata.listPropertyMetadata, property.value);
                     break;
             }
 
@@ -384,14 +395,14 @@ class CacheRequest {
      * @return {String} path where image is stored
      * @memberof CacheRequest
      */
-    async __processImage(imageURI) {
+    async #processImage(imageURI) {
 
-        let imagePath = CacheRequest.__manager.joinPath(
-            CacheRequest.__manager.cacheDirectory(), 
+        let imagePath = CacheRequest.#manager.joinPath(
+            CacheRequest.#manager.cacheDirectory(), 
             `CIMG-${UUID.string()}.jpeg`
         );
         
-        CacheRequest.__manager.writeImage(imagePath, await new Request(imageURI).loadImage());
+        CacheRequest.#manager.writeImage(imagePath, await new Request(imageURI).loadImage());
         return imagePath;
     }
 
@@ -404,7 +415,7 @@ class CacheRequest {
      * @return {List<Object>} list of processed data
      * @memberof CacheRequest
      */
-    async __processList(listMetadata, collection) {
+    async #processList(listMetadata, collection) {
 
         let processedCollection = [];
 
@@ -413,7 +424,7 @@ class CacheRequest {
         }
 
         for (let entry of collection) {
-            processedCollection.push(await this.__processResponse(listMetadata, entry));
+            processedCollection.push(await this.#processResponse(listMetadata, entry));
         }
 
         return processedCollection;
@@ -428,7 +439,7 @@ class CacheRequest {
      * @return {Object} field that corresponds to composed property
      * @memberof CacheRequest
      */
-    __getPropertyFromResponse(composedProperty, response) {
+    #getPropertyFromResponse(composedProperty, response) {
 
         let propertyChain = composedProperty.split(".");
         let propertyValue = response;
@@ -458,9 +469,9 @@ class CacheRequest {
      * @param {Object} response response processed using metadata
      * @memberof CacheRequest
      */
-    async __cacheResponse(key, response) {
+    async #cacheResponse(key, response) {
 
-        let cache = FileUtil.readLocalJson(CacheRequest.__FILE_NAME, [])
+        let cache = FileUtil.readLocalJson(CacheRequest.#FILE_NAME, [])
             .filter(entry => entry.id != key);
 
         cache.push({
@@ -468,7 +479,7 @@ class CacheRequest {
             value: response
         });
 
-        FileUtil.updateLocalJson(CacheRequest.__FILE_NAME, cache);
+        FileUtil.updateLocalJson(CacheRequest.#FILE_NAME, cache);
     }
 
     /**
@@ -479,9 +490,9 @@ class CacheRequest {
      * @return {Object} response from cache
      * @memberof CacheRequest
      */
-    __getResponseFromCache(key) {
+    #getResponseFromCache(key) {
         
-        const entryFromCache = FileUtil.readLocalJson(CacheRequest.__FILE_NAME, [])
+        const entryFromCache = FileUtil.readLocalJson(CacheRequest.#FILE_NAME, [])
             .find(entry => entry.id == key);
 
         return entryFromCache?.value;

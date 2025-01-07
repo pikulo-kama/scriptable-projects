@@ -2,7 +2,6 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: globe-asia;
 
-
 /**
  * Used to hold protected fields of instances
  * that should be accessible by other classes in script..
@@ -123,6 +122,7 @@ function addOneToState(stateOwner, name, value) {
 function getFromState(stateOwner, name, defaultValue) {
     return ProtectedDataHolder.getFromState(stateOwner, name, defaultValue);
 }
+
 
 function getState(stateOwner) {
     return ProtectedDataHolder.getState(stateOwner);

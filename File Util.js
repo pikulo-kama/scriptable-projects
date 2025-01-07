@@ -13,11 +13,11 @@
  */
 class FileUtil {
 
-    static __manager = FileManager.iCloud();
+    static #manager = FileManager.iCloud();
     
-    static __RESOURCES_DIR = "Resources";
-    static __LOCALES_DIR = "i18n";
-    static __JS_EXTENSION = ".js";
+    static #RESOURCES_DIR = "Resources";
+    static #LOCALES_DIR = "i18n";
+    static #JS_EXTENSION = ".js";
 
     /**
      * Used to update Scriptable script content.
@@ -30,11 +30,11 @@ class FileUtil {
     static async updateScript(scriptName, script) {
 
         const scriptPath = this.joinPaths(
-            this.__getScriptableDirectory(),
+            this.#getScriptableDirectory(),
             scriptName
         );
 
-        await this.__manager.write(scriptPath, Data.fromString(script));
+        await this.#manager.write(scriptPath, Data.fromString(script));
     }
 
     /**
@@ -50,11 +50,11 @@ class FileUtil {
     static async updateLocale(scriptName, languageCode, content) {
         
         let localeFileName = `locale_${languageCode}.json`;
-        await this.__updateFileInternal(
+        await this.#updateFileInternal(
             scriptName,
             localeFileName,
             JSON.stringify(content, null, 4),
-            this.__getLocalesDirectory()
+            this.#getLocalesDirectory()
         );
     }
 
@@ -109,7 +109,7 @@ class FileUtil {
      * @memberof FileUtil
      */
     static async updateFile(scriptName, fileName, content) {
-        await this.__updateFileInternal(scriptName, fileName, content, this.__getResourcesDirectory());
+        await this.#updateFileInternal(scriptName, fileName, content, this.#getResourcesDirectory());
     }
     
     /**
@@ -123,19 +123,19 @@ class FileUtil {
      * @param {String} directory path on which file should be created
      * @memberof FileUtil
      */
-    static async __updateFileInternal(scriptName, fileName, content, directory) {
+    static async #updateFileInternal(scriptName, fileName, content, directory) {
         
         const targetDirectory = this.joinPaths(
             directory,
             scriptName
         );
         
-        if (!this.__manager.isDirectory(targetDirectory)) {
-            this.__manager.createDirectory(targetDirectory, true);
+        if (!this.#manager.isDirectory(targetDirectory)) {
+            this.#manager.createDirectory(targetDirectory, true);
         }
         
         const targetFile = this.joinPaths(targetDirectory, fileName); 
-        await this.__manager.write(targetFile, Data.fromString(String(content)));
+        await this.#manager.write(targetFile, Data.fromString(String(content)));
     }
 
 
@@ -151,7 +151,7 @@ class FileUtil {
      */
     static localeExists(scriptName, languageCode) {
         let localeFileName = `locale_${languageCode}.json`;
-        return this.__fileExistsInternal(scriptName, localeFileName, this.__getLocalesDirectory());
+        return this.#fileExistsInternal(scriptName, localeFileName, this.#getLocalesDirectory());
     }
 
     /**
@@ -165,7 +165,7 @@ class FileUtil {
      * @memberof FileUtil
      */
     static fileExists(scriptName, fileName) {
-        return this.__fileExistsInternal(scriptName, fileName, this.__getResourcesDirectory());
+        return this.#fileExistsInternal(scriptName, fileName, this.#getResourcesDirectory());
     }
 
     /**
@@ -179,7 +179,7 @@ class FileUtil {
      * @return {Boolean} True if file exists otherwise false
      * @memberof FileUtil
      */
-    static __fileExistsInternal(scriptName, fileName, directory) {
+    static #fileExistsInternal(scriptName, fileName, directory) {
 
         const targetFile = this.joinPaths(
             directory,
@@ -187,7 +187,7 @@ class FileUtil {
             fileName
         );
         
-        return this.__manager.fileExists(targetFile);
+        return this.#manager.fileExists(targetFile);
     }
 
     /**
@@ -200,8 +200,8 @@ class FileUtil {
      */
     static readScript(scriptName) {
 
-        const scriptPath = this.joinPaths(this.__getScriptableDirectory(), scriptName);
-        return this.__manager.readString(scriptPath);
+        const scriptPath = this.joinPaths(this.#getScriptableDirectory(), scriptName);
+        return this.#manager.readString(scriptPath);
     }
 
     /**
@@ -219,11 +219,11 @@ class FileUtil {
     static readLocale(scriptName, languageCode) {
 
         let localeFileName = `locale_${languageCode}.json`;
-        let content = this.__readFileInternal(
+        let content = this.#readFileInternal(
             scriptName,
             localeFileName,
             {},
-            this.__getLocalesDirectory()
+            this.#getLocalesDirectory()
         );
 
         if (typeof content === 'string') {
@@ -294,7 +294,7 @@ class FileUtil {
      * @memberof FileUtil
      */
     static readFile(scriptName, fileName, defaultValue) {
-        return this.__readFileInternal(scriptName, fileName, defaultValue, this.__getResourcesDirectory());
+        return this.#readFileInternal(scriptName, fileName, defaultValue, this.#getResourcesDirectory());
     }
     
     /**
@@ -309,7 +309,7 @@ class FileUtil {
      * @return {Object} content of file if exists otherwise default value
      * @memberof FileUtil
      */
-    static __readFileInternal(scriptName, fileName, defaultValue, directory) {
+    static #readFileInternal(scriptName, fileName, defaultValue, directory) {
 
         const targetFile = this.joinPaths(
             directory, 
@@ -317,12 +317,12 @@ class FileUtil {
             fileName
         );
         
-        if (!this.__manager.fileExists(targetFile)) {
+        if (!this.#manager.fileExists(targetFile)) {
             console.warn("File does not exist: " + targetFile);
             return defaultValue;
         }
         
-        return this.__manager.readString(targetFile);
+        return this.#manager.readString(targetFile);
     }
 
     /**
@@ -334,7 +334,7 @@ class FileUtil {
      * @memberof FileUtil
      */
     static findLocaleDirectories() {
-        return this.__manager.listContents(this.__getLocalesDirectory());
+        return this.#manager.listContents(this.#getLocalesDirectory());
     }
 
     /**
@@ -345,8 +345,8 @@ class FileUtil {
      * @memberof FileUtil
      */
     static findScripts() {
-        return this.__manager.listContents(this.__getScriptableDirectory())
-            .filter((script) => script.endsWith(this.__JS_EXTENSION));
+        return this.#manager.listContents(this.#getScriptableDirectory())
+            .filter((script) => script.endsWith(this.#JS_EXTENSION));
     }
 
     /**
@@ -363,7 +363,7 @@ class FileUtil {
         let filePath = "";
         
         for (let segment of segments) {
-            filePath = this.__manager.joinPath(filePath, segment);
+            filePath = this.#manager.joinPath(filePath, segment);
         }
         
         return filePath;
@@ -378,10 +378,10 @@ class FileUtil {
      * @return {String} Resources directory path
      * @memberof FileUtil
      */
-    static __getResourcesDirectory() {
+    static #getResourcesDirectory() {
         return this.joinPaths(
-            this.__getScriptableDirectory(),
-            this.__RESOURCES_DIR
+            this.#getScriptableDirectory(),
+            this.#RESOURCES_DIR
         );
     }
 
@@ -394,10 +394,10 @@ class FileUtil {
      * @return {String} locales directory path
      * @memberof FileUtil
      */
-    static __getLocalesDirectory() {
+    static #getLocalesDirectory() {
         return this.joinPaths(
-            this.__getScriptableDirectory(),
-            this.__LOCALES_DIR
+            this.#getScriptableDirectory(),
+            this.#LOCALES_DIR
         );
     }
 
@@ -409,8 +409,8 @@ class FileUtil {
      * @return {String} Scriptable root directory path
      * @memberof FileUtil
      */
-    static __getScriptableDirectory() {
-        return this.__manager.documentsDirectory();
+    static #getScriptableDirectory() {
+        return this.#manager.documentsDirectory();
     }
 }
 

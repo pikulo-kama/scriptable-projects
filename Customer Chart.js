@@ -9,7 +9,7 @@ const { tr } = importModule("Localization");
 
 const conf = {
     debug: {
-        enabled: true
+        enabled: false
     },
 
     timeZone: tr("customerChart_timezone"),
@@ -100,8 +100,7 @@ function getArguments() {
  */
 class CalendarChartDataRepository {
 
-    static __FIRST_DAY_OF_MONTH = 1;
-    
+    static #FIRST_DAY_OF_MONTH = 1;
 
     /**
      * Used to get data from calendar
@@ -113,7 +112,7 @@ class CalendarChartDataRepository {
      */
     async getChartData() {
   
-        let dateRange = this.__getDateRange();
+        let dateRange = this.#getDateRange();
         let eventSet = [];
         
         const calendar = await Calendar.forEventsByTitle(conf.args.calendar);
@@ -166,7 +165,7 @@ class CalendarChartDataRepository {
      * @return {List<Date>} list of dates for which events should be found
      * @memberof CalendarChartDataRepository
      */
-    __getDateRange() {
+    #getDateRange() {
     
         let dates = new Array();
         
@@ -174,7 +173,7 @@ class CalendarChartDataRepository {
             
             let monthStartDate = new Date();
             monthStartDate.setMonth(monthStartDate.getMonth() - monthIdx);
-            monthStartDate.setDate(CalendarChartDataRepository.__FIRST_DAY_OF_MONTH);
+            monthStartDate.setDate(CalendarChartDataRepository.#FIRST_DAY_OF_MONTH);
 
             dates.push(monthStartDate);
         }

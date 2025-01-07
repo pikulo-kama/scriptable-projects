@@ -119,8 +119,8 @@ class EpisodateApiResource extends ApiResource {
 
     async download() {
 
-        const request = cacheRequest(this.__getMetadata());
-        const seriesData = await request.get(this.__getSeriesUrl());
+        const request = cacheRequest(this.#getMetadata());
+        const seriesData = await request.get(this.#getSeriesUrl());
 
         const seriesInfo = new SeriesInfo(
             seriesData.title,
@@ -148,7 +148,7 @@ class EpisodateApiResource extends ApiResource {
      * 
      * @returns {String} URL
      */
-    __getSeriesUrl() {
+    #getSeriesUrl() {
         return this._webUrl + conf.seriesName;
     }
 
@@ -161,7 +161,7 @@ class EpisodateApiResource extends ApiResource {
      * 
      * @returns {Object} cache config
      */
-    __getMetadata() {
+    #getMetadata() {
 
         return metadata()
             .data()
@@ -212,15 +212,15 @@ class StubApiResource extends ApiResource {
         );
         
         seriesInfo.addEpisode(
-            new EpisodeInfo(1, 1, this.__dateNMonthsInPast(12))
+            new EpisodeInfo(1, 1, this.#dateNMonthsInPast(12))
         );
         
         seriesInfo.addEpisode(
-            new EpisodeInfo(1, 2, this.__dateNMonthsInPast(6))
+            new EpisodeInfo(1, 2, this.#dateNMonthsInPast(6))
         );
         
         seriesInfo.addEpisode(
-            new EpisodeInfo(2, 1, this.__getNextEpisodeDate())
+            new EpisodeInfo(2, 1, this.#getNextEpisodeDate())
         );
         
         return seriesInfo;
@@ -233,28 +233,28 @@ class StubApiResource extends ApiResource {
      * 
      * @returns {Date} next episode release date
      */
-    __getNextEpisodeDate() {
+    #getNextEpisodeDate() {
 
         // Last known episode already aired.
         // No information when next would be (Waiting).
         if (conf.debug.forceWaitingStatus) {
-            return this.__dateNMonthsInPast(1);
+            return this.#dateNMonthsInPast(1);
         }
 
         if (conf.debug.forceCountdownHours) {
-            return this.__dateNHoursInFuture(2);
+            return this.#dateNHoursInFuture(2);
         }
 
         if (conf.debug.forceCountdownDays) {
-            return this.__dateNDaysInFuture(5);
+            return this.#dateNDaysInFuture(5);
         }
 
         if (conf.debug.forceCountdownWeeks) {
-            return this.__dateNDaysInFuture(8);
+            return this.#dateNDaysInFuture(8);
         }
 
         if (conf.debug.forceCountdownMonths) {
-            return this.__dateNMonthsInFuture(3);
+            return this.#dateNMonthsInFuture(3);
         }
         
         return new Date();
@@ -267,7 +267,7 @@ class StubApiResource extends ApiResource {
      * @param {Number} months amount of months
      * @returns date in the past
      */
-    __dateNMonthsInPast(months) {
+    #dateNMonthsInPast(months) {
 
         let date = new Date();
         date.setMonth(date.getMonth() - months);
@@ -282,7 +282,7 @@ class StubApiResource extends ApiResource {
      * @param {Number} months amount of months
      * @returns date in the future
      */
-    __dateNMonthsInFuture(months) {
+    #dateNMonthsInFuture(months) {
         
         let date = new Date();
         date.setMonth(date.getMonth() + months);
@@ -297,7 +297,7 @@ class StubApiResource extends ApiResource {
      * @param {Number} days amount of days
      * @returns date in the future
      */
-    __dateNDaysInFuture(days) {
+    #dateNDaysInFuture(days) {
         
         let date = new Date();
         date.setDate(date.getDate() + days);
@@ -312,7 +312,7 @@ class StubApiResource extends ApiResource {
      * @param {Number} hours amount of hours
      * @returns date in the future
      */
-    __dateNHoursInFuture(hours) {
+    #dateNHoursInFuture(hours) {
         
         let date = new Date();
         date.setHours(date.getHours() + hours);
@@ -426,8 +426,8 @@ class SeriesInfo {
  */
 class Series {
 
-    static __formatter = new RelativeDateTimeFormatter();
-    static __REGEXP_COUNTDOWN = /in\s(\d+)\s(\w+)/;
+    static #formatter = new RelativeDateTimeFormatter();
+    static #REGEXP_COUNTDOWN = /in\s(\d+)\s(\w+)/;
 
     /**
      * @param {SeriesInfo} seriesInfo series information
@@ -435,13 +435,13 @@ class Series {
     constructor(seriesInfo) {
         
         this._seriesInfo = seriesInfo;
-        this._image = this.__processImage(seriesInfo.getImage());
+        this._image = this.#processImage(seriesInfo.getImage());
 
         this._countdown = null;
         this._nextEpisode = null;
         this._dominantColor = null;
 
-        this.__processCountdown(seriesInfo);
+        this.#processCountdown(seriesInfo);
     }
 
     /**
@@ -566,7 +566,7 @@ class Series {
 
         if (!colorFromFile || conf.debug.rerollColor) {
 
-            let dominantColor = await this.__retrieveDominantColor();
+            let dominantColor = await this.#retrieveDominantColor();
             colorFromFile = {color: dominantColor};
             colorMap[imageURI] = colorFromFile;
 
@@ -587,7 +587,7 @@ class Series {
      * @param {String} imagePath path to the downloaded image on device
      * @returns {Image} initialized image for the series
      */
-    __processImage(imagePath) {
+    #processImage(imagePath) {
 
         if (imagePath) {
             return Image.fromFile(imagePath);
@@ -602,24 +602,24 @@ class Series {
      * 
      * @param {SeriesInfo} seriesInfo with series information
      */
-    __processCountdown(seriesInfo) {
+    #processCountdown(seriesInfo) {
 
         let now = new Date();
-        let nextEpisode = this.__getEpisodeAfter(seriesInfo, now);
+        let nextEpisode = this.#getEpisodeAfter(seriesInfo, now);
 
         if (!nextEpisode) {
             return;
         }
 
-        Series.__formatter.useNumericDateTimeStyle();
-        let countdownString = Series.__formatter.string(nextEpisode.getAirDate(), now);
+        Series.#formatter.useNumericDateTimeStyle();
+        let countdownString = Series.#formatter.string(nextEpisode.getAirDate(), now);
 
         // Remove 's' from end of countdown
         if (countdownString.endsWith('s')) {
             countdownString = countdownString.substring(0, countdownString.length - 1);
         }
 
-        let match = countdownString.match(Series.__REGEXP_COUNTDOWN);
+        let match = countdownString.match(Series.#REGEXP_COUNTDOWN);
         let time = Number(match[1]);
         let type = match[2];
 
@@ -638,7 +638,7 @@ class Series {
      * @param {Date} targetDate date for which episode should be found
      * @returns {EpisodeInfo} episode that releases after provided date
      */
-    __getEpisodeAfter(seriesInfo, targetDate) {
+    #getEpisodeAfter(seriesInfo, targetDate) {
 
         let episodes = seriesInfo?.getEpisodes();
 
@@ -675,7 +675,7 @@ class Series {
      * 
      * @returns {String} HEX representation of color
      */
-    async __retrieveDominantColor() {
+    async #retrieveDominantColor() {
 
         let webView = new WebView();
         await webView.loadURL("https://example.com/");
@@ -806,7 +806,7 @@ class SeriesWidget {
      */
     create(series) {
 
-        const root = this.__createRootWidget(series);
+        const root = this.#createRootWidget(series);
 
         // Render widget wrapper
         // with small paddings on top and bottom.
@@ -840,14 +840,14 @@ class SeriesWidget {
                     
             // Countdown
             spacer().renderFor(contentStack, 10);
-            this.__renderCountdown(contentStack, series);
+            this.#renderCountdown(contentStack, series);
             spacer().renderFor(contentStack);
             
-            this.__renderReleaseInformation(contentStack, series)
+            this.#renderReleaseInformation(contentStack, series)
         
         } else {
             // Other statuses (ended, waiting for next season)
-            this.__renderStatusPlaceholder(contentStack, series);
+            this.#renderStatusPlaceholder(contentStack, series);
         }
         
         return root;
@@ -859,7 +859,7 @@ class SeriesWidget {
      * @param {*} root parent widget where block should be
      * @param {Series} series series
      */
-    __renderCountdown(root, series) {
+    #renderCountdown(root, series) {
 
         const countdownBox = stack()
             .color(series.getDominantColor())
@@ -883,7 +883,7 @@ class SeriesWidget {
      * @param {*} root parent widget where block should be
      * @param {Series} series series
      */
-    __renderReleaseInformation(root, series) {
+    #renderReleaseInformation(root, series) {
         
         const releaseInfoStack = stack()
             .rightAlign()
@@ -926,7 +926,7 @@ class SeriesWidget {
      * @param {*} root parent widget where block should be
      * @param {Series} series series
      */
-    __renderStatusPlaceholder(root, series) {
+    #renderStatusPlaceholder(root, series) {
         
         const statusWidget = image();
         
@@ -952,7 +952,7 @@ class SeriesWidget {
      * @param {Series} series series
      * @returns {ListWidget} root widget
      */
-    __createRootWidget(series) {
+    #createRootWidget(series) {
 
         return rootWidget()
             .gradient()

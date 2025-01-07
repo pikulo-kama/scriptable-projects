@@ -23,7 +23,7 @@ const {
 const conf = {
     debug: {
         enabled: false,
-        forceWidget: true
+        forceWidget: false
     }
 };
 

@@ -119,14 +119,17 @@ function pad(text) {
  */
 class WidgetBuilder {
 
+    #seriesInfo;
+    #darkColorHex;
+
     /**
      * Creates an instance of WidgetBuilder.
      * @param {Object} seriesInfo JSON with series data
      * @memberof WidgetBuilder
      */
     constructor(seriesInfo) {
-        this.__seriesInfo = seriesInfo;
-        this.__darkColorHex = this.__generateDarkHex();
+        this.#seriesInfo = seriesInfo;
+        this.#darkColorHex = this.#generateDarkHex();
     }
 
     /**
@@ -140,7 +143,7 @@ class WidgetBuilder {
 
         const root = rootWidget()
             .gradient()
-                .color(0.05, this.__getDarkColor())
+                .color(0.05, this.#getDarkColor())
                 .color(0.7, new Color("a9a9a9"))
                 .color(0.9, Color.white())
                 .topToBottom()
@@ -151,12 +154,12 @@ class WidgetBuilder {
             .vertical()
             .renderFor(root);
             
-        this.__renderSeriesName(contentStack);
+        this.#renderSeriesName(contentStack);
         spacer().renderFor(contentStack);
         
-        this.__renderTimeCode(contentStack);
+        this.#renderTimeCode(contentStack);
         spacer().renderFor(contentStack, 4);
-        this.__renderInfo(contentStack);
+        this.#renderInfo(contentStack);
         spacer().renderFor(contentStack);
         
         return root;
@@ -169,13 +172,13 @@ class WidgetBuilder {
      * @param {*} root parent widget
      * @memberof WidgetBuilder
      */
-    __renderSeriesName(root) {
+    #renderSeriesName(root) {
         
         const wrapper = stack().renderFor(root);
         
         // Series name
         text()
-            .content(this.__seriesInfo.serieName)
+            .content(this.#seriesInfo.serieName)
             .limit(16)
             .centerAlign()
             .color(Color.white())
@@ -193,24 +196,24 @@ class WidgetBuilder {
      * @param {*} root parent widget
      * @memberof WidgetBuilder
      */
-    __renderTimeCode(root) {
+    #renderTimeCode(root) {
         
         let contentWidget;
         const wrapper = stack()
-            .color(this.__getDarkColor(0.9))
+            .color(this.#getDarkColor(0.9))
             .width(100)
             .padding(1, 7)
             .radius(5)
             .renderFor(root);
         
-        if (this.__seriesInfo.isDone) {
+        if (this.#seriesInfo.isDone) {
             contentWidget = image()
                 .icon("checkmark.circle")
                 .size(24);
                 
         } else {
             contentWidget = text()
-                .content(this.__getTimeCode())
+                .content(this.#getTimeCode())
                 .blackFont(24);
         }
         
@@ -229,7 +232,7 @@ class WidgetBuilder {
      * @param {*} root parent widget
      * @memberof WidgetBuilder
      */
-    __renderInfo(root) {
+    #renderInfo(root) {
         
         let contentWidget;
         const wrapper = stack()
@@ -240,7 +243,7 @@ class WidgetBuilder {
             .radius(5)
             .renderFor(root);
             
-        if (this.__seriesInfo.isDone) {
+        if (this.#seriesInfo.isDone) {
             contentWidget = image()
                 .icon("checkmark")
                 .heavyWeight()
@@ -251,7 +254,7 @@ class WidgetBuilder {
             const {
                 season,
                 episode
-            } = this.__seriesInfo;
+            } = this.#seriesInfo;
             
             contentWidget = text()
                 .content(`s${season}e${episode}`)
@@ -259,7 +262,7 @@ class WidgetBuilder {
         }
             
         contentWidget
-            .color(this.__getDarkColor())
+            .color(this.#getDarkColor())
             .opacity(0.9)
             .renderFor(wrapper);
     }
@@ -274,9 +277,9 @@ class WidgetBuilder {
      * @return {Color} color with applied opacity
      * @memberof WidgetBuilder
      */
-    __getDarkColor(opacity = 1) {
+    #getDarkColor(opacity = 1) {
         return new Color(
-            this.__darkColorHex,
+            this.#darkColorHex,
             opacity
         );
     }
@@ -289,7 +292,7 @@ class WidgetBuilder {
      * @return {String} HEX value of dark color
      * @memberof WidgetBuilder
      */
-    __generateDarkHex() {
+    #generateDarkHex() {
         
         const bound = 5;
         
@@ -307,15 +310,15 @@ class WidgetBuilder {
      * @return {String} formatted time code
      * @memberof WidgetBuilder
      */
-    __getTimeCode() {
+    #getTimeCode() {
         
-        if (!this.__seriesInfo.hour && !this.__seriesInfo.minute) {
+        if (!this.#seriesInfo.hour && !this.#seriesInfo.minute) {
             return tr("stopWatcher_timeCodePlaceholder");    
         } 
 
         return tr("stopWatcher_timeCodeLabel",
-            pad(this.__seriesInfo.hour),
-            pad(this.__seriesInfo.minute)
+            pad(this.#seriesInfo.hour),
+            pad(this.#seriesInfo.minute)
         );
     }
 }
@@ -329,23 +332,24 @@ class WidgetBuilder {
  */
 class SeriesTableView {
 
+    #isDoneField = new BoolDataField("isDone", false);
+    #seriesIdField = new TextDataField("serieId");
+    #showInSummaryField = new BoolDataField("showInSummary", false);
+    #serieNameField = new TextDataField("serieName", tr("stopWatcher_serieNamePlaceholder"));
+    #seasonField = new TextDataField("season", "1");
+    #episodeField = new TextDataField("episode", "1");
+    #hourField = new NumberDataField("hour");
+    #minuteField = new NumberDataField("minute");
+
+    #seriesList;
+
     /**
      * Creates an instance of SeriesTableView.
      * @param {List<Object>} seriesList list of series JSON
      * @memberof SeriesTableView
      */
     constructor(seriesList) {
-
-        this.__seriesList = seriesList;
-
-        this.__isDoneField = new BoolDataField("isDone", false);
-        this.__seriesIdField = new TextDataField("serieId");
-        this.__showInSummaryField = new BoolDataField("showInSummary", false);
-        this.__serieNameField = new TextDataField("serieName", tr("stopWatcher_serieNamePlaceholder"));
-        this.__seasonField = new TextDataField("season", "1");
-        this.__episodeField = new TextDataField("episode", "1");
-        this.__hourField = new NumberDataField("hour");
-        this.__minuteField = new NumberDataField("minute");
+        this.#seriesList = seriesList;
     }
 
     /**
@@ -355,16 +359,16 @@ class SeriesTableView {
      */
     async present() {
 
-        const uiFields = this.__getUIFields()
+        const uiFields = this.#getUIFields()
         const dataFields = [
-            this.__isDoneField,
-            this.__seriesIdField,
-            this.__showInSummaryField,
-            this.__serieNameField,
-            this.__seasonField,
-            this.__episodeField,
-            this.__hourField,
-            this.__minuteField
+            this.#isDoneField,
+            this.#seriesIdField,
+            this.#showInSummaryField,
+            this.#serieNameField,
+            this.#seasonField,
+            this.#episodeField,
+            this.#hourField,
+            this.#minuteField
         ];
 
         const table = new UIDataTable();
@@ -373,15 +377,15 @@ class SeriesTableView {
         table.showSeparators()
 
         table.allowCreation();
-        table.setTableData(this.__seriesList);
+        table.setTableData(this.#seriesList);
         table.onDataModification((tableData) => FileUtil.updateLocalJson(conf.storageFileName, tableData));
-        table.onFieldChange(this.__onFieldChange);
+        table.onFieldChange(this.#onFieldChange);
 
         table.setDataFields(dataFields);
         table.setUIFields(uiFields);
 
-        table.addFilterField(this.__isDoneField, tr("stopWatcher_isDoneFilterName"));
-        table.addFilterField(this.__serieNameField, tr("stopWatcher_serieNameFilterName"));
+        table.addFilterField(this.#isDoneField, tr("stopWatcher_isDoneFilterName"));
+        table.addFilterField(this.#serieNameField, tr("stopWatcher_serieNameFilterName"));
 
         table.setSortingFunction((first, second) => 
             second.isDone - first.isDone || first.id - second.id
@@ -396,21 +400,21 @@ class SeriesTableView {
      * @return {List<UIField>} list of UI fields
      * @memberof SeriesTableView
      */
-    __getUIFields() {
+    #getUIFields() {
 
         // Status Field
-        const statusUIField = new UIForm(this.__getStatusLabel, 20);
-        statusUIField.setFormTitleFunction(this.__getStatusFormTitle);
+        const statusUIField = new UIForm(this.#getStatusLabel, 20);
+        statusUIField.setFormTitleFunction(this.#getStatusFormTitle);
         const toggleStatusAction = new UIFormAction(tr("stopWatcher_toggleStatusActionName"));
-        toggleStatusAction.addCallback(this.__isDoneField, (series) => !series.isDone);
+        toggleStatusAction.addCallback(this.#isDoneField, (series) => !series.isDone);
         statusUIField.addFormAction(toggleStatusAction);
 
         // Integration Field
-        const apiIntegrationUIField = new UIForm(this.__getApiIntegrationLabel, 20);
-        apiIntegrationUIField.setFormTitleFunction(this.__getApiIntegrationFormTitle);
-        const seriesIdFormField = new UIFormField(this.__seriesIdField, tr("stopWatcher_apiIntegrationFieldFormLabel"));
+        const apiIntegrationUIField = new UIForm(this.#getApiIntegrationLabel, 20);
+        apiIntegrationUIField.setFormTitleFunction(this.#getApiIntegrationFormTitle);
+        const seriesIdFormField = new UIFormField(this.#seriesIdField, tr("stopWatcher_apiIntegrationFieldFormLabel"));
         const toggleSummaryViewAction = new UIFormAction(tr("stopWatcher_toggleSummaryViewActionName"));
-        toggleSummaryViewAction.addCallback(this.__showInSummaryField, (series) => !series.showInSummary);
+        toggleSummaryViewAction.addCallback(this.#showInSummaryField, (series) => !series.showInSummary);
 
         apiIntegrationUIField.addDefaultAction(tr("stopWatcher_updateApiIntegrationIdActionName"));
         apiIntegrationUIField.addFormAction(toggleSummaryViewAction);
@@ -420,19 +424,19 @@ class SeriesTableView {
         const serieNameUIField = new UIForm((series) => series.serieName, 70);
         serieNameUIField.setFormTitleFunction(() => tr("stopWatcher_serieNameFormTitle"));
         serieNameUIField.setColor(Color.white());
-        const serieNameFormField = new UIFormField(this.__serieNameField, tr("stopWatcher_serieNameFieldFormLabel"));
+        const serieNameFormField = new UIFormField(this.#serieNameField, tr("stopWatcher_serieNameFieldFormLabel"));
 
         serieNameUIField.addDefaultAction(tr("stopWatcher_updateSerieNameActionName"));
         serieNameUIField.addFormField(serieNameFormField);
 
         // Season/Episode field
-        const tagUIField = new UIForm(this.__getTag, 50);
+        const tagUIField = new UIForm(this.#getTag, 50);
         tagUIField.setFormTitleFunction(() => tr("stopWatcher_tagFormTitle"));
-        const seasonFormField = new UIFormField(this.__seasonField, tr("stopWatcher_seasonFieldFormLabel"));
-        const episodeFormField = new UIFormField(this.__episodeField, tr("stopWatcher_episodeFieldFormLabel"));
+        const seasonFormField = new UIFormField(this.#seasonField, tr("stopWatcher_seasonFieldFormLabel"));
+        const episodeFormField = new UIFormField(this.#episodeField, tr("stopWatcher_episodeFieldFormLabel"));
         const nextEpisodeAction = new UIFormAction(tr("stopWatcher_nextEpisodeActionName"));
         
-        nextEpisodeAction.addCallback(this.__episodeField, (series) => String(Number(series.episode) + 1));
+        nextEpisodeAction.addCallback(this.#episodeField, (series) => String(Number(series.episode) + 1));
         seasonFormField.addRule(ModalRule.Number);
         episodeFormField.addRule(ModalRule.Number);
 
@@ -442,9 +446,9 @@ class SeriesTableView {
         tagUIField.addFormField(episodeFormField);
 
         // Time code field
-        const timeCodeUIField = new UIDatePicker(this.__getTimeCode, 30);
-        timeCodeUIField.setHourField(this.__hourField);
-        timeCodeUIField.setMinuteField(this.__minuteField);
+        const timeCodeUIField = new UIDatePicker(this.#getTimeCode, 30);
+        timeCodeUIField.setHourField(this.#hourField);
+        timeCodeUIField.setMinuteField(this.#minuteField);
 
         // Delete field
         const deleteUIField = new UIDeleteRowField(() => tr("stopWatcher_deleteFieldLabel"), 15);
@@ -469,7 +473,7 @@ class SeriesTableView {
      * @param {*} field
      * @memberof SeriesTableView
      */
-    __onFieldChange(series, field) {
+    #onFieldChange(series, field) {
         if (field.getName() === "season" ||
             field.getName() === "episode"
         ) {
@@ -486,7 +490,7 @@ class SeriesTableView {
      * @return {String} label for UI field
      * @memberof SeriesTableView
      */
-    __getApiIntegrationLabel(series) {
+    #getApiIntegrationLabel(series) {
         return !!series.serieId ? 
             tr("stopWatcher_integrationIdSetLabel") : 
             tr("stopWatcher_integrationIdUnsetLabel");
@@ -500,7 +504,7 @@ class SeriesTableView {
      * @return {String} title for form
      * @memberof SeriesTableView
      */
-    __getApiIntegrationFormTitle(series) {
+    #getApiIntegrationFormTitle(series) {
         return series.showInSummary ? 
             tr("stopWatcher_integrationTitleWhenInSummary") : 
             tr("stopWatcher_integrationTitleWhenNotInSummary");
@@ -513,7 +517,7 @@ class SeriesTableView {
      * @return {String} status field label
      * @memberof SeriesTableView
      */
-    __getStatusLabel(series) {
+    #getStatusLabel(series) {
         return series.isDone ? tr("stopWatcher_doneStatusLabel") : 
             tr("stopWatcher_ongoingStatusLabel")
     }
@@ -525,7 +529,7 @@ class SeriesTableView {
      * @return {String} title for status form
      * @memberof SeriesTableView
      */
-    __getStatusFormTitle(series) {
+    #getStatusFormTitle(series) {
         return series.isDone ? 
             tr("stopWatcher_statusDoneTitle") :
             tr("stopWatcher_statusOngoingTitle");
@@ -538,7 +542,7 @@ class SeriesTableView {
      * @return {String} label for season/episode field
      * @memberof SeriesTableView
      */
-    __getTag(series) {
+    #getTag(series) {
         return series.isDone ? 
             tr("stopWatcher_doneStatusFieldPlaceholder") :
             tr("stopWatcher_tagLabel", series.season, series.episode);
@@ -551,7 +555,7 @@ class SeriesTableView {
      * @return {String} label for time code field
      * @memberof SeriesTableView
      */
-    __getTimeCode(series) {
+    #getTimeCode(series) {
         
         if (series.isDone) {
             return tr("stopWatcher_doneStatusFieldPlaceholder");

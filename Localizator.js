@@ -68,7 +68,11 @@ class ScriptSelector {
  */
 class LocalizatorTable {
 
-    static __DEFAULT_LOCALE = "en";
+    static #DEFAULT_LOCALE = "en";
+
+    #scriptName;
+    #languageCode;
+    #translationValueField = new TextDataField("value");
 
     /**
      * Creates an instance of LocalizatorTable.
@@ -76,11 +80,8 @@ class LocalizatorTable {
      * @memberof LocalizatorTable
      */
     constructor(scriptName) {
-        this.__scriptName = scriptName;
-        this.__translations = [];
-        this.__languageCode = this.__getLanguageCode();
-
-        this.__translationValueField = new TextDataField("value");
+        this.#scriptName = scriptName;
+        this.#languageCode = this.#getLanguageCode();
     }
 
     /**
@@ -94,14 +95,14 @@ class LocalizatorTable {
     async build() {
 
         const table = new UIDataTable();
-        table.title = tr("localizator_tableTitle", this.__languageCode, this.__scriptName);
+        table.title = tr("localizator_tableTitle", this.#languageCode, this.#scriptName);
         table.rowHeight = 55;
 
-        table.setTableData(await this.__loadTranslations());
-        table.onDataModification(this.__getOnLocaleModificationCallback());
+        table.setTableData(await this.#loadTranslations());
+        table.onDataModification(this.#getOnLocaleModificationCallback());
 
-        table.setDataFields([this.__translationValueField]);
-        table.setUIFields(this.__getUIFields());
+        table.setDataFields([this.#translationValueField]);
+        table.setUIFields(this.#getUIFields());
 
         table.setSortingFunction((first, second) => {
 
@@ -127,7 +128,7 @@ class LocalizatorTable {
      * @return {List<UIField>} 
      * @memberof LocalizatorTable
      */
-    __getUIFields() {
+    #getUIFields() {
         
         // Translation Key Field
         const translationKeyUIField = new UIFormReadOnly((translation) => translation.label, 50);
@@ -140,7 +141,7 @@ class LocalizatorTable {
         translationValueUIField.rightAligned();
 
         const translationValueFormField = new UIFormField(
-            this.__translationValueField,
+            this.#translationValueField,
             tr("localizator_translationFormFieldTitle")
         );
 
@@ -163,7 +164,7 @@ class LocalizatorTable {
      * @return {Function} onSave table callback
      * @memberof LocalizatorTable
      */
-    __getOnLocaleModificationCallback() {
+    #getOnLocaleModificationCallback() {
 
         const that = this;
 
@@ -174,7 +175,7 @@ class LocalizatorTable {
                 translationsObject[translation.key] = translation.value;
             }
 
-            FileUtil.updateLocale(that.__scriptName, that.__languageCode, translationsObject);
+            FileUtil.updateLocale(that.#scriptName, that.#languageCode, translationsObject);
         };
     }
 
@@ -187,10 +188,10 @@ class LocalizatorTable {
      * @return {List<Object>} translations as list
      * @memberof LocalizatorTable
      */
-    async __loadTranslations() {
+    async #loadTranslations() {
 
         const translationList = [];
-        const translations = await this.__readTranslationFile();
+        const translations = await this.#readTranslationFile();
         // Needed so table will not create a sequence
         // which we don't need.
         let id = 1;
@@ -201,7 +202,7 @@ class LocalizatorTable {
                 id: id++,
                 key: translationKey,
                 value: translations[translationKey],
-                label: this.__translationKeyToText(translationKey)
+                label: this.#translationKeyToText(translationKey)
             });
         }
 
@@ -220,7 +221,7 @@ class LocalizatorTable {
      * @return {String} transformed translation key
      * @memberof LocalizatorTable
      */
-    __translationKeyToText(translationKey) {
+    #translationKeyToText(translationKey) {
 
         let keyParts = translationKey.split("_");
         let key = keyParts[keyParts.length - 1];
@@ -240,7 +241,7 @@ class LocalizatorTable {
      * @return {String} language code
      * @memberof Localizator
      */
-    __getLanguageCode() {
+    #getLanguageCode() {
         
         const locale = Device.preferredLanguages()[0];
         return locale.substring(0, locale.indexOf('-'));
@@ -256,17 +257,17 @@ class LocalizatorTable {
      * @return {Object} translations object
      * @memberof LocalizatorTable
      */
-    async __readTranslationFile() {
+    async #readTranslationFile() {
 
-        const localeExists = FileUtil.localeExists(this.__scriptName, this.__languageCode);
+        const localeExists = FileUtil.localeExists(this.#scriptName, this.#languageCode);
         
         if (!localeExists) {
             
-            let mainLocaleFile = FileUtil.readLocale(this.__scriptName, LocalizatorTable.__DEFAULT_LOCALE);
-            await FileUtil.updateLocale(this.__scriptName, this.__languageCode, mainLocaleFile);
+            let mainLocaleFile = FileUtil.readLocale(this.#scriptName, LocalizatorTable.#DEFAULT_LOCALE);
+            await FileUtil.updateLocale(this.#scriptName, this.#languageCode, mainLocaleFile);
         }
 
-        return FileUtil.readLocale(this.__scriptName, this.__languageCode);
+        return FileUtil.readLocale(this.#scriptName, this.#languageCode);
     }
 }
 

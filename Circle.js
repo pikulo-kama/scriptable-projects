@@ -11,7 +11,7 @@ const { ConfigStore } = importModule("Config Util");
  */
 class Circle {
 
-    static __DEFAULT_CONFIG = {
+    static #DEFAULT_CONFIG = {
         size: 400,
         steps: 180,
         diameter: 350,
@@ -25,6 +25,8 @@ class Circle {
         ]
     };
 
+    #configStore = new ConfigStore();
+
     /**
      * Creates an instance of Circle.
      * 
@@ -32,9 +34,8 @@ class Circle {
      * @memberof Circle
      */
     constructor(userConfig) {
-        this.__configStore = new ConfigStore();
-        this.__configStore.setConfig(Circle.__DEFAULT_CONFIG);
-        this.__configStore.overrideConfig(userConfig);
+        this.#configStore.setConfig(Circle.#DEFAULT_CONFIG);
+        this.#configStore.overrideConfig(userConfig);
     }
 
     /**
@@ -48,22 +49,22 @@ class Circle {
         const context = new DrawContext();
         context.opaque = false;
         
-        const size = this.__configStore.get("size");
+        const size = this.#configStore.get("size");
         context.size = new Size(size, size);
         
-        context.setLineWidth(this.__configStore.get("circleLineWidth"));
+        context.setLineWidth(this.#configStore.get("circleLineWidth"));
         
         let circleData = [{
             color: null,
             percentage: 0
-        }].concat(this.__configStore.get("data"));
+        }].concat(this.#configStore.get("data"));
         
         for (let i = 0; i + 1 < circleData.length; i++) {
 
             let from = circleData[i];
             let to = circleData[i + 1];
             
-            let segment = this.__getSegment(
+            let segment = this.#getSegment(
                 from.percentage, 
                 to.percentage
             );
@@ -72,7 +73,7 @@ class Circle {
             context.setStrokeColor(to.color);
             context.addPath(segment);
             
-            if (this.__configStore.get("fill")) {
+            if (this.#configStore.get("fill")) {
                 context.fillPath();
 
             } else {
@@ -91,17 +92,17 @@ class Circle {
      * @return {Path} segment
      * @memberof Circle
      */
-    __getSegment(from, to) {
+    #getSegment(from, to) {
 
-        let step = Math.PI * 2 / this.__configStore.get("steps");
+        let step = Math.PI * 2 / this.#configStore.get("steps");
         let points = [];
         
-        const size = this.__configStore.get("size") + 1;
+        const size = this.#configStore.get("size") + 1;
         const origin = size / 2;
         
-        let radius = this.__configStore.get("diameter") / 2;
+        let radius = this.#configStore.get("diameter") / 2;
         
-        if (this.__configStore.get("fill")) {
+        if (this.#configStore.get("fill")) {
             points.push(new Point(origin, origin));
         }
         
@@ -118,6 +119,7 @@ class Circle {
         return path;
     }
 };
+
 
 module.exports = {
     Circle

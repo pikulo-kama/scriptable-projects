@@ -9,6 +9,7 @@
  * @class ColorMode
  */
 class ColorMode {
+
     static Light = "light";
     static Dark = "dark";
 
@@ -47,6 +48,9 @@ class ColorMode {
  */
 class ThemedProperty {
 
+    #darkModeProperty;
+    #lightModeProperty;
+
     /**
      * Creates an instance of ThemedProperty.
      * 
@@ -55,8 +59,8 @@ class ThemedProperty {
      * @memberof ThemedProperty
      */
     constructor(darkModeProperty, lightModeProperty) {
-        this.__darkModeProperty = darkModeProperty;
-        this.__lightModelProperty = lightModeProperty;
+        this.#darkModeProperty = darkModeProperty;
+        this.#lightModeProperty = lightModeProperty;
     }
 
     /**
@@ -71,10 +75,10 @@ class ThemedProperty {
 
         switch (colorMode) {
             case ColorMode.Dark:
-                return this.__darkModeProperty;
+                return this.#darkModeProperty;
 
             case ColorMode.Light:
-                return this.__lightModelProperty;
+                return this.#lightModeProperty;
         }
     }
 }
@@ -88,15 +92,9 @@ class ThemedProperty {
  */
 class ConfigStore {
 
-    /**
-     * Creates an instance of ConfigStore.
-     * @memberof ConfigStore
-     */
-    constructor() {
-        this.__config = {};
-        this.__userConfig = {};
-        this.__colorMode = ColorMode.Dark;
-    }
+    #config = {};
+    #userConfig = {};
+    #colorMode = ColorMode.Dark;
 
     /**
      * Used to set default config.
@@ -105,7 +103,7 @@ class ConfigStore {
      * @memberof ConfigStore
      */
     setConfig(config) {
-        this.__config = config;
+        this.#config = config;
     }
 
     /**
@@ -117,7 +115,7 @@ class ConfigStore {
     overrideConfig(config) {
 
         if (config) {
-            this.__userConfig = config;
+            this.#userConfig = config;
         }
     }
 
@@ -128,7 +126,7 @@ class ConfigStore {
      * @memberof ConfigStore
      */
     setColorMode(colorMode) {
-        this.__colorMode = colorMode;
+        this.#colorMode = colorMode;
     }
 
     /**
@@ -144,8 +142,8 @@ class ConfigStore {
       
         const propertyChain = composedProperty.split(".");
         
-        const configValue = this.__getField(this.__config, propertyChain);
-        const userConfigValue = this.__getField(this.__userConfig, propertyChain);
+        const configValue = this.#getField(this.#config, propertyChain);
+        const userConfigValue = this.#getField(this.#userConfig, propertyChain);
         
         let value = configValue;
 
@@ -165,7 +163,7 @@ class ConfigStore {
     * @param {List<String>} propertyChain list of configuration recursive properties
     * @return {Object} field from config
     */
-    __getField(config, propertyChain) {
+    #getField(config, propertyChain) {
 
         let configValue = config;
 
@@ -182,12 +180,13 @@ class ConfigStore {
         }
         
         if (configValue instanceof ThemedProperty) {
-            configValue = configValue.get(this.__colorMode);
+            configValue = configValue.get(this.#colorMode);
         }
         
         return configValue;
     }
 }
+
 
 /**
 * Used to return value based on current
@@ -205,6 +204,7 @@ class ConfigStore {
 function themed(dark, light) {
     return new ThemedProperty(dark, light);
 }
+
 
 module.exports = {
     ConfigStore,

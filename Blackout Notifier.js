@@ -214,46 +214,41 @@ class DebugScheduleWebView extends ScheduleWebView {
  */
 class OeIfScheduleWebView extends ScheduleWebView {
 
-    constructor() {
-        super();
-
-        this._today = null;
-        this._tomorrow = null;
-        
-        this._available = false;
-    }
+    #today = null;
+    #tomorrow = null;
+    #available = false;
 
     async downloadSchedules() {
 
-        let schedules = await this.__downloadSchedulesInternal();
+        let schedules = await this.#downloadSchedulesInternal();
 
         if (schedules) {
 
-            this._available = true;
+            this.#available = true;
 
-            this._today = new Schedule(schedules.today);
-            this._tomorrow = new Schedule(schedules.tomorrow);
+            this.#today = new Schedule(schedules.today);
+            this.#tomorrow = new Schedule(schedules.tomorrow);
         }
     }
 
     async present() {
 
-        let webView = await this.__getWebView();
+        let webView = await this.#getWebView();
 
-        await webView.evaluateJavaScript(this.__getLoadScheduleReportJSPayload());
+        await webView.evaluateJavaScript(this.#getLoadScheduleReportJSPayload());
         await webView.present();
     }
 
     getToday() {
-        return this._today;
+        return this.#today;
     }
 
     getTomorrow() {
-        return this._tomorrow;
+        return this.#tomorrow;
     }
 
     isAvailable() {
-        return this._available;
+        return this.#available;
     }
 
     /**
@@ -262,28 +257,28 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns {Map<String, List<OutageRecord>>} Map with schedule records for today and tomorrow
      */
-    async __downloadSchedulesInternal() {
+    async #downloadSchedulesInternal() {
 
         let today;
         let tomorrow;
 
-        let queue = await this.__getQueueNumber();
+        let queue = await this.#getQueueNumber();
         
         if (!queue) {
             return null;
         }
 
-        let webView = await this.__getWebView();
-        let scheduleList = await webView.evaluateJavaScript(this.__getDownloadSchedulesByQueueJSPayload());
+        let webView = await this.#getWebView();
+        let scheduleList = await webView.evaluateJavaScript(this.#getDownloadSchedulesByQueueJSPayload());
 
         let first = scheduleList[0];
         let second = scheduleList[1];
 
         if (first) {
             
-            let info = this.__createOutageRecords(first.queues[queue]);
+            let info = this.#createOutageRecords(first.queues[queue]);
 
-            if (this.__isFutureSchedule(first)) {
+            if (this.#isFutureSchedule(first)) {
                 tomorrow = info;
 
             } else {
@@ -293,9 +288,9 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
         if (second) {
 
-            let info = this.__createOutageRecords(second.queues[queue]);
+            let info = this.#createOutageRecords(second.queues[queue]);
 
-            if (this.__isFutureSchedule(second)) {
+            if (this.#isFutureSchedule(second)) {
                 tomorrow = info;
 
             } else {
@@ -316,7 +311,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * @param {Object} outageEntries JSON of outage entries
      * @returns {List<OutageRecord>} list of wrapped outage records
      */
-    __createOutageRecords(outageEntries) {
+    #createOutageRecords(outageEntries) {
 
         let outageRecords = [];
 
@@ -345,10 +340,10 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns formatted queue number (i.e. 3.1, 5.2, etc)
      */
-    async __getQueueNumber() {
+    async #getQueueNumber() {
 
-        let webView = await this.__getWebView();
-        let response = await webView.evaluateJavaScript(this.__getDownloadScheduleJSPayload());
+        let webView = await this.#getWebView();
+        let response = await webView.evaluateJavaScript(this.#getDownloadScheduleJSPayload());
         
         if (!response) {
             return null;
@@ -366,7 +361,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * @param {Object} schedule JSON object of schedule
      * @returns {Boolean} True if for tomorrow otherwise False
      */
-    __isFutureSchedule(schedule) {
+    #isFutureSchedule(schedule) {
 
         if (!schedule) {
             return false;
@@ -387,7 +382,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns {WebView} web view.
      */
-    async __getWebView() {
+    async #getWebView() {
 
         let webView = new WebView();
         await webView.loadURL("https://svitlo.oe.if.ua");
@@ -403,7 +398,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns {String} JS script as text.
      */
-    __getDownloadScheduleJSPayload() {
+    #getDownloadScheduleJSPayload() {
         return "" +
             "$.ajax({" +
             "   url: 'https://be-svitlo.oe.if.ua/GavGroupByAccountNumber'," +
@@ -424,7 +419,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns {String} JS script as text.
      */
-    __getLoadScheduleReportJSPayload() {
+    #getLoadScheduleReportJSPayload() {
         return "" +
             "let cityField = document.getElementById('searchCityAdress');" +
             "let streetField = document.getElementById('searchStreetAdress');" +
@@ -444,7 +439,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns {String} JS script as text.
      */
-    __getDownloadSchedulesByQueueJSPayload() {
+    #getDownloadSchedulesByQueueJSPayload() {
         return "" +
             "$.ajax({" +
             "   url: 'https://be-svitlo.oe.if.ua/schedule-by-queue'," +
@@ -464,19 +459,19 @@ class OeIfScheduleWebView extends ScheduleWebView {
  * Also serves as iterator.
  */
 class Schedule {
+
+    #outageRecords = [];
+    #outageRecordIndex = -1;
+    #hasInfo = false;
     
     /**
      * @param {List<OutageRecord>} records list of outage records.
      */
     constructor(records) {
-        
-        this._outageRecords = [];
-        this._outageRecordIndex = -1;
-        this._hasInfo = false;
 
         if (records) {
-            this._hasInfo = true
-            this._outageRecords = records;
+            this.#hasInfo = true
+            this.#outageRecords = records;
         }
     }
     
@@ -487,7 +482,7 @@ class Schedule {
      * @returns {Boolean} True if information was updated, otherwise False.
      */
     hasInfo() {
-        return this._hasInfo;
+        return this.#hasInfo;
     }
 
     /**
@@ -497,7 +492,7 @@ class Schedule {
      * @returns {Boolean} True if has next record, otherwise False.
      */
     hasNext() {
-        return this._outageRecordIndex + 1 < this._outageRecords.length;
+        return this.#outageRecordIndex + 1 < this.#outageRecords.length;
     }
 
     /**
@@ -506,7 +501,7 @@ class Schedule {
      * @returns {OutageRecord} next Schedule from collection.
      */
     next() {
-        return this._outageRecords[++this._outageRecordIndex];
+        return this.#outageRecords[++this.#outageRecordIndex];
     }
 }
 
@@ -516,7 +511,12 @@ class Schedule {
  */
 class OutageRecord {
 
-    static HOUR_RANGE_SEPARATOR = " - ";
+    static #HOUR_RANGE_SEPARATOR = " - ";
+
+    #startTime;
+    #endTime;
+    #isProbable;
+    #order;
 
     /**
      * @param {Time} startTime time when outage starts.
@@ -526,10 +526,10 @@ class OutageRecord {
      */
     constructor(startTime, endTime, isProbable, order) {
 
-        this._startTime = startTime;
-        this._endTime = endTime;
-        this._isProbable = isProbable;
-        this._order = order;
+        this.#startTime = startTime;
+        this.#endTime = endTime;
+        this.#isProbable = isProbable;
+        this.#order = order;
     }
 
     /**
@@ -538,7 +538,7 @@ class OutageRecord {
      * @returns {Boolean} True if outage is probable, otherwise False.
      */
     isProbable() {
-        return this._isProbable;
+        return this.#isProbable;
     }
 
     /**
@@ -547,7 +547,7 @@ class OutageRecord {
      * @returns {Number} order of the schedule.
      */
     getOrder() {
-        return this._order;
+        return this.#order;
     }
 
     /**
@@ -560,7 +560,7 @@ class OutageRecord {
 
         let now = new Date();
 
-        let finishTime = this._endTime;
+        let finishTime = this.#endTime;
         let currentTime = Time.of(now.getHours() , now.getMinutes());
         
         if (conf.debug.enable) {
@@ -578,9 +578,9 @@ class OutageRecord {
      */
     toString() {
 
-        return this._startTime.toString() +
-            OutageRecord.HOUR_RANGE_SEPARATOR +
-            this._endTime.toString();
+        return this.#startTime.toString() +
+            OutageRecord.#HOUR_RANGE_SEPARATOR +
+            this.#endTime.toString();
     }
 }
 
@@ -601,11 +601,11 @@ class ScheduleWidget {
         // This is triggered when schedule data was
         // not loaded due to connection issues.
         if (!webView.isAvailable()) {
-            present(this.__getNotAvailableRootWidget());
+            present(this.#getNotAvailableRootWidget());
             return;
         }
 
-        const root = this.__createRootWidget();
+        const root = this.#createRootWidget();
         const todaySchedule = webView.getToday();
 
         // Render header of widget (icon + address).
@@ -628,7 +628,7 @@ class ScheduleWidget {
 
         // Add indicator if there are schedules for tomorrow.
         if (webView.getTomorrow().hasInfo()) {
-            this.__renderTomorrowScheduleIndicator(root, webView.getTomorrow());
+            this.#renderTomorrowScheduleIndicator(root, webView.getTomorrow());
         }
 
         spacer().renderFor(root);
@@ -647,7 +647,7 @@ class ScheduleWidget {
 
         // Add each outage record.
         while (todaySchedule.hasNext()) {
-            this.__renderOutageRecord(root, todaySchedule.next());
+            this.#renderOutageRecord(root, todaySchedule.next());
 
             // Don't add spacing after last outage record.
             if (todaySchedule.hasNext()) {
@@ -664,7 +664,7 @@ class ScheduleWidget {
      * @param {ListWidget} root root widget.
      * @param {OutageRecord} outageRecord daily outage record.
      */
-    __renderOutageRecord(root, outageRecord) {
+    #renderOutageRecord(root, outageRecord) {
 
         let outageIcon = image();
         let outagePeriodText = text();
@@ -706,7 +706,7 @@ class ScheduleWidget {
      * @param {ListWidget} root root widget.
      * @param {Schedule} tomorrowSchedule tomorrow schedule.
      */
-    __renderTomorrowScheduleIndicator(root, tomorrowSchedule) {
+    #renderTomorrowScheduleIndicator(root, tomorrowSchedule) {
 
         let indicatorColor = Color.green();
 
@@ -741,9 +741,9 @@ class ScheduleWidget {
      * 
      * @returns {ListWidget} root widget.
      */
-    __getNotAvailableRootWidget() {
+    #getNotAvailableRootWidget() {
 
-        const root = this.__createRootWidget();
+        const root = this.#createRootWidget();
 
         spacer().renderFor(root);
         image()
@@ -761,7 +761,7 @@ class ScheduleWidget {
      * 
      * @returns {ListWidget} root widget.
      */
-    __createRootWidget() {
+    #createRootWidget() {
 
         const root = rootWidget()
         
@@ -779,8 +779,12 @@ class ScheduleWidget {
  */
 class Time {
 
-    static HOUR_MINUTES = 60;
-    static HOUR_MINUTE_SEPARATOR = ":";
+    static #HOUR_MINUTES = 60;
+    static #HOUR_MINUTE_SEPARATOR = ":";
+
+    #hours;
+    #minutes;
+    #time;
 
     /**
      * Creates time from hours and minutes.
@@ -790,9 +794,9 @@ class Time {
      */
     constructor(hours, minutes) {
      
-        this._hours = hours;
-        this._minutes = minutes;
-        this._time = hours * Time.HOUR_MINUTES + minutes;
+        this.#hours = hours;
+        this.#minutes = minutes;
+        this.#time = hours * Time.#HOUR_MINUTES + minutes;
     }
 
     /**
@@ -813,7 +817,7 @@ class Time {
 
     static ofString(stringTime) {
 
-        let timeParts = stringTime.split(Time.HOUR_MINUTE_SEPARATOR);
+        let timeParts = stringTime.split(Time.#HOUR_MINUTE_SEPARATOR);
         let hours = Number(timeParts[0]);
         let minutes = Number(timeParts[1]);
 
@@ -826,7 +830,7 @@ class Time {
      * @returns {Number} time.
      */
     getTime() {
-        return this._time;
+        return this.#time;
     }
 
     /**
@@ -835,7 +839,7 @@ class Time {
      * @returns {Number} hours.
      */
     getHours() {
-        return this._hours;
+        return this.#hours;
     }
 
     /**
@@ -844,7 +848,7 @@ class Time {
      * @returns {Number} minutes.
      */
     getMinutes() {
-        return this._minutes;
+        return this.#minutes;
     }
 
     /**
@@ -861,7 +865,7 @@ class Time {
             minutes = "0" + minutes;
         }
 
-        return this.getHours() + Time.HOUR_MINUTE_SEPARATOR + minutes;
+        return this.getHours() + Time.#HOUR_MINUTE_SEPARATOR + minutes;
     }
 }
 

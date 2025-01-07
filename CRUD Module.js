@@ -17,6 +17,9 @@ const { tr } = importModule("Localization");
  */
 class DataField {
 
+    #fieldName;
+    #defaultValue;
+
     /**
      * Creates an instance of DataField.
      * 
@@ -25,8 +28,8 @@ class DataField {
      * @memberof DataField
      */
     constructor(name, defaultValue = null) {
-        this.__fieldName = name;
-        this.__defaultValue = defaultValue;
+        this.#fieldName = name;
+        this.#defaultValue = defaultValue;
     }
 
     /**
@@ -36,7 +39,7 @@ class DataField {
      * @memberof DataField
      */
     getName() {
-        return this.__fieldName;
+        return this.#fieldName;
     }
 
     /**
@@ -46,7 +49,7 @@ class DataField {
      * @memberof DataField
      */
     getDefault() {
-        return this.__defaultValue;
+        return this.#defaultValue;
     }
 }
 
@@ -94,6 +97,12 @@ class NumberDataField extends DataField {
  */
 class UIField {
 
+    #fieldLabelFunction;
+    #cellAligningFunction = (cell) => cell.leftAligned();
+
+    #weight;
+    #color = null;
+
     /**
      * Creates an instance of UIField.
      * 
@@ -102,14 +111,33 @@ class UIField {
      * @memberof UIField
      */
     constructor(fieldLabelFunction, weight) {
-        this.__fieldLabelFunction = fieldLabelFunction;
-        this.__weight = weight;
-        this.__color = null;
-        this.__aligningFunction = (cell) => cell.leftAligned();
+        this.#fieldLabelFunction = fieldLabelFunction;
+        this.#weight = weight;
 
         if (typeof fieldLabelFunction === 'string') {
-            this.__fieldLabelFunction = () => fieldLabelFunction;
+            this.#fieldLabelFunction = () => fieldLabelFunction;
         }
+    }
+
+    /**
+     * Used to get function that returns
+     * field label.
+     *
+     * @return {Function} field label function
+     * @memberof UIField
+     */
+    getFieldLabelFunction() {
+        return this.#fieldLabelFunction;
+    }
+
+    /**
+     * Used to get field width weight.
+     *
+     * @return {Number} field width weight
+     * @memberof UIField
+     */
+    getWeight() {
+        return this.#weight;
     }
     
     /**
@@ -120,7 +148,17 @@ class UIField {
      * @memberof UIField
      */
     setColor(color) {
-        this.__color = color;
+        this.#color = color;
+    }
+
+    /**
+     * Used to get field color.
+     *
+     * @return {Color} field color
+     * @memberof UIField
+     */
+    getColor() {
+        return this.#color;
     }
 
     /**
@@ -129,7 +167,17 @@ class UIField {
      * @memberof UIField
      */
     rightAligned() {
-        this.__aligningFunction = (cell) => cell.rightAligned();
+        this.#cellAligningFunction = (cell) => cell.rightAligned();
+    }
+
+    /**
+     * Used to get cell aligning function.
+     *
+     * @return {Function} table cell aligning function
+     * @memberof UIField
+     */
+    getAligningFunction() {
+        return this.#cellAligningFunction;
     }
 }
 
@@ -141,10 +189,6 @@ class UIField {
  * @extends {UIField}
  */
 class UIFormReadOnly extends UIField {
-
-    constructor(fieldLabelFunction, weight, color) {
-        super(fieldLabelFunction, weight);
-    }
 }
 
 
@@ -156,30 +200,47 @@ class UIFormReadOnly extends UIField {
  */
 class UIDatePicker extends UIField {
 
-    constructor(fieldLabelFunction, weight, color) {
-        super(fieldLabelFunction, weight, color);
-        this.__hourField = null;
-        this.__minuteField = null;
-    }
+    #hourField;
+    #minuteField;
 
     /**
-     * Data field representing hour.
+     * Data field representing hours.
      *
-     * @param {DataField} dataField hour data field
+     * @param {DataField} dataField hours data field
      * @memberof UIDatePicker
      */
     setHourField(dataField) {
-        this.__hourField = dataField;
+        this.#hourField = dataField;
     }
 
     /**
-     * Data field representing minute.
+     * Used to get data field represention hours.
      *
-     * @param {DataField} dataField number data field
+     * @return {DataField} hours data field
+     * @memberof UIDatePicker
+     */
+    getHourField() {
+        return this.#hourField;
+    }
+
+    /**
+     * Data field representing minutes.
+     *
+     * @param {DataField} dataField minutes data field
      * @memberof UIDatePicker
      */
     setMinuteField(dataField) {
-        this.__minuteField = dataField;
+        this.#minuteField = dataField;
+    }
+
+    /**
+     * Used to get data field represention minutes.
+     *
+     * @return {DataField} minutes data field
+     * @memberof UIDatePicker
+     */
+    getMinuteField() {
+        return this.#minuteField;
     }
 }
 
@@ -193,10 +254,11 @@ class UIDatePicker extends UIField {
  */
 class UIDeleteRowField extends UIField {
 
-    constructor(fieldLabelFunction, weight, color) {
-        super(fieldLabelFunction, weight, color);
-        this.__message = tr("crudModule_deleteFieldMessage");
-        this.__confirmAction = tr("crudModule_deleteFieldConfirmAction");
+    #message = tr("crudModule_deleteFieldMessage");
+    #confirmAction = tr("crudModule_deleteFieldConfirmAction");
+
+    constructor(fieldLabelFunction, weight) {
+        super(fieldLabelFunction, weight);
     }
 
     /**
@@ -206,7 +268,17 @@ class UIDeleteRowField extends UIField {
      * @memberof UIDeleteRowField
      */
     setMessage(message) {
-        this.__message = message;
+        this.#message = message;
+    }
+
+    /**
+     * Used to get deletion confirmation message.
+     *
+     * @return {String} confirmation message
+     * @memberof UIDeleteRowField
+     */
+    getMessage() {
+        return this.#message;
     }
 
     /**
@@ -216,7 +288,17 @@ class UIDeleteRowField extends UIField {
      * @memberof UIDeleteRowField
      */
     setConfirmAction(action) {
-        this.__confirmAction = action;
+        this.#confirmAction = action;
+    }
+
+    /**
+     * Used to get name of deletion confirm action.
+     *
+     * @return {String} name of confirm action
+     * @memberof UIDeleteRowField
+     */
+    getConfirmAction() {
+        return this.#confirmAction;
     }
 }
 
@@ -230,13 +312,12 @@ class UIDeleteRowField extends UIField {
  */
 class UIForm extends UIField {
 
-    constructor(fieldLabelFunction, weight, color) {
-        super(fieldLabelFunction, weight, color);
-        this.__formTitleFunction = () => "";
-        this.__fields = [];
-        this.__actions = [];
-        this.__defaultAction = null;
-    }
+    #formTitleFunction = () => "";
+
+    #fields = [];
+    #actions = [];
+
+    #hasDefaultAction = false;
 
     /**
      * Used to set function which
@@ -246,7 +327,18 @@ class UIForm extends UIField {
      * @memberof UIForm
      */
     setFormTitleFunction(formTitleFunction) {
-        this.__formTitleFunction = formTitleFunction;
+        this.#formTitleFunction = formTitleFunction;
+    }
+
+    /**
+     * Used to get form title
+     * function.
+     *
+     * @return {Function} form title function
+     * @memberof UIForm
+     */
+    getFormTitleFunction() {
+        return this.#formTitleFunction;
     }
 
     /**
@@ -256,7 +348,17 @@ class UIForm extends UIField {
      * @memberof UIForm
      */
     addFormField(formField) {
-        this.__fields.push(formField);
+        this.#fields.push(formField);
+    }
+
+    /**
+     * Used to get list of form fields.
+     *
+     * @return {List<UIFormField>} list of form fields
+     * @memberof UIForm
+     */
+    getFormFields() {
+        return this.#fields;
     }
 
     /**
@@ -268,12 +370,13 @@ class UIForm extends UIField {
      */
     addDefaultAction(actionLabel) {
 
-        if (this.__defaultAction) {
-            return;
-        }
+        if (!this.#hasDefaultAction) {
 
-        const defaultAction = new UIDefaultFormAction(actionLabel);
-        this.addFormAction(defaultAction);
+            const defaultAction = new UIDefaultFormAction(actionLabel);
+            this.addFormAction(defaultAction);
+
+            this.#hasDefaultAction = true;
+        }
     }
 
     /**
@@ -283,7 +386,17 @@ class UIForm extends UIField {
      * @memberof UIForm
      */
     addFormAction(action) {
-        this.__actions.push(action);
+        this.#actions.push(action);
+    }
+
+    /**
+     * Used to get list of form actions.
+     *
+     * @return {List<UIFormAction>} list of form actions
+     * @memberof UIForm
+     */
+    getFormActions() {
+        return this.#actions;
     }
 }
 
@@ -296,6 +409,10 @@ class UIForm extends UIField {
  */
 class UIFormField {
 
+    #rules = [];
+    #dataField;
+    #label;
+
     /**
      * Creates an instance of UIFormField.
      * 
@@ -304,9 +421,29 @@ class UIFormField {
      * @memberof UIFormField
      */
     constructor(dataField, label) {
-        this.__dataField = dataField;
-        this.__label = label;
-        this.__rules = [];
+        this.#dataField = dataField;
+        this.#label = label;
+    }
+
+    /**
+     * Used to get UI form field label.
+     *
+     * @return {String} from field label
+     * @memberof UIFormField
+     */
+    getLabel() {
+        return this.#label;
+    }
+
+    /**
+     * Used to get data field associated
+     * with UI form field.
+     *
+     * @return {DataField} data field
+     * @memberof UIFormField
+     */
+    getDataField() {
+        return this.#dataField;
     }
 
     /**
@@ -317,7 +454,17 @@ class UIFormField {
      * @memberof UIFormField
      */
     addRule(rule) {
-        this.__rules.push(rule);
+        this.#rules.push(rule);
+    }
+
+    /**
+     * Used to get form field validation rules.
+     *
+     * @return {List<ModalRule>} validation rules
+     * @memberof UIFormField
+     */
+    getRules() {
+        return this.#rules;
     }
 }
 
@@ -330,6 +477,9 @@ class UIFormField {
  */
 class UIFormAction {
 
+    #actionLabel;
+    #actionCallbacks = [];
+
     /**
      * Creates an instance of UIFormAction.
      * 
@@ -337,8 +487,17 @@ class UIFormAction {
      * @memberof UIFormAction
      */
     constructor(label) {
-        this.__label = label;
-        this.__actionCallbacks = [];
+        this.#actionLabel = label;
+    }
+
+    /**
+     * Used to get action label.
+     *
+     * @return {String} action label
+     * @memberof UIFormAction
+     */
+    getLabel() {
+        return this.#actionLabel;
     }
 
     /**
@@ -350,10 +509,20 @@ class UIFormAction {
      * @memberof UIFormAction
      */
     addCallback(dataField, callback) {
-        this.__actionCallbacks.push({
+        this.#actionCallbacks.push({
             dataField,
             callback
         });
+    }
+
+    /**
+     * Used to get list of action callbacks.
+     * 
+     * @return {List<Object>} list of callbacks
+     * @memberof UIFormAction
+     */
+    getCallbacks() {
+        return this.#actionCallbacks;
     }
 }
 
@@ -380,6 +549,9 @@ class UIDefaultFormAction extends UIFormAction {
  */
 class UIFilterField {
 
+    #dataField;
+    #label;
+
     /**
      * Creates an instance of UIFilterField.
      * 
@@ -388,8 +560,29 @@ class UIFilterField {
      * @memberof UIFilterField
      */
     constructor(dataField, label) {
-        this.__dataField = dataField;
-        this.__label = label;
+        this.#dataField = dataField;
+        this.#label = label;
+    }
+
+    /**
+     * Used to get filter label.
+     *
+     * @return {String} filter label
+     * @memberof UIFilterField
+     */
+    getLabel() {
+        return this.#label;
+    }
+
+    /**
+     * Used to get data field
+     * associated with filter.
+     *
+     * @return {DataField} filter data field
+     * @memberof UIFilterField
+     */
+    getDataField() {
+        return this.#dataField;
     }
 }
 
@@ -446,32 +639,36 @@ class UIFieldHandler {
  */
 class UIFormHandler extends UIFieldHandler {
 
+    #uiTable;
+    #tableRecord;
+    #uiField;
+
     async handle(uiTable, metadata) {
 
-        this.__tableRecord = metadata.tableRecord;
-        this.__uiField = metadata.uiField;
-        this.__uiTable = uiTable;
+        this.#tableRecord = metadata.tableRecord;
+        this.#uiField = metadata.uiField;
+        this.#uiTable = uiTable;
 
-        const result = await this.__presentForm();
+        const result = await this.#presentForm();
 
         if (result.isCancelled()) {
             return;
         }
 
-        const selectedAction = this.__uiField.__actions.find(action => 
-            action.__label === result.choice()
+        const selectedAction = this.#uiField.getFormActions().find(action => 
+            action.getLabel() === result.choice()
         );
         
         // Handle default action
         if (selectedAction instanceof UIDefaultFormAction) {
-            this.__processFieldChanges(result);
+            this.#processFieldChanges(result);
 
         // Handle custom actions
         } else {
-            this.__processCustomAction(selectedAction);
+            this.#processCustomAction(selectedAction);
         }
         
-        this.__uiTable.__upsertTableRecord(this.__tableRecord);
+        uiTable.__upsertTableRecord(this.#tableRecord);
     }
 
     /**
@@ -480,22 +677,23 @@ class UIFormHandler extends UIFieldHandler {
      * @return {Promise<ModalResult>} promise of modal result
      * @memberof UIFormHandler
      */
-    async __presentForm() {
+    async #presentForm() {
 
-        const formTitle = this.__uiField.__formTitleFunction(this.__tableRecord);
+        const formTitleFunction = this.#uiField.getFormTitleFunction();
+        const formTitle = formTitleFunction(this.#tableRecord);
 
         const modalBuilder = modal()
             .title(formTitle)
-            .actions(this.__uiField.__actions.map(action => action.__label));
+            .actions(this.#uiField.getFormActions().map(action => action.getLabel()));
         
-        this.__uiField.__fields.forEach(field => {
+        this.#uiField.getFormFields().forEach(field => {
 
-            const fieldName = field.__dataField.__fieldName;
+            const fieldName = field.getDataField().getName();
             modalBuilder.field()
                 .name(fieldName)
-                .label(field.__label)
-                .initial(this.__tableRecord[fieldName])
-                .validations(field.__rules)
+                .label(field.getLabel())
+                .initial(this.#tableRecord[fieldName])
+                .validations(field.getRules())
                 .add();
         });
         
@@ -508,16 +706,16 @@ class UIFormHandler extends UIFieldHandler {
      * @param {ModalResult} result modal result
      * @memberof UIFormHandler
      */
-    async __processFieldChanges(result) {
+    async #processFieldChanges(result) {
 
-        for (let formField of this.__uiField.__fields) {
+        for (let formField of this.#uiField.getFormFields()) {
 
-            let dataField = formField.__dataField;
-            let originalValue = this.__tableRecord[dataField.__fieldName];
-            let updatedValue = result.get(dataField.__fieldName);
+            let dataField = formField.getDataField();
+            let originalValue = this.#tableRecord[dataField.getName()];
+            let updatedValue = result.get(dataField.getName());
 
-            this.__uiTable.__onChangeFunction(this.__tableRecord, dataField, updatedValue, originalValue);
-            this.__tableRecord[dataField.__fieldName] = updatedValue;
+            this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
+            this.#tableRecord[dataField.getName()] = updatedValue;
         }
     }
 
@@ -527,20 +725,20 @@ class UIFormHandler extends UIFieldHandler {
      * @param {UIFormAction} action custom form action
      * @memberof UIFormHandler
      */
-    async __processCustomAction(action) {
+    async #processCustomAction(action) {
 
-        for (let actionCallback of action.__actionCallbacks) {
+        for (let actionCallback of action.getCallbacks()) {
 
             let {
                 dataField,
                 callback
             } = actionCallback;
 
-            let originalValue = this.__tableRecord[dataField.__fieldName];
-            let updatedValue = callback(this.__tableRecord, action);
+            let originalValue = this.#tableRecord[dataField.getName()];
+            let updatedValue = callback(this.#tableRecord, action);
 
-            this.__uiTable.__onChangeFunction(this.__tableRecord, dataField, updatedValue, originalValue);
-            this.__tableRecord[dataField.__fieldName] = updatedValue;
+            this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
+            this.#tableRecord[dataField.getName()] = updatedValue;
         }
     }
 }
@@ -556,24 +754,23 @@ class UIDatePickerHandler extends UIFieldHandler {
 
     async handle(uiTable, metadata) {
 
-        this.__tableRecord = metadata.tableRecord;
-        this.__uiField = metadata.uiField;
-        this.__uiTable = uiTable;
+        const tableRecord = metadata.tableRecord;
+        const uiField = metadata.uiField;
 
-        const hourField = this.__uiField.__hourField;
-        const minuteField = this.__uiField.__minuteField;
+        const hourField = uiField.getHourField();
+        const minuteField = uiField.getMinuteField();
 
-        const originalHours = this.__tableRecord[hourField.__fieldName];
-        const originalMinutes = this.__tableRecord[minuteField.__fieldName];
+        const originalHours = tableRecord[hourField.getName()];
+        const originalMinutes = tableRecord[minuteField.getName()];
 
-        const resultSeconds = await this.__presentDatePicker(originalHours, originalMinutes);
+        const resultSeconds = await this.#presentDatePicker(originalHours, originalMinutes);
   
         const updatedHours = Math.floor(resultSeconds / 3600);
         const updatedMinutes = resultSeconds / 60 - (updatedHours * 60);
         
         if (originalHours !== updatedHours) {
-            this.__uiTable.__onChangeFunction(
-                this.__tableRecord, 
+            uiTable.__onChange(
+                tableRecord, 
                 hourField, 
                 updatedHours, 
                 originalHours
@@ -581,18 +778,18 @@ class UIDatePickerHandler extends UIFieldHandler {
         }
 
         if (originalMinutes !== updatedMinutes) {
-            this.__uiTable.__onChangeFunction(
-                this.__tableRecord, 
+            uiTable.__onChange(
+                tableRecord, 
                 minuteField, 
                 updatedMinutes, 
                 originalMinutes
             );
         }
 
-        this.__tableRecord[hourField.__fieldName] = updatedHours;
-        this.__tableRecord[minuteField.__fieldName] = updatedMinutes;
+        tableRecord[hourField.getName()] = updatedHours;
+        tableRecord[minuteField.getName()] = updatedMinutes;
         
-        this.__uiTable.__upsertTableRecord(this.__tableRecord);
+        uiTable.__upsertTableRecord(tableRecord);
     }
 
     /**
@@ -603,7 +800,7 @@ class UIDatePickerHandler extends UIFieldHandler {
      * @return {Promise<Number>} promise with selected duration
      * @memberof UIDatePickerHandler
      */
-    async __presentDatePicker(hours, minutes) {
+    async #presentDatePicker(hours, minutes) {
 
         let seconds = 0;
 
@@ -632,18 +829,10 @@ class UIDeleteRowFieldHandler extends UIFieldHandler {
 
     async handle(uiTable, metadata) {
 
-        const shouldRemove = await this.__presentDeleteModal(metadata.uiField);
+        const shouldRemove = await this.#presentDeleteModal(metadata.uiField);
 
         if (shouldRemove) {
-
-            // Remove record
-            uiTable.__tableData = uiTable.__tableData.filter(record => 
-                record.id !== metadata.tableRecord.id
-            );
-            
-            uiTable.__table.removeRow(metadata.tableRow);
-            uiTable.__table.reload();
-            uiTable.__onDataModificationFunction(uiTable.__tableData);
+            uiTable.__removeTableRecord(metadata.tableRecord, metadata.tableRow);
         }
     }
 
@@ -654,11 +843,11 @@ class UIDeleteRowFieldHandler extends UIFieldHandler {
      * @return {Boolean} True if deletion confirmed otherwise false
      * @memberof UIDeleteRowFieldHandler
      */
-    async __presentDeleteModal(uiField) {
+    async #presentDeleteModal(uiField) {
         
         const result = await modal()
-            .title(uiField.__message)
-            .actions([uiField.__confirmAction])
+            .title(uiField.getMessage())
+            .actions([uiField.getConfirmAction()])
             .present();
         
         if (!result.isCancelled()) {
@@ -717,8 +906,8 @@ class FilterMetadata {
      * @memberof FilterMetadata
      */
     constructor(filterField) {
-        this.label = filterField.__label;
-        this.dataField = filterField.__dataField;
+        this.label = filterField.getLabel();
+        this.dataField = filterField.getDataField();
     }
 }
 
@@ -768,8 +957,8 @@ class TextFilterHandler extends FilterHandler {
     async handle(uiTable, metadata) {
 
         const dataField = metadata.dataField;
-        const fieldName = dataField.__fieldName;
-        const filterValue = uiTable.__appliedFilters[fieldName];
+        const fieldName = dataField.getName();
+        const filterValue = uiTable.__getFilterValue(fieldName);
 
         const result = await modal()
             .title(tr("crudModule_filterModalTitle", metadata.label))
@@ -791,7 +980,7 @@ class TextFilterHandler extends FilterHandler {
         if (result.choice() === tr("crudModule_applyFilterAction")) {
             await uiTable.__upsertFilter(fieldName, result.get(fieldName));
 
-        } else if (result.choice() === tr("ccrudModule_learFilterAction")) {
+        } else if (result.choice() === tr("crudModule_clearFilterAction")) {
             await uiTable.__deleteFilter(fieldName);
         }
     }
@@ -802,10 +991,10 @@ class TextFilterHandler extends FilterHandler {
      */
     getFilterFunction() {
         return (recordValue, filterValue) => 
-            this.__toLower(recordValue).includes(this.__toLower(filterValue));
+            this.#toLower(recordValue).includes(this.#toLower(filterValue));
     }
 
-    __toLower(value) {
+    #toLower(value) {
         return String(value).toLowerCase();
     }
 }
@@ -827,11 +1016,11 @@ class BoolFilterHandler extends FilterHandler {
     async handle(uiTable, metadata) {
 
         const dataField = metadata.dataField;
-        const fieldName = dataField.__fieldName;
-        const filterValue = uiTable.__appliedFilters[fieldName];
+        const fieldName = dataField.getName();
+        const filterValue = uiTable.__getFilterValue(fieldName);
 
-        const yesAction = this.__getYesNoAction(filterValue === true, "crudModule_yesBooleanAction");
-        const noAction = this.__getYesNoAction(filterValue === false, "crudModule_noBooleanAction");
+        const yesAction = this.#getYesNoAction(filterValue === true, "crudModule_yesBooleanAction");
+        const noAction = this.#getYesNoAction(filterValue === false, "crudModule_noBooleanAction");
 
         const result = await modal()
             .title(tr("crudModule_filterModalTitle", metadata.label))
@@ -872,7 +1061,7 @@ class BoolFilterHandler extends FilterHandler {
      * @return {String} formatted action name
      * @memberof BoolFilterHandler
      */
-    __getYesNoAction(isEnabled, actionKey) {
+    #getYesNoAction(isEnabled, actionKey) {
 
         let enabledIndicator = "";
 
@@ -930,7 +1119,7 @@ class FilterHandlerFactory {
      */
     static getHandler(filterField) {
 
-        const dataField = filterField.__dataField;
+        const dataField = filterField.getDataField();
 
         if (dataField instanceof TextDataField) {
             return new TextFilterHandler();
@@ -954,36 +1143,30 @@ class FilterHandlerFactory {
  */
 class UIDataTable {
 
-    /**
-     * Creates an instance of UIDataTable.
-     * @memberof UIDataTable
-     */
-    constructor() {
-        this.__table = new UITable();
-        this.__appliedFilters = {};
-        this.__tableData = [];
+    #table = new UITable();
+    #appliedFilters = {};
+    #tableData = [];
 
-        this.__dataFields = [];
-        this.__uiFields = [];
-        this.__filterFields = [];
+    #dataFields = [];
+    #uiFields = [];
+    #filterFields = [];
 
-        this.__sortingFunction = () => 1;
-        this.__onChangeFunction = () => {};
-        this.__onDataModificationFunction = () => {};
+    #sortingFunction = () => 1;
+    #onChangeFunction = () => {};
+    #onDataModificationFunction = () => {};
 
-        this.__showSeparators = false;
-        this.__allowCreation = false;
+    #showSeparators = false;
+    #allowCreation = false;
 
-        this.title = "";
-        this.filterButtonText = tr("crudModule_headerFilterButton");
-        this.createButtonText = tr("crudModule_headerCreateButton");
-        this.headerBackgroundColor = Color.white();
-        this.headerTitleColor = Color.darkGray();
-        this.rowHeight = 44;
+    title = "";
+    filterButtonText = tr("crudModule_headerFilterButton");
+    createButtonText = tr("crudModule_headerCreateButton");
+    headerBackgroundColor = Color.white();
+    headerTitleColor = Color.darkGray();
+    rowHeight = 44;
 
-        this.sequenceFileName = "sequence.json";
-        this.filtersFileName = "filter.json";
-    }
+    sequenceFileName = "sequence.json";
+    filtersFileName = "filter.json";
 
     /**
      * Will add create button that allows
@@ -992,7 +1175,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     allowCreation() {
-        this.__allowCreation = true;
+        this.#allowCreation = true;
     }
 
     /**
@@ -1002,7 +1185,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     showSeparators() {
-        this.__showSeparators = true;
+        this.#showSeparators = true;
     }
 
     /**
@@ -1014,7 +1197,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     setTableData(tableData) {
-        this.__tableData = tableData;
+        this.#tableData = tableData;
     }
 
     /**
@@ -1026,7 +1209,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     setDataFields(dataFields) {
-        this.__dataFields = dataFields;
+        this.#dataFields = dataFields;
     }
 
     /**
@@ -1041,7 +1224,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     setUIFields(uiFields) {
-        this.__uiFields = uiFields;
+        this.#uiFields = uiFields;
     }
 
     /**
@@ -1054,7 +1237,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     addFilterField(dataField, label) {
-        this.__filterFields.push(new UIFilterField(dataField, label));
+        this.#filterFields.push(new UIFilterField(dataField, label));
     }
 
     /**
@@ -1065,7 +1248,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     setSortingFunction(sortingFunction) {
-        this.__sortingFunction = sortingFunction;
+        this.#sortingFunction = sortingFunction;
     }
 
     /**
@@ -1080,7 +1263,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     onFieldChange(onChangeFunction) {
-        this.__onChangeFunction = onChangeFunction;
+        this.#onChangeFunction = onChangeFunction;
     }
 
     /**
@@ -1096,7 +1279,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     onDataModification(onDataChangeFunction) {
-        this.__onDataModificationFunction = onDataChangeFunction;
+        this.#onDataModificationFunction = onDataChangeFunction;
     }
 
     /**
@@ -1106,15 +1289,16 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     async present() {
-        this.__table.showSeparators = this.__showSeparators;
-        this.__tableData = this.__tableData.sort(this.__sortingFunction);
 
-        if (this.__filterFields.length > 0) {
-            this.__loadFilters();
+        this.#table.showSeparators = this.#showSeparators;
+        this.#tableData = this.#tableData.sort(this.#sortingFunction);
+
+        if (this.#filterFields.length > 0) {
+            this.#loadFilters();
         }
 
-        await this.__reloadTable();
-        await this.__table.present();
+        await this.#reloadTable();
+        await this.#table.present();
     }
 
     /**
@@ -1126,16 +1310,16 @@ class UIDataTable {
      *
      * @memberof UIDataTable
      */
-    async __reloadTable() {
+    async #reloadTable() {
 
-        this.__table.removeAllRows();
-        await this.__addHeaderRow();
+        this.#table.removeAllRows();
+        await this.#addHeaderRow();
 
-        for (let tableRecord of this.__getFilteredTableData()) {
-            await this.__addTableRow(tableRecord);
+        for (let tableRecord of this.#getFilteredTableData()) {
+            await this.#addTableRow(tableRecord);
         }
 
-        this.__table.reload();
+        this.#table.reload();
     }
 
     /**
@@ -1145,7 +1329,7 @@ class UIDataTable {
      *
      * @memberof UIDataTable
      */
-    async __addHeaderRow() {
+    async #addHeaderRow() {
 
         const tableHeader = new UITableRow();
         
@@ -1158,28 +1342,28 @@ class UIDataTable {
         headerTitle.titleColor = this.headerTitleColor;
 
         // Add 'Filter' button
-        if (this.__filterFields.length > 0) {
+        if (this.#filterFields.length > 0) {
 
             const filterButton = tableHeader.addButton(this.filterButtonText);
             filterButton.widthWeight = 40;
             filterButton.onTap = async () => {
-                await this.__presentFiltersModal();
-                await this.__reloadTable();
+                await this.#presentFiltersModal();
+                await this.#reloadTable();
             };
         }
 
         // Add 'Create' button
-        if (this.__allowCreation) {
+        if (this.#allowCreation) {
 
             const createButton = tableHeader.addButton(this.createButtonText);
             createButton.widthWeight = 40;
             createButton.onTap = async () => {
                 await this.__upsertTableRecord();
-                await this.__reloadTable();
+                await this.#reloadTable();
             };
         }
 
-        this.__table.addRow(tableHeader);
+        this.#table.addRow(tableHeader);
     }
 
     /**
@@ -1189,14 +1373,17 @@ class UIDataTable {
      * @param {Object} tableRecord table record in JSON format
      * @memberof UIDataTable
      */
-    async __addTableRow(tableRecord) {
+    async #addTableRow(tableRecord) {
 
         const tableRow = new UITableRow();
         tableRow.height = this.rowHeight;
 
-        for (let uiField of this.__uiFields) {
+        for (let uiField of this.#uiFields) {
 
-            let uiFieldLabel = uiField.__fieldLabelFunction(tableRecord);
+            let fieldLabelFunction = uiField.getFieldLabelFunction();
+            let aligningFunction = uiField.getAligningFunction();
+
+            let uiFieldLabel = fieldLabelFunction(tableRecord);
             let tableCell;
 
             if (uiField instanceof UIFormReadOnly) {
@@ -1206,9 +1393,9 @@ class UIDataTable {
                 tableCell = tableRow.addButton(uiFieldLabel);
             }
 
-            uiField.__aligningFunction(tableCell);
-            tableCell.widthWeight = uiField.__weight;
-            tableCell.titleColor = uiField.__color;
+            aligningFunction(tableCell);
+            tableCell.widthWeight = uiField.getWeight();
+            tableCell.titleColor = uiField.getColor();
 
             let handler = UIFieldHandlerFactory.getHandler(uiField);
 
@@ -1222,11 +1409,11 @@ class UIDataTable {
 
                 const metadata = new UIFieldMetadata(tableRow, tableRecord, uiField);
                 await handler.handle(this, metadata);
-                await this.__reloadTable();
+                await this.#reloadTable();
             };
         }
 
-        this.__table.addRow(tableRow);
+        this.#table.addRow(tableRow);
     }
 
     /**
@@ -1245,25 +1432,60 @@ class UIDataTable {
         if (!updatedRecord?.id) {
 
             let newRecord = {
-                id: await this.__nextSequenceValue()
+                id: await this.#nextSequenceValue()
             };
 
-            this.__dataFields.forEach(field => 
-                newRecord[field.__fieldName] = field.__defaultValue
+            this.#dataFields.forEach(field => 
+                newRecord[field.getName()] = field.getDefault()
             );
             
-            this.__tableData.push(newRecord);
+            this.#tableData.push(newRecord);
 
         // Handle update
         } else {
             
-            const recordIndex = this.__tableData.findIndex(tableRecord =>
+            const recordIndex = this.#tableData.findIndex(tableRecord =>
                 tableRecord.id === updatedRecord.id
             );
-            this.__tableData[recordIndex] = updatedRecord;
+            this.#tableData[recordIndex] = updatedRecord;
         }
 
-        this.__onDataModificationFunction(this.__tableData);
+        this.#onDataModificationFunction(this.#tableData);
+    }
+
+    /**
+     * Used to remove record from UI table and storage.
+     * 
+     * @param {Object} tableRecord table record to remove
+     * @param {UITableRow} tableRow UI table row to remove
+     * @memberof UIDataTable
+     */
+    __removeTableRecord(tableRecord, tableRow) {
+
+        this.setTableData(this.#tableData.filter(record => 
+            record.id !== tableRecord?.id
+        ));
+
+        // If UI table row was provided
+        // then delete it as well
+        if (tableRow) {
+            this.#table.removeRow(tableRow);
+            this.#table.reload();
+        }
+
+        this.#onDataModificationFunction(this.#tableData);
+    }
+
+    /**
+     * Used to handle updates of data fields.
+     * 
+     * @param {Object} tableRecord table record
+     * @param {DataField} dataField data field that is being updated
+     * @param {Object} updatedValue new value
+     * @param {Object} originalValue previous value
+     */
+    __onChange(tableRecord, dataField, updatedValue, originalValue) {
+        this.#onChangeFunction(tableRecord, dataField, updatedValue, originalValue);
     }
 
     /**
@@ -1272,7 +1494,7 @@ class UIDataTable {
      * @return {Number} next ID
      * @memberof UIDataTable
      */
-    async __nextSequenceValue() {
+    async #nextSequenceValue() {
 
         let sequence = FileUtil.readLocalJson(this.sequenceFileName, {next: 0});
         sequence.next += 1
@@ -1287,20 +1509,20 @@ class UIDataTable {
      * @return {Future<ModalResult>} promise with modal result
      * @memberof UIDataTable
      */
-    async __presentFiltersModal() {
+    async #presentFiltersModal() {
 
-        const appliedFiltersList = Object.keys(this.__appliedFilters);
+        const appliedFiltersList = Object.keys(this.#appliedFilters);
         const labelFilterMap = {};
 
-        this.__filterFields.forEach(field => {
+        this.#filterFields.forEach(field => {
 
             let popupLabel = "";
 
-            if (appliedFiltersList.includes(field.__dataField.__fieldName)) {
+            if (appliedFiltersList.includes(field.getDataField().getName())) {
                 popupLabel += tr("crudModule_filterAppliedIndicator") + " ";
             }
 
-            popupLabel += field.__label;
+            popupLabel += field.getLabel();
             labelFilterMap[popupLabel] = field;
         });
 
@@ -1315,7 +1537,7 @@ class UIDataTable {
         }
         
         if (result.choice() === tr("crudModule_clearAllFiltersAction")) {
-            this.__clearFilters();
+            this.#clearFilters();
             return;   
         }
 
@@ -1338,15 +1560,15 @@ class UIDataTable {
      * @return {List<Object>} filtered table data
      * @memberof UIDataTable
      */
-    __getFilteredTableData() {
+    #getFilteredTableData() {
 
-        let filteredData = this.__tableData;
+        let filteredData = this.#tableData;
 
-        for (let filterField of this.__filterFields) {
+        for (let filterField of this.#filterFields) {
 
-            let dataField = filterField.__dataField;
-            let fieldName = dataField.__fieldName;
-            let filterValue = this.__appliedFilters[fieldName];
+            let dataField = filterField.getDataField();
+            let fieldName = dataField.getName();
+            let filterValue = this.#appliedFilters[fieldName];
 
             // Skip if there is no filtering for this field.
             if (filterValue === undefined) {
@@ -1373,8 +1595,18 @@ class UIDataTable {
      *
      * @memberof UIDataTable
      */
-    __loadFilters() {
-        this.__appliedFilters = FileUtil.readLocalJson(this.filtersFileName, {});
+    #loadFilters() {
+        this.#appliedFilters = FileUtil.readLocalJson(this.filtersFileName, {});
+    }
+
+    /**
+     * Used to get value of applied filter.
+     * 
+     * @return {Object} filter value
+     * @memberof UIDataTable
+     */
+    __getFilterValue(fieldName) {
+        return this.#appliedFilters[fieldName];
     }
     
     /**
@@ -1386,8 +1618,8 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     async __upsertFilter(fieldName, filter) {
-        this.__appliedFilters[fieldName] = filter;
-        await FileUtil.updateLocalJson(this.filtersFileName, this.__appliedFilters);
+        this.#appliedFilters[fieldName] = filter;
+        await FileUtil.updateLocalJson(this.filtersFileName, this.#appliedFilters);
     }
 
     /**
@@ -1398,8 +1630,8 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     async __deleteFilter(fieldName) {
-        delete this.__appliedFilters[fieldName];
-        await FileUtil.updateLocalJson(this.filtersFileName, this.__appliedFilters);
+        delete this.#appliedFilters[fieldName];
+        await FileUtil.updateLocalJson(this.filtersFileName, this.#appliedFilters);
     }
 
     /**
@@ -1408,8 +1640,8 @@ class UIDataTable {
      *
      * @memberof UIDataTable
      */
-    async __clearFilters() {
-        this.__appliedFilters = {};
+    async #clearFilters() {
+        this.#appliedFilters = {};
         await FileUtil.updateLocalJson(this.filtersFileName, {});
     }
 }

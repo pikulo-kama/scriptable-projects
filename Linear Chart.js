@@ -13,7 +13,7 @@ const { rootWidget, image } = importModule("UI");
  */
 class LinearChart {
 
-    static __DEFAULT_CONFIG = {
+    static #DEFAULT_CONFIG = {
         // Fields related to canvas size
         widget: {
             height: 500,
@@ -51,6 +51,8 @@ class LinearChart {
         }
     };
 
+    #configStore = new ConfigStore();
+
     /**
      * Creates an instance of LinearChart.
      * 
@@ -59,10 +61,9 @@ class LinearChart {
      * @memberof LinearChart
      */
     constructor(userConfig, colorMode) {
-        this.__configStore = new ConfigStore();
-        this.__configStore.setConfig(LinearChart.__DEFAULT_CONFIG);
-        this.__configStore.overrideConfig(userConfig);
-        this.__configStore.setColorMode(ColorMode.of(colorMode));
+        this.#configStore.setConfig(LinearChart.#DEFAULT_CONFIG);
+        this.#configStore.overrideConfig(userConfig);
+        this.#configStore.setColorMode(ColorMode.of(colorMode));
     }
 
     
@@ -76,7 +77,7 @@ class LinearChart {
     getWidget() {
 
         const root = rootWidget()
-            .color(this.__configStore.get("chart.bgColor"))
+            .color(this.#configStore.get("chart.bgColor"))
             .render();
 
         image()
@@ -100,44 +101,44 @@ class LinearChart {
 
         context.opaque = false;
         context.size = new Size(
-            this.__configStore.get("widget.width"), 
-            this.__configStore.get("widget.height")
+            this.#configStore.get("widget.width"), 
+            this.#configStore.get("widget.height")
         );
 
-        const bgRectangle = this.__getBackground();
+        const bgRectangle = this.#getBackground();
 
-        context.setFillColor(this.__configStore.get("chart.bgColor"));
+        context.setFillColor(this.#configStore.get("chart.bgColor"));
         context.fill(bgRectangle);
 
-        const chartPoints = this.__getDataLocations();
+        const chartPoints = this.#getDataLocations();
     
-        const gridPath = this.__getGridPath(context, chartPoints);
+        const gridPath = this.#getGridPath(context, chartPoints);
         const linesPath = new Path();
         
-        if (this.__configStore.get("chart.showTooltips")) {
-            this.__drawTooltips(context, chartPoints);
+        if (this.#configStore.get("chart.showTooltips")) {
+            this.#drawTooltips(context, chartPoints);
         }
 
-        if (this.__configStore.get("chart.showGrid")) {
+        if (this.#configStore.get("chart.showGrid")) {
                 
-            context.setStrokeColor(this.__configStore.get("chart.gridColor"));
-            context.setLineWidth(this.__configStore.get("chart.gridLineWidth"));
+            context.setStrokeColor(this.#configStore.get("chart.gridColor"));
+            context.setLineWidth(this.#configStore.get("chart.gridLineWidth"));
             
             context.addPath(gridPath);
             context.strokePath();
         }
         
-        if (this.__configStore.get("chart.showDots")) {
+        if (this.#configStore.get("chart.showDots")) {
 
-            const dotsPath = this.__getDotsPath(chartPoints);
+            const dotsPath = this.#getDotsPath(chartPoints);
             
-            context.setFillColor(this.__configStore.get("chart.dotColor"));
+            context.setFillColor(this.#configStore.get("chart.dotColor"));
             context.addPath(dotsPath);
             context.fillPath();
         }
 
-        context.setStrokeColor(this.__configStore.get("chart.lineColor"));
-        context.setLineWidth(this.__configStore.get("chart.lineWidth"));
+        context.setStrokeColor(this.#configStore.get("chart.lineColor"));
+        context.setLineWidth(this.#configStore.get("chart.lineWidth"));
     
         linesPath.addLines(chartPoints);
         context.addPath(linesPath);
@@ -153,10 +154,10 @@ class LinearChart {
      * @return {Rect} chart canvas
      * @memberof LinearChart
      */
-    __getBackground() { 
+    #getBackground() { 
         return new Rect(0, 0, 
-            this.__configStore.get("widget.width"), 
-            this.__configStore.get("widget.height")
+            this.#configStore.get("widget.width"), 
+            this.#configStore.get("widget.height")
         );
     }
 
@@ -170,47 +171,47 @@ class LinearChart {
     * @return {Path} grid
     * @memberof LinearChart
     */
-    __getGridPath(context, chartPoints) {
+    #getGridPath(context, chartPoints) {
         
         let path = new Path();
-        const showLegend = this.__configStore.get("chart.showLegend");
+        const showLegend = this.#configStore.get("chart.showLegend");
 
-        const yAxisValues = this.__getYAxisValues(this.__configStore.get("chart.data"));
-        const yStep = (this.__configStore.get("widget.height") - 
-                    this.__configStore.get("widget.padding.vertical")) / this.__configStore.get("chart.yMax");
+        const yAxisValues = this.#getYAxisValues(this.#configStore.get("chart.data"));
+        const yStep = (this.#configStore.get("widget.height") - 
+                    this.#configStore.get("widget.padding.vertical")) / this.#configStore.get("chart.yMax");
 
-        let step = this.__configStore.get("widget.padding.vertical") / 2;
+        let step = this.#configStore.get("widget.padding.vertical") / 2;
 
-        context.setTextColor(this.__configStore.get("chart.legendColor"));
+        context.setTextColor(this.#configStore.get("chart.legendColor"));
         context.setFont(Font.heavyMonospacedSystemFont(
-            this.__configStore.get("chart.legendFontSize")
+            this.#configStore.get("chart.legendFontSize")
         ));
 
         context.setTextAlignedCenter();
 
         for (let i = 0; i < chartPoints.length; i++) {
 
-            let startPoint = new Point(chartPoints[i].x, this.__configStore.get("widget.padding.vertical") / 2);
-            let endPoint = new Point(chartPoints[i].x, (this.__configStore.get("widget.height") - 
-                this.__configStore.get("widget.padding.vertical") / 2));
+            let startPoint = new Point(chartPoints[i].x, this.#configStore.get("widget.padding.vertical") / 2);
+            let endPoint = new Point(chartPoints[i].x, (this.#configStore.get("widget.height") - 
+                this.#configStore.get("widget.padding.vertical") / 2));
 
             path.addLines([
                 startPoint, endPoint
             ]);
 
             endPoint.x -= 10;
-            endPoint.y += this.__configStore.get("chart.legendFontSize");
+            endPoint.y += this.#configStore.get("chart.legendFontSize");
 
             if (showLegend) {
-                context.drawText(this.__configStore.get("chart.data")[i][this.__configStore.get("chart.xField")], endPoint);
+                context.drawText(this.#configStore.get("chart.data")[i][this.#configStore.get("chart.xField")], endPoint);
             }
         }
 
-        for (let i = 0; i <= this.__configStore.get("chart.yMax"); i++, step += yStep) {
+        for (let i = 0; i <= this.#configStore.get("chart.yMax"); i++, step += yStep) {
             
-            let startPoint = new Point(this.__configStore.get("widget.padding.horizontal") / 2, step);
-            let endPoint = new Point(this.__configStore.get("widget.width") - 
-                this.__configStore.get("widget.padding.horizontal") / 2, step
+            let startPoint = new Point(this.#configStore.get("widget.padding.horizontal") / 2, step);
+            let endPoint = new Point(this.#configStore.get("widget.width") - 
+                this.#configStore.get("widget.padding.horizontal") / 2, step
             );
             
             path.addLines([
@@ -219,7 +220,7 @@ class LinearChart {
 
             const value = yAxisValues[i];
             
-            startPoint.x -= value.length * this.__configStore.get("chart.legendFontSize");
+            startPoint.x -= value.length * this.#configStore.get("chart.legendFontSize");
             startPoint.y -= 10;
             
             if (showLegend) {
@@ -241,17 +242,17 @@ class LinearChart {
     * @return {Path} dots
     * @memberof LinearChart
     */
-    __getDotsPath(chartPoints) {
+    #getDotsPath(chartPoints) {
 
         let path = new Path();
 
         chartPoints.forEach(point => {
             path.addEllipse(
                 new Rect(
-                    point.x - (this.__configStore.get("chart.pointSize") / 2),
-                    point.y - (this.__configStore.get("chart.pointSize") / 2),
-                    this.__configStore.get("chart.pointSize"), 
-                    this.__configStore.get("chart.pointSize")
+                    point.x - (this.#configStore.get("chart.pointSize") / 2),
+                    point.y - (this.#configStore.get("chart.pointSize") / 2),
+                    this.#configStore.get("chart.pointSize"), 
+                    this.#configStore.get("chart.pointSize")
                 )
             )
         });
@@ -275,26 +276,26 @@ class LinearChart {
     * used as orienters when adding tooltips)
     * @memberof LinearChart
     */
-    __drawTooltips(context, chartPoints) {
+    #drawTooltips(context, chartPoints) {
 
-        context.setTextColor(this.__configStore.get("chart.tooltipColor"));
+        context.setTextColor(this.#configStore.get("chart.tooltipColor"));
         context.setFont(Font.heavyMonospacedSystemFont(
-            this.__configStore.get("chart.tooltipFontSize")
+            this.#configStore.get("chart.tooltipFontSize")
         ));
         
-        const data = this.__configStore.get("chart.data");
-        const axisValues = this.__getYAxisValues(data);
+        const data = this.#configStore.get("chart.data");
+        const axisValues = this.#getYAxisValues(data);
         
         for (let i = 0; i < chartPoints.length; i++) {
 
             let point = chartPoints[i];
             let pointCopy = new Point(point.x, point.y);
 
-            pointCopy.y -= this.__configStore.get("chart.tooltipFontSize") * 1.5;
+            pointCopy.y -= this.#configStore.get("chart.tooltipFontSize") * 1.5;
             pointCopy.x -= 10;
-            let yFieldValue = String(data[i][this.__configStore.get("chart.yField")]);
+            let yFieldValue = String(data[i][this.#configStore.get("chart.yField")]);
             
-            if (this.__configStore.get("chart.hideAxisPlacedTooltips")
+            if (this.#configStore.get("chart.hideAxisPlacedTooltips")
                 && axisValues.includes(yFieldValue)
             ) {
                 continue;
@@ -310,24 +311,24 @@ class LinearChart {
     * @return {List<Point>} list of points
     * @memberof LinearChart
     */
-    __getDataLocations() {
+    #getDataLocations() {
 
         const points = [];
-        const data = this.__configStore.get("chart.data");
-        const xStep = (this.__configStore.get("widget.width") - 
-            this.__configStore.get("widget.padding.horizontal")) / (data.length - 1);
+        const data = this.#configStore.get("chart.data");
+        const xStep = (this.#configStore.get("widget.width") - 
+            this.#configStore.get("widget.padding.horizontal")) / (data.length - 1);
 
-        let currentStep = this.__configStore.get("widget.padding.horizontal") / 2;
-        const maxCustomersInMonth = this.__getMaxProperty(data, this.__configStore.get("chart.yField"));
+        let currentStep = this.#configStore.get("widget.padding.horizontal") / 2;
+        const maxCustomersInMonth = this.#getMaxProperty(data, this.#configStore.get("chart.yField"));
 
-        const chartPercent = (this.__configStore.get("widget.height") - 
-            this.__configStore.get("widget.padding.vertical")) / maxCustomersInMonth;
+        const chartPercent = (this.#configStore.get("widget.height") - 
+            this.#configStore.get("widget.padding.vertical")) / maxCustomersInMonth;
 
         const getDataPoint = (i, x) => {
             return new Point(x,
-                this.__configStore.get("widget.height") - 
-                (this.__configStore.get("widget.padding.vertical") / 2) - 
-                (data[i][this.__configStore.get("chart.yField")] * chartPercent)
+                this.#configStore.get("widget.height") - 
+                (this.#configStore.get("widget.padding.vertical") / 2) - 
+                (data[i][this.#configStore.get("chart.yField")] * chartPercent)
             );
         }
         
@@ -347,15 +348,15 @@ class LinearChart {
     * @return {List<Number>} Y axis fields
     * @memberof LinearChart
     */
-    __getYAxisValues(data) {
+    #getYAxisValues(data) {
 
         const axisValues = [];
-        const iteration = this.__getMaxProperty(data, this.__configStore.get("chart.yField")) / 
-            this.__configStore.get("chart.yMax");
+        const iteration = this.#getMaxProperty(data, this.#configStore.get("chart.yField")) / 
+            this.#configStore.get("chart.yMax");
 
         const fixed = !Number.isInteger(iteration) ? 1 : 0;
         
-        for (let i = this.__configStore.get("chart.yMax"); i > 0; i--) {
+        for (let i = this.#configStore.get("chart.yMax"); i > 0; i--) {
             axisValues.push(Number(i * iteration).toFixed(fixed));
         }
 
@@ -373,7 +374,7 @@ class LinearChart {
     * @return {Number} max value in array
     * @memberof LinearChart
     */
-    __getMaxProperty(data, property) {
+    #getMaxProperty(data, property) {
         return Math.max.apply(
             Math, 
             data.map(function (record) {return record[property]})

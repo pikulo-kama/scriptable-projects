@@ -13,6 +13,9 @@ const { addToState, getFromState } = importModule("Core");
  */
 class ModalRule {
 
+    #messageFunction;
+    #ruleFunction;
+
     /**
      * Checks whether field is populated.
      *
@@ -43,8 +46,30 @@ class ModalRule {
      * @memberof ModalRule
      */
     constructor(messageFunction, ruleFunction) {
-        this.messageFunction = messageFunction;
-        this.ruleFunction = ruleFunction;
+        this.#messageFunction = messageFunction;
+        this.#ruleFunction = ruleFunction;
+    }
+
+    /**
+     * Used to get function that is invoked
+     * when validation doesn't pass.
+     *
+     * @return {Function} error message function
+     * @memberof ModalRule
+     */
+    getMessageFunction() {
+        return this.#messageFunction;
+    }
+
+    /**
+     * Used to get function that used to
+     * validate field value.
+     *
+     * @return {Function} validation function
+     * @memberof ModalRule
+     */
+    getRuleFunction()  {
+        return this.#ruleFunction;
     }
 }
 
@@ -311,7 +336,7 @@ class Modal {
 
         this.#alert = new Alert();
         this.#alert.title = this.#title;
-        this.#fields = getFromState(this, "fields");
+        this.#fields = getFromState(this, "fields", []);
 
         // Add actions
         this.#actions.forEach(action => this.#alert.addAction(action));
@@ -366,13 +391,16 @@ class Modal {
         for (let field of this.#fields) {
             for (let validation of field.validations) {
 
+                let ruleFunction = validation.getRuleFunction();
+                
                 // Don't proceed with validation of field
                 // if one rule already failed.
-                if (validation.ruleFunction(field.value)) {
+                if (ruleFunction(field.value)) {
                     break;
                 }
 
-                let errorMessage = validation.messageFunction(field);
+                let messageFunction = validation.getMessageFunction();
+                let errorMessage = messageFunction(field);
                 await this.#presentErrorModal(errorMessage);
                 
                 field.value = field.previousValue;

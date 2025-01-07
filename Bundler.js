@@ -71,8 +71,12 @@ class ScriptSelector {
  */
 class Bundler {
 
-    static __DEPENDENCY_REGEXP = new RegExp(/const\s*\{[^}]+\}\s*=\s*importModule\(["']([^"']+)["']\);?/g);
-    static __MODULE_EXPORTS_REGEXP = new RegExp(/module\.exports\s*=\s*{[^}]+};?/g);
+    static #DEPENDENCY_REGEXP = new RegExp(/const\s*\{[^}]+\}\s*=\s*importModule\(["']([^"']+)["']\);?/g);
+    static #MODULE_EXPORTS_REGEXP = new RegExp(/module\.exports\s*=\s*{[^}]+};?/g);
+
+    #scriptName;
+    #scriptMetadata = new Map();
+    #dependencyScripts = new Map();
 
     /**
      * Creates an instance of Bundler.
@@ -80,9 +84,7 @@ class Bundler {
      * @memberof Bundler
      */
     constructor(scriptName) {
-        this.__scriptName = scriptName;
-        this.__scriptMetadata = new Map();
-        this.__dependencyScripts = new Map();
+        this.#scriptName = scriptName;
     }
 
     
@@ -95,27 +97,27 @@ class Bundler {
      */
     async bundle() {
 
-        this.__processDependencies(this.__scriptName);
+        this.#processDependencies(this.#scriptName);
         
         let scriptBody = "";
-        const mainScriptMetadata = this.__scriptMetadata.get(this.__scriptName);
-        const mainScriptBody = this.__dependencyScripts.get(this.__scriptName);
+        const mainScriptMetadata = this.#scriptMetadata.get(this.#scriptName);
+        const mainScriptBody = this.#dependencyScripts.get(this.#scriptName);
 
         // Delete main script from dependencies.
-        this.__dependencyScripts.delete(this.__scriptName);
+        this.#dependencyScripts.delete(this.#scriptName);
 
         // Add back removed metadata.
         scriptBody += mainScriptMetadata;
 
         // Add all dependencies.
-        for (let dependencyBody of this.__dependencyScripts.values()) {
+        for (let dependencyBody of this.#dependencyScripts.values()) {
             scriptBody += dependencyBody;
         }
 
         // Add main script.
         scriptBody += mainScriptBody;
 
-        const targetFileName = tr("bundler_bundledScriptName", this.__scriptName);
+        const targetFileName = tr("bundler_bundledScriptName", this.#scriptName);
         await FileUtil.updateScript(targetFileName + conf.jsExtension, scriptBody)
     }
 
@@ -129,24 +131,24 @@ class Bundler {
      * @param {String} scriptName script that should be processed
      * @memberof Bundler
      */
-    __processDependencies(scriptName) {
+    #processDependencies(scriptName) {
 
         let scriptBody = FileUtil.readScript(scriptName + conf.jsExtension);
-        scriptBody = this.__extractMetadataAndGet(scriptName, scriptBody);
+        scriptBody = this.#extractMetadataAndGet(scriptName, scriptBody);
 
-        const scriptDependencies = this.__getScriptDependencies(scriptBody);
-        scriptBody = this.__removeDependenciesAndGet(scriptBody);
-        this.__dependencyScripts.set(scriptName, scriptBody);
+        const scriptDependencies = this.#getScriptDependencies(scriptBody);
+        scriptBody = this.#removeDependenciesAndGet(scriptBody);
+        this.#dependencyScripts.set(scriptName, scriptBody);
 
         for (let dependencyName of scriptDependencies) {
 
             // Don't process if it was already processed
             // in previous scripts.
-            if (this.__dependencyScripts.has(dependencyName)) {
+            if (this.#dependencyScripts.has(dependencyName)) {
                 continue;
             }
 
-            this.__processDependencies(dependencyName);
+            this.#processDependencies(dependencyName);
         }
     }
 
@@ -158,9 +160,9 @@ class Bundler {
      * @return {List<String>} list of dependency scripts
      * @memberof Bundler
      */
-    __getScriptDependencies(scriptBody) {
+    #getScriptDependencies(scriptBody) {
 
-        const dependencyMatches = [...scriptBody.matchAll(Bundler.__DEPENDENCY_REGEXP)];
+        const dependencyMatches = [...scriptBody.matchAll(Bundler.#DEPENDENCY_REGEXP)];
         return dependencyMatches.map(match => match[1]);
     }
     
@@ -173,9 +175,9 @@ class Bundler {
      * @return {String} updated script content
      * @memberof Bundler
      */
-    __removeDependenciesAndGet(scriptBody) {
+    #removeDependenciesAndGet(scriptBody) {
 
-        const dependencyMatches = [...scriptBody.matchAll(Bundler.__DEPENDENCY_REGEXP)];
+        const dependencyMatches = [...scriptBody.matchAll(Bundler.#DEPENDENCY_REGEXP)];
 
         for (let match of dependencyMatches) {
 
@@ -183,7 +185,7 @@ class Bundler {
             scriptBody = scriptBody.replaceAll(importModuleBlock, conf.emptyString);
         }
 
-        const exportMatches = [...scriptBody.matchAll(Bundler.__MODULE_EXPORTS_REGEXP)];
+        const exportMatches = [...scriptBody.matchAll(Bundler.#MODULE_EXPORTS_REGEXP)];
 
         for (let match of exportMatches) {
 
@@ -205,13 +207,13 @@ class Bundler {
      * @return {String} updated script content without metadata
      * @memberof Bundler
      */
-    __extractMetadataAndGet(scriptName, scriptBody) {
+    #extractMetadataAndGet(scriptName, scriptBody) {
         let scriptBodyLines = scriptBody.split('\n')
         let metadataLines = scriptBodyLines.splice(0, 3)
 
         // Store metadata to later use it when building
         // back composed script.
-        this.__scriptMetadata.set(scriptName, metadataLines.join('\n'));
+        this.#scriptMetadata.set(scriptName, metadataLines.join('\n'));
         return scriptBodyLines.join('\n');
     }
 }

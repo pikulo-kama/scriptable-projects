@@ -12,8 +12,8 @@ const { FileUtil } = importModule("File Util");
  */
 class Locale {
 
-    static __DEFAULT_LOCALE = "en";
-    static __translations = null;
+    static #DEFAULT_LOCALE = "en";
+    static #translations = null;
 
     /**
      * Used to retrieve translation for provided key 
@@ -26,8 +26,8 @@ class Locale {
      * @memberof Locale
      */
     static tr(key, args) {
-        this.__ensureTranslationsLoaded();
-        let translation = this.__translations[key];
+        this.#ensureTranslationsLoaded();
+        let translation = this.#translations[key];
 
         if (!translation) {
             console.warn(`Translation with key '${key}' doesn't exist.`);
@@ -52,31 +52,31 @@ class Locale {
      * @static
      * @memberof Locale
      */
-    static __ensureTranslationsLoaded() {
+    static #ensureTranslationsLoaded() {
 
-        if (this.__translations) {
+        if (this.#translations) {
             return;
         }
 
-        this.__translations = {};
-        const languageCode = this.__getLanguageCode();
+        this.#translations = {};
+        const languageCode = this.#getLanguageCode();
         const localeDirectories = FileUtil.findLocaleDirectories();
         
         for (let directory of localeDirectories) {
 
             let localeContent = {};
             const customLocaleExists = FileUtil.localeExists(directory, languageCode);
-            const defaultLocaleExists = FileUtil.localeExists(directory, this.__DEFAULT_LOCALE);
+            const defaultLocaleExists = FileUtil.localeExists(directory, this.#DEFAULT_LOCALE);
 
             if (customLocaleExists) {
                 localeContent = FileUtil.readLocale(directory, languageCode);
             
             } else if (defaultLocaleExists) {
-                localeContent = FileUtil.readLocale(directory, this.__DEFAULT_LOCALE);
+                localeContent = FileUtil.readLocale(directory, this.#DEFAULT_LOCALE);
             }
 
-            this.__translations = {
-                ...this.__translations,
+            this.#translations = {
+                ...this.#translations,
                 ...localeContent
             };
         }
@@ -93,7 +93,7 @@ class Locale {
      * @return {String} language code
      * @memberof Locale
      */
-    static __getLanguageCode() {
+    static #getLanguageCode() {
         
         const locale = Device.preferredLanguages()[0];
         return locale.substring(0, locale.indexOf('-'));
