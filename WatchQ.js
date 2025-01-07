@@ -23,7 +23,7 @@ const {
 const conf = {
     debug: {
         enabled: false,
-        forceWidget: f
+        forceWidget: false
     }
 };
 
@@ -304,6 +304,7 @@ class WidgetBuilder {
      * @memberof WidgetBuilder
      */
     static build(seriesRecords) {
+        
         let totalEpisodeCount = seriesRecords
             .filter(record => record.showInSummary)
             .reduce((totalEpisodes, record) => totalEpisodes + record.count, 0);
@@ -319,17 +320,23 @@ class WidgetBuilder {
             episodeCountWidget.content(getEpisodeCountLabel(totalEpisodeCount));
         }
         
-        const root = rootWidget().render();
+        const root = rootWidget()
+            .gradient()
+                .color(0, new Color("8b0000", 0.4))
+                .color(0.6, new Color("0f0f0f"))
+                .create()
+            .render();
         
         episodeCountWidget
-            .blackMonospacedFont(24)
+            .blackMonospacedFont(25)
             .renderFor(root);
         
-        spacer().renderFor(root, 10);
+        spacer().renderFor(root, 5);
         
         text()
             .content(tr("watchQueue_toBeWatchedLabel"))
-            .blackMonospacedFont(18)
+            .blackMonospacedFont(14)
+            .color(new Color("8b0000"))
             .renderFor(root);
 
         return root;
