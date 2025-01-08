@@ -4,7 +4,8 @@
 
 const { FileUtil } = importModule("File Util");
 const { metadata, cacheRequest } = importModule("Cache");
-const { tr } = importModule("Localization")
+const { tr } = importModule("Localization");
+const { debugFeatureEnabled } = importModule("Feature");
 
 const {
     spacer,
@@ -20,14 +21,6 @@ const {
 } = importModule("CRUD Module");
 
 
-const conf = {
-    debug: {
-        enabled: false,
-        forceWidget: false
-    }
-};
-
-
 /**
  * ENTRY POINT
  */
@@ -36,7 +29,7 @@ async function main() {
     const repository = SeriesDataRepositoryFactory.getRepository();
     const seriesData = await repository.getData();
 
-    if (config.runsInWidget || conf.debug.forceWidget) {
+    if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         const widget = WidgetBuilder.build(seriesData);
         present(widget);
 
@@ -279,7 +272,7 @@ class SeriesDataRepositoryFactory {
      */
     static getRepository() {
 
-        if (conf.debug.enabled) {
+        if (debugFeatureEnabled("mockSeriesData")) {
             return new DebugRepository();
         }
 

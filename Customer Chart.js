@@ -2,40 +2,20 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: cyan; icon-glyph: users;
 
+const { debugEnabled, debugFeatureEnabled, getFeature } = importModule("Feature");
 const { LinearChart } = importModule("Linear Chart");
 const { present } = importModule("UI");
 const { themed, ColorMode } = importModule("Config Util");
 const { tr } = importModule("Localization");
 
-const conf = {
-    debug: {
-        enabled: false
-    },
 
-    timeZone: tr("customerChart_timezone"),
-    months: [
-        tr("customerChart_january"),
-        tr("customerChart_february"),
-        tr("customerChart_march"),
-        tr("customerChart_april"),
-        tr("customerChart_may"),
-        tr("customerChart_june"),
-        tr("customerChart_july"),
-        tr("customerChart_august"),
-        tr("customerChart_september"),
-        tr("customerChart_october"),
-        tr("customerChart_november"),
-        tr("customerChart_december")
-    ]
-};
-
+const parameters = getArguments();
 
 /**
  * ENTRY POINT
  */
 async function main() {
 
-    conf.args = getArguments();
     const repository = new CalendarChartDataRepository();
 
     const chart = new LinearChart({
@@ -49,9 +29,9 @@ async function main() {
             gridColor: themed(new Color("FEFBFA10"), new Color("707070")),
             tooltipColor: new Color("999")
         }
-    }, conf.args.mode);
+    }, parameters.mode);
 
-    if (conf.debug.enabled) {
+    if (debugEnabled()) {
         chart.getWidget().presentMedium();
 
     } else {
@@ -72,20 +52,38 @@ async function main() {
  */
 function getArguments() {
 
-    let arguments = JSON.parse(args.widgetParameter);
-
-    if (conf.debug.enabled) {
-        arguments = {
-            // Period in months
-            period: 5,
-            calendar: "Робочий",
-            mode: ColorMode.Dark,
-            trimBlank: true
-        };
-    }
+    let arguments = JSON.parse(args.widgetParameter) ?? {};
 
     if (!arguments.trimBlank) {
         arguments.trimBlank = false;
+    }
+
+    if (!arguments.ColorMode) {
+        arguments.mode = ColorMode.Dark;
+    }
+
+    if (!arguments.period) {
+        arguments.period = 6;
+    }
+
+    if (debugFeatureEnabled("trimBlank")) {
+        arguments.trimBlank = getFeature("trimBlank");
+    }
+
+    if (debugFeatureEnabled("period")) {
+        arguments.period = getFeature("period");
+    }
+
+    if (debugFeatureEnabled("calendar")) {
+        arguments.calendar = getFeature("calendar");
+    }
+
+    if (debugFeatureEnabled("forceLightMode")) {
+        arguments.mode = ColorMode.Light;
+    }
+
+    if (!arguments.calendar) {
+        throw new Error("Calendar was not provided");
     }
 
     return arguments;
@@ -101,6 +99,20 @@ function getArguments() {
 class CalendarChartDataRepository {
 
     static #FIRST_DAY_OF_MONTH = 1;
+    static #MONTH_NAMES = [
+        tr("customerChart_january"),
+        tr("customerChart_february"),
+        tr("customerChart_march"),
+        tr("customerChart_april"),
+        tr("customerChart_may"),
+        tr("customerChart_june"),
+        tr("customerChart_july"),
+        tr("customerChart_august"),
+        tr("customerChart_september"),
+        tr("customerChart_october"),
+        tr("customerChart_november"),
+        tr("customerChart_december")
+    ];
 
     /**
      * Used to get data from calendar
@@ -112,10 +124,10 @@ class CalendarChartDataRepository {
      */
     async getChartData() {
   
+        const monthNames = CalendarChartDataRepository.#MONTH_NAMES;
         let dateRange = this.#getDateRange();
         let eventSet = [];
-        
-        const calendar = await Calendar.forEventsByTitle(conf.args.calendar);
+        const calendar = await Calendar.forEventsByTitle(parameters.calendar);
         
         for (let rangeId = 0; rangeId + 1 < dateRange.length; rangeId++) {
                 
@@ -129,12 +141,12 @@ class CalendarChartDataRepository {
             );
             
             eventSet.push({
-                month: conf.months[startDate.getMonth()],
+                month: monthNames[startDate.getMonth()],
                 eventCount: events.length
             });
         }
         
-        if (conf.args.skipBlank) {
+        if (parameters.skipBlank) {
         
             let eventSetCopy = eventSet;
             
@@ -169,7 +181,7 @@ class CalendarChartDataRepository {
     
         let dates = new Array();
         
-        for (let monthIdx = conf.args.period - 1; monthIdx >= 0; monthIdx--) {
+        for (let monthIdx = parameters.period - 1; monthIdx >= 0; monthIdx--) {
             
             let monthStartDate = new Date();
             monthStartDate.setMonth(monthStartDate.getMonth() - monthIdx);
@@ -181,7 +193,7 @@ class CalendarChartDataRepository {
         dates.push(new Date());
         
         return dates.map(date => 
-            new Date(date.toLocaleString('en-US', {timeZone: conf.timeZone}))
+            new Date(date.toLocaleString('en-US', {timeZone: tr("customerChart_timezone")}))
         );
     }
 }

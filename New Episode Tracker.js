@@ -4,6 +4,14 @@
 
 const { cacheRequest, metadata } = importModule("Cache");
 const { FileUtil } = importModule("File Util");
+
+const {
+    debugEnabled,
+    debugFeatureEnabled,
+    featureEnabled,
+    getFeature
+} = importModule("Feature");
+
 const {
     spacer,
     stack,
@@ -15,35 +23,13 @@ const {
 } = importModule("UI");
 
 
-const conf = {
-    debug: {
-        enabled: true,
-        
-        mockData: false,
-        forceCountdownMonths: false,
-        forceCountdownWeeks: false,
-        forceCountdownDays: false,
-        forceCountdownHours: false,
-        forceWaitingStatus: false,
-        forceEndedStatus: false,
-        
-        forceSeriesName: false,
-        seriesName: "the-last-of-us",
-        
-        rerollColor: false
-    },
-
-    googleVisionApiKey: FileUtil.readLocalFile("google_vision_api_key.txt", "<your API key>"),
-    backgroundColor: new Color("070d0d")
-};
-
+const GOOGLE_VISION_API_KEY = FileUtil.readLocalFile("google_vision_api_key.txt", "<your API key>");
+const seriesNameParameter = getSeriesName();
 
 /**
  * ENTRY POINT
  */
 async function main() {
-    conf.seriesName = getSeriesName();
-
     const apiResource = ApiResourceFactory.getResource();
     const seriesData = await apiResource.download();
 
@@ -53,7 +39,7 @@ async function main() {
 
     const renderedWidget = widget.create(seriesObject);
 
-    if (conf.debug.enabled) {
+    if (debugEnabled()) {
         renderedWidget.presentMedium();
 
     } else {
@@ -70,9 +56,11 @@ async function main() {
  */
 function getSeriesName() {
 
-    let seriesName = conf.debug.forceSeriesName ?
-        conf.debug.seriesName :
-        args.widgetParameter;
+    let seriesName = args.widgetParameter;
+
+    if (debugFeatureEnabled("mockSeriesName")) {
+        seriesName = getFeature("mockSeriesName");
+    }
 
     if (!seriesName) {
         throw new Error("Series name was not provided")
@@ -146,7 +134,7 @@ class EpisodateApiResource extends ApiResource {
      * @returns {String} URL
      */
     #getSeriesUrl() {
-        return this.#webUrl + conf.seriesName;
+        return this.#webUrl + seriesNameParameter;
     }
 
     /**
@@ -205,7 +193,7 @@ class StubApiResource extends ApiResource {
         
         let seriesInfo = new SeriesInfo(
             "Debug",
-            conf.debug.forceEndedStatus ? Status.Ended : Status.Ongoing
+            debugFeatureEnabled("forceEndedStatus") ? Status.Ended : Status.Ongoing
         );
         
         seriesInfo.addEpisode(
@@ -234,23 +222,23 @@ class StubApiResource extends ApiResource {
 
         // Last known episode already aired.
         // No information when next would be (Waiting).
-        if (conf.debug.forceWaitingStatus) {
+        if (debugFeatureEnabled("forceWaitingStatus")) {
             return this.#dateNMonthsInPast(1);
         }
 
-        if (conf.debug.forceCountdownHours) {
+        if (debugFeatureEnabled("forceCountdownHours")) {
             return this.#dateNHoursInFuture(2);
         }
 
-        if (conf.debug.forceCountdownDays) {
+        if (debugFeatureEnabled("forceCountdownDays")) {
             return this.#dateNDaysInFuture(5);
         }
 
-        if (conf.debug.forceCountdownWeeks) {
+        if (debugFeatureEnabled("forceCountdownWeeks")) {
             return this.#dateNDaysInFuture(8);
         }
 
-        if (conf.debug.forceCountdownMonths) {
+        if (debugFeatureEnabled("forceCountdownMonths")) {
             return this.#dateNMonthsInFuture(3);
         }
         
@@ -332,7 +320,7 @@ class ApiResourceFactory {
      */
     static getResource() {
 
-        if (conf.debug.mockData) {
+        if (debugFeatureEnabled("mockSeriesData")) {
             return new StubApiResource();
         }
 
@@ -566,7 +554,7 @@ class Series {
         let colorMap = FileUtil.readLocalJson(fileName, {});
         let colorFromFile = colorMap[imageURI];
 
-        if (!colorFromFile || conf.debug.rerollColor) {
+        if (!colorFromFile || featureEnabled("rerollColor")) {
 
             let dominantColor = await this.#retrieveDominantColor();
             colorFromFile = {color: dominantColor};
@@ -685,7 +673,7 @@ class Series {
         let response = await webView.evaluateJavaScript(`
             var xhr = new XMLHttpRequest();
 
-            xhr.open('POST', "https://vision.googleapis.com/v1/images:annotate?alt=json&key=${conf.googleVisionApiKey}", false);
+            xhr.open('POST', "https://vision.googleapis.com/v1/images:annotate?alt=json&key=${GOOGLE_VISION_API_KEY}", false);
 
             xhr.send(JSON.stringify({
                 "requests": [{
@@ -803,6 +791,8 @@ class Status {
  */
 class SeriesWidget {
 
+    static #backgroundColor = new Color("070d0d");
+
     /**
      * Used to create widget based on
      * the series information.
@@ -876,7 +866,7 @@ class SeriesWidget {
         
         text()
             .content(series.getCountdown())
-            .color(conf.backgroundColor)
+            .color(SeriesWidget.#backgroundColor)
             .boldMonospacedFont(36)
             .renderFor(countdownBox);
     }
@@ -964,7 +954,7 @@ class SeriesWidget {
             .gradient()
                 .leftToRight()
                 .color(0, series.getDominantColor())
-                .color(0.7, conf.backgroundColor)
+                .color(0.7, SeriesWidget.#backgroundColor)
                 .create()
             .render();
     }

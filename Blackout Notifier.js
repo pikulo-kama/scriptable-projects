@@ -3,6 +3,12 @@
 // icon-color: gray; icon-glyph: moon;
 
 const {
+    debugFeatureEnabled, 
+    featureEnabled, 
+    getFeature 
+} = importModule("Feature");
+
+const {
     spacer,
     stack,
     text,
@@ -11,41 +17,16 @@ const {
     present
 } = importModule("UI");
 
-
-const conf = {
-    debug: {
-        enable: false,
-
-        forceWidget: false,
-        forceIndicator: false,
-        forceNoOutages: false,
-        forceNotAvailable: false,
-        forceAddress: false,
-
-        address: "Івано-Франківськ,Стуса,10",
-        currentHour: 17
-    },
-    
-    showGradient: true,
-    styleGradient: (rootWidget) => {
-        
-        rootWidget.gradient()
-            .color(0, new Color("040059"))
-            .color(0.5, new Color("030037"))
-            .create()
-    }
-};
-
+const parameters = getAddress();
 
 /**
  * ENTRY POINT
  */
 async function main() {
 
-    conf.address = getAddress();
     let webView = ScheduleWebViewFactory.getWebView();
 
-    if (config.runsInWidget || conf.debug.forceWidget) {
+    if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         const widget = new ScheduleWidget();
         
         await webView.downloadSchedules();
@@ -70,9 +51,11 @@ async function main() {
  */
 function getAddress() {
 
-    let address = conf.debug.forceAddress ?
-        conf.debug.address :
-        args.widgetParameter
+    let address = args.widgetParameter;
+
+    if (debugFeatureEnabled("mockAddress")) {
+        address = getFeature("mockAddress");
+    }
         
     if (!address) {
         throw new Error("Address was not provided.");
@@ -159,8 +142,8 @@ class ScheduleWebViewFactory {
      */
     static getWebView() {
         
-        if (conf.debug.enable) {
-            return new DebugScheduleWebView();
+        if (debugFeatureEnabled("mockWebView")) {
+            return new MockScheduleWebView();
         }
         
         return new OeIfScheduleWebView();
@@ -174,13 +157,13 @@ class ScheduleWebViewFactory {
  * 
  * This web view was only tested with IF OE data format.
  */
-class DebugScheduleWebView extends ScheduleWebView {
+class MockScheduleWebView extends ScheduleWebView {
     
     getToday() {
         
         let records = [];
         
-        if (!conf.debug.forceNoOutages) {
+        if (!debugFeatureEnabled("forceNoOutages")) {
             
             records = [
                 new OutageRecord(Time.of(4), Time.of(4, 30), false, 1),
@@ -194,11 +177,11 @@ class DebugScheduleWebView extends ScheduleWebView {
     }
     
     getTomorrow() {
-        return new Schedule(conf.debug.forceIndicator ? [] : null);
+        return new Schedule(debugFeatureEnabled("forceIndicator") ? [] : null);
     }
     
     isAvailable() {
-        return !conf.debug.forceNotAvailable;
+        return !debugFeatureEnabled("forceNotAvailable");
     }
 }
 
@@ -406,7 +389,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
             "   data: {" +
             "      accountNumber: ''," +
             "      userSearchChoice: 'pob'," +
-            "      address: '" + conf.address.address + "'" +
+            "      address: '" + parameters.address + "'" +
             "   }," +
             "   async: false" +
             "}).responseJSON;";
@@ -426,9 +409,9 @@ class OeIfScheduleWebView extends ScheduleWebView {
             "let buildingField = document.getElementById('searchBuildingAdress');" +
             "let submitButton = document.getElementById('adressReport');" +
 
-            "cityField.value = '" + conf.address.city + "';" +
-            "streetField.value = '" + conf.address.street + "';" +
-            "buildingField.value = '" + conf.address.buildingNumber + "';" +
+            "cityField.value = '" + parameters.city + "';" +
+            "streetField.value = '" + parameters.street + "';" +
+            "buildingField.value = '" + parameters.buildingNumber + "';" +
 
             "submitButton.click();";
     }
@@ -446,7 +429,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
             "   data: {" +
             "      accountNumber: ''," +
             "      userSearchChoice: 'pob'," +
-            "      address: '" + conf.address.address + "'" +
+            "      address: '" + parameters.address + "'" +
             "   }," +
             "   async: false" +
             "}).responseJSON;";
@@ -563,8 +546,8 @@ class OutageRecord {
         let finishTime = this.#endTime;
         let currentTime = Time.of(now.getHours() , now.getMinutes());
         
-        if (conf.debug.enable) {
-            currentTime = Time.of(conf.debug.currentHour);
+        if (debugFeatureEnabled("mockCurrentHour")) {
+            currentTime = Time.of(getFeature("mockCurrentHour"));
         }
 
         return currentTime.getTime() >= finishTime.getTime();
@@ -620,7 +603,7 @@ class ScheduleWidget {
         spacer().renderFor(headerStack, 5);
         
         text()
-            .content(conf.address.shortAddress)
+            .content(parameters.shortAddress)
             .limit(16)
             .blackRoundedFont(10)
             .color(new Color("bfbfbf"))
@@ -763,10 +746,14 @@ class ScheduleWidget {
      */
     #createRootWidget() {
 
-        const root = rootWidget()
+        const root = rootWidget();
         
-        if (conf.showGradient) {
-            conf.styleGradient(root);
+        if (featureEnabled("showGradient")) {
+            
+            root.gradient()
+                .color(0, new Color("040059"))
+                .color(0.5, new Color("030037"))
+                .create();
         }
         
         return root.render();

@@ -7,6 +7,11 @@ const { ModalRule } = importModule("Modal");
 const { tr } = importModule("Localization");
 
 const {
+    debugFeatureEnabled,
+    getFeature
+} = importModule("Feature");
+
+const {
     spacer,
     stack,
     text,
@@ -28,31 +33,20 @@ const {
 } = importModule("CRUD Module");
 
 
-const conf = {
-    debug: {
-        enabled: false,
-
-        forceWidget: false,
-
-        forceSeriesName: false,
-        seriesName: "Naruto"
-    },
-
-    storageFileName: "watchlist.json"
-}
-
+const STORAGE_FILE_NAME = "watchlist.json";
+let seriesNameParameter;
 
 /**
  * ENTRY POINT
  */
 async function main() {
 
-    const seriesList = FileUtil.readLocalJson(conf.storageFileName, [])
+    const seriesList = FileUtil.readLocalJson(STORAGE_FILE_NAME, [])
 
-    if (config.runsInWidget || conf.debug.forceWidget) {
+    if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         
-        conf.seriesName = getSeriesName();
-        const seriesInfo = seriesList.find(record => record.serieName == conf.seriesName)
+        seriesNameParameter = getSeriesName();
+        const seriesInfo = seriesList.find(record => record.serieName == getSeriesName())
     
         if (seriesInfo) {
     
@@ -78,9 +72,11 @@ async function main() {
  */
 function getSeriesName() {
 
-    let seriesName = conf.debug.forceSeriesName ? 
-        conf.debug.seriesName :
-        args.widgetParameter;
+    let seriesName = args.widgetParameter;
+
+    if (debugFeatureEnabled("mockSeriesName")) {
+        seriesName = getFeature("mockSeriesName");
+    }
 
     if (!seriesName) {
         throw new Error("Series name was not provided.");
