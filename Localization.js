@@ -29,7 +29,7 @@ class Locale {
         this.#ensureTranslationsLoaded();
         let translation = this.#translations[key];
 
-        if (!translation) {
+        if (translation === undefined) {
             console.warn(`Translation with key '${key}' doesn't exist.`);
             return "";
         }
