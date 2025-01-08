@@ -34,7 +34,6 @@ const {
 
 
 const STORAGE_FILE_NAME = "watchlist.json";
-let seriesNameParameter;
 
 /**
  * ENTRY POINT
@@ -45,8 +44,8 @@ async function main() {
 
     if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         
-        seriesNameParameter = getSeriesName();
-        const seriesInfo = seriesList.find(record => record.serieName == getSeriesName())
+        const seriesNameParameter = getSeriesName();
+        const seriesInfo = seriesList.find(record => record.serieName == seriesNameParameter)
     
         if (seriesInfo) {
     

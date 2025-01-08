@@ -4,6 +4,7 @@
 
 const { FileUtil } = importModule("File Util");
 
+
 /**
  * Helper class used to get translations
  * for the key based on the current system language.

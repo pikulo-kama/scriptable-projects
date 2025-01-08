@@ -9,6 +9,7 @@ const {
     getState 
 } = importModule("Core");
 
+
 /**
  * Spacer builder.
  *
@@ -53,6 +54,7 @@ class ColorBuilder {
     }
 }
 
+
 /**
  * Mixin for setting opacity.
  *
@@ -72,6 +74,7 @@ class OpacityBuilder {
         return this;
     }    
 }
+
 
 /**
  * Mixin for setting layout
@@ -124,14 +127,13 @@ class LayoutBuilder {
     }
 }
 
+
 /**
  * Mixin used to set widget content and font
  *
  * @class TextBuilder
  */
 class TextBuilder {
-
-    #aligningFunction = (widget) => widget.centerAlignText();
 
     /**
      * Used to set widget content.
@@ -482,6 +484,7 @@ class TextWidgetBuilder extends Classes(
     }
 }
 
+
 /**
  * Used to build image widget.
  *
@@ -663,6 +666,7 @@ class ImageWidgetBuilder extends Classes(
     }
 }
 
+
 /**
  * Used to render date as text widget.
  *
@@ -722,6 +726,7 @@ class DateWidgetBuilder extends Classes(
         return dateWidget;
     }
 }
+
 
 /**
  * Used to create LinearGradient.
@@ -813,6 +818,7 @@ class GradientBuilder {
     }
 }
 
+
 /**
  * Used to build root widget.
  *
@@ -858,29 +864,36 @@ class RootWidgetBuilder extends ColorBuilder {
     }
 }
 
+
 function spacer() {
     return new SpacerWidgetBuilder();
 }
+
 
 function stack() {
     return new StackWidgetBuilder();
 }
 
+
 function text() {
     return new TextWidgetBuilder();;
 }
+
 
 function image() {
     return new ImageWidgetBuilder();
 }
 
+
 function date() {
     return new DateWidgetBuilder();
 }
 
+
 function rootWidget() {
     return new RootWidgetBuilder();
 }
+
 
 /**
 * Used to present root widget.
@@ -891,6 +904,7 @@ function present(rootWidget) {
     QuickLook.present(rootWidget);
     Script.setWidget(rootWidget);
 }
+
 
 module.exports = {
     spacer,

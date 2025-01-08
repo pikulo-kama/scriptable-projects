@@ -242,7 +242,6 @@ class LocalizatorTable {
      * @memberof Localizator
      */
     #getLanguageCode() {
-        
         const locale = Device.preferredLanguages()[0];
         return locale.substring(0, locale.indexOf('-'));
     }

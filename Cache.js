@@ -147,6 +147,7 @@ class PropertyMetadata {
     }
 }
 
+
 /**
  * Builder for metadata.
  * Used to build List objects.
@@ -215,6 +216,7 @@ class ListMetadata extends PropertyMetadata {
         return metadata;
     }
 }
+
 
 /**
  * Metadata builder.
@@ -298,6 +300,7 @@ class Metadata {
         return this.#fields;
     }
 }
+
 
 /**
  * Main component.
@@ -499,13 +502,16 @@ class CacheRequest {
     }
 }
 
+
 function metadata() {
     return new Metadata();
 }
 
+
 function cacheRequest(metadata) {
     return new CacheRequest(metadata);
 }
+
 
 module.exports = {
     metadata,

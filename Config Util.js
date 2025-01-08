@@ -2,7 +2,6 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: cogs;
 
-
 /**
  * Enumeration for color mode.
  *
@@ -38,6 +37,7 @@ class ColorMode {
         return colorModes[index];
     }
 }
+
 
 /**
  * Property with two values.

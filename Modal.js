@@ -72,7 +72,6 @@ class ModalRule {
         return this.#ruleFunction;
     }
 
-
     /**
      * Used to validate provided
      * value against the rule.
@@ -429,6 +428,14 @@ class Modal {
 }
 
 
+/**
+ * Used to present simple popup
+ * with provided message, title and action name.
+ *
+ * @param {String} title title of modal
+ * @param {String} message message to show
+ * @param {String} confirmAction name of action
+ */
 async function presentModal(title, message, confirmAction) {
     let alert = new Alert();
 
@@ -441,13 +448,10 @@ async function presentModal(title, message, confirmAction) {
 
 
 /**
- * Used to present simple popup
- * with provided error message.
- * 
- * Used to indicate that field
- * validation has failed.
+ * Used to present error popup
+ * with provided message.
  *
- * @param {String} message error message
+ * @param {String} message message to show
  */
 async function showError(message) {
     return await presentModal(
@@ -458,6 +462,12 @@ async function showError(message) {
 }
 
 
+/**
+ * Used to present warning popup
+ * with provided message.
+ *
+ * @param {String} message message to show
+ */
 async function showWarning(message) {
     return await presentModal(
         tr("modal_warnModalTitle"),

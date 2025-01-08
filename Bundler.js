@@ -23,6 +23,7 @@ async function main() {
     }
 }
 
+
 /**
  * Used to select script that
  * should be bundled.
@@ -84,7 +85,6 @@ class Bundler {
         this.#scriptName = scriptName;
     }
 
-    
     /**
      * Composes script and all of its 
      * dependencies into single file and then
@@ -214,6 +214,7 @@ class Bundler {
         return scriptBodyLines.join('\n');
     }
 }
+
 
 await main();
 Script.complete();

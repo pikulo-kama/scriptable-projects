@@ -621,6 +621,7 @@ class UIFieldMetadata {
     }
 }
 
+
 /**
  * Interface.
  * Should not be used directly.
@@ -641,6 +642,7 @@ class UIFieldHandler {
      */
     async handle(uiTable, metadata) {}
 }
+
 
 /**
  * Handler used to handle forms.
@@ -830,6 +832,7 @@ class UIDatePickerHandler extends UIFieldHandler {
     }
 }
 
+
 /**
  * Handler used to process delete field.
  *
@@ -869,6 +872,7 @@ class UIDeleteRowFieldHandler extends UIFieldHandler {
     }
 }
 
+
 /**
  * Factory used to get handler
  * based on the UI field.
@@ -904,6 +908,7 @@ class UIFieldHandlerFactory {
     }
 }
 
+
 /**
  * Used to hold metadata for filter.
  *
@@ -921,6 +926,7 @@ class FilterMetadata {
         this.dataField = filterField.getDataField();
     }
 }
+
 
 /**
  * Interface.
@@ -950,6 +956,7 @@ class FilterHandler {
      */
     getFilterFunction() {}
 }
+
 
 /**
  * Used to handle filtering operations
@@ -1005,10 +1012,18 @@ class TextFilterHandler extends FilterHandler {
             this.#toLower(recordValue).includes(this.#toLower(filterValue));
     }
 
+    /**
+     * Used to transform string to lower case.
+     *
+     * @param {String} value text
+     * @return {String} text in lower case
+     * @memberof TextFilterHandler
+     */
     #toLower(value) {
         return String(value).toLowerCase();
     }
 }
+
 
 /**
  * Used to handle filtering operations
@@ -1084,6 +1099,7 @@ class BoolFilterHandler extends FilterHandler {
     }
 }
 
+
 /**
  * Used to handle filtering operations
  * for number fields.
@@ -1110,6 +1126,7 @@ class NumberFilterHandler extends FilterHandler {
         throw new Error("Number filtering not implemented.");
     }
 }
+
 
 /**
  * Factory used to get filter handle
@@ -1145,6 +1162,7 @@ class FilterHandlerFactory {
         return null;
     }
 }
+
 
 /**
  * Main component.
