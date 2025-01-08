@@ -15,9 +15,31 @@ class FileUtil {
 
     static #manager = FileManager.iCloud();
     
+    static #FEATURES_DIR = "Features";
     static #RESOURCES_DIR = "Resources";
     static #LOCALES_DIR = "i18n";
+
+    static #DEBUG_CONFIG_FILE_NAME = "feature.json";
     static #JS_EXTENSION = ".js";
+
+    /**
+     * Used to update features object
+     * for provided script.
+     *
+     * @static
+     * @param {String} scriptName name of script
+     * @param {Object} content features object
+     * @memberof FileUtil
+     */
+    static async updateFeatureFile(scriptName, content) {
+
+        await this.#updateFileInternal(
+            scriptName,
+            this.#DEBUG_CONFIG_FILE_NAME,
+            JSON.stringify(content, null, 4),
+            this.#getFeaturesDirectory()
+        );
+    }
 
     /**
      * Used to update Scriptable script content.
@@ -138,6 +160,20 @@ class FileUtil {
         await this.#manager.write(targetFile, Data.fromString(String(content)));
     }
 
+    /**
+     * Checks whether feature file
+     * exists for provided script.
+     *
+     * @static
+     * @param {String} scriptName name of script
+     * @return {Boolean} true if feature file exists otherwise false
+     * @memberof FileUtil
+     */
+    static featureFileExists(scriptName) {
+        return this.#fileExistsInternal(
+            scriptName, this.#DEBUG_CONFIG_FILE_NAME, this.#getFeaturesDirectory()
+        );
+    }
 
     /**
      * Checks whether script has locale
@@ -191,6 +227,41 @@ class FileUtil {
     }
 
     /**
+     * Used to read feature file for current
+     * script.
+     *
+     * @static
+     * @return {Object} feature configuration
+     * @memberof FileUtil
+     */
+    static readLocalFeatureFile() {
+        return this.readFeatureFile(Script.name());
+    }
+
+    /**
+     * Used to read feature file for
+     * provided script.
+     *
+     * @static
+     * @param {String} scriptName name of script
+     * @return {Object} feature configuration
+     * @memberof FileUtil
+     */
+    static readFeatureFile(scriptName) {
+
+        const defaultValue = {enabled: false};
+
+        let content = this.#readFileInternal(
+            scriptName, 
+            this.#DEBUG_CONFIG_FILE_NAME, 
+            defaultValue, 
+            this.#getFeaturesDirectory()
+        );
+
+        return this.#toJSON(content);
+    }
+
+    /**
      * Used to read content of Scriptable script.
      *
      * @static
@@ -226,11 +297,7 @@ class FileUtil {
             this.#getLocalesDirectory()
         );
 
-        if (typeof content === 'string') {
-            content = JSON.parse(content);
-        }
-
-        return content;
+        return this.#toJSON(content);
     }
 
     /**
@@ -260,12 +327,7 @@ class FileUtil {
      */
     static readJson(scriptName, fileName, defaultValue) {
         let content = this.readFile(scriptName, fileName, defaultValue);
-
-        if (typeof content === 'string') {
-            content = JSON.parse(content);
-        }
-
-        return content;
+        return this.#toJSON(content);
     }
     
     /**
@@ -327,6 +389,18 @@ class FileUtil {
 
     /**
      * Used to get list of scripts
+     * that have feature file.
+     *
+     * @static
+     * @return {List<String>} list of script names
+     * @memberof FileUtil
+     */
+    static findFeatureDirectories() {
+        return this.#manager.listContents(this.#getFeaturesDirectory());
+    }
+
+    /**
+     * Used to get list of scripts
      * that have locale directories created.
      *
      * @static
@@ -367,6 +441,21 @@ class FileUtil {
         }
         
         return filePath;
+    }
+
+    /**
+     * Used to get 'Debug' directory
+     * where all runnable script configurations
+     * are stored.
+     *
+     * @return {String} Debug directory path
+     * @memberof FileUtil
+     */
+    static #getFeaturesDirectory() {
+        return this.joinPaths(
+            this.#getScriptableDirectory(),
+            this.#FEATURES_DIR
+        );
     }
 
     /**
@@ -411,6 +500,23 @@ class FileUtil {
      */
     static #getScriptableDirectory() {
         return this.#manager.documentsDirectory();
+    }
+
+    /**
+     * Used to transform object
+     * to JSON in case if it's string
+     *
+     * @param {String|Object} content JSON like string object
+     * @return {Object} JSON value
+     * @memberof FileUtil
+     */
+    static #toJSON(content) {
+
+        if (typeof content === 'string') {
+            content = JSON.parse(content);
+        }
+
+        return content;
     }
 }
 
