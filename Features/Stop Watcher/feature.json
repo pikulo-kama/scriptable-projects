@@ -1,11 +1,9 @@
 {
     "__debug": {
-        "value": "undefined",
-        "__enabled": true,
+        "__enabled": false,
         "__type": "boolean"
     },
     "forceWidget": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },

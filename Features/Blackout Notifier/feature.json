@@ -1,26 +1,21 @@
 {
     "__debug": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "forceWidget": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "forceIndicator": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "forceNoOutages": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "forceNotAvailable": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
@@ -30,18 +25,21 @@
         "__type": "string"
     },
     "mockCurrentHour": {
-        "value": "17",
+        "value": 17,
         "__enabled": true,
         "__type": "number"
     },
     "showGradient": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "mockWebView": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
+    },
+    "feature": {
+        "value": 1234,
+        "__enabled": false,
+        "__type": "number"
     }
 }

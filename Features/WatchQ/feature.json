@@ -1,16 +1,13 @@
 {
     "__debug": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "forceWidget": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "mockSeriesData": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     }

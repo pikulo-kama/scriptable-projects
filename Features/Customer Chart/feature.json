@@ -1,11 +1,10 @@
 {
     "__debug": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "period": {
-        "value": "5",
+        "value": 5,
         "__enabled": true,
         "__type": "number"
     },
@@ -15,7 +14,6 @@
         "__type": "string"
     },
     "trimBlank": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     }

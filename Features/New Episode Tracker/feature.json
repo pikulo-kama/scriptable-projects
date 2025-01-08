@@ -1,31 +1,25 @@
 {
     "__debug": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "forceCountdownMonths": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "forceCountdownWeeks": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "forceCountdownDays": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "forceCountdownHours": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     },
     "forceWaitingStatus": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
@@ -35,17 +29,14 @@
         "__type": "string"
     },
     "rerollColor": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "forceEndedStatus": {
-        "value": "undefined",
         "__enabled": false,
         "__type": "boolean"
     },
     "mockSeriesData": {
-        "value": "undefined",
         "__enabled": true,
         "__type": "boolean"
     }
