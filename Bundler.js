@@ -7,11 +7,8 @@ const { modal } = importModule("Modal");
 const { tr } = importModule("Localization");
 
 
-const conf = {
-    jsExtension: ".js",
-    emptyString: ""
-}
-
+const JS_EXTENSION = ".js";
+const EMPTY_STRING = "";
 
 /**
  * ENTRY POINT
@@ -45,7 +42,7 @@ class ScriptSelector {
     static async selectScript() {
 
         const scriptList = FileUtil.findScripts()
-            .map((script) => script.replace(conf.jsExtension, conf.emptyString))
+            .map((script) => script.replace(JS_EXTENSION, EMPTY_STRING))
             .sort();
 
         const result = await modal()
@@ -118,7 +115,7 @@ class Bundler {
         scriptBody += mainScriptBody;
 
         const targetFileName = tr("bundler_bundledScriptName", this.#scriptName);
-        await FileUtil.updateScript(targetFileName + conf.jsExtension, scriptBody)
+        await FileUtil.updateScript(targetFileName + JS_EXTENSION, scriptBody)
     }
 
     /**
@@ -133,7 +130,7 @@ class Bundler {
      */
     #processDependencies(scriptName) {
 
-        let scriptBody = FileUtil.readScript(scriptName + conf.jsExtension);
+        let scriptBody = FileUtil.readScript(scriptName + JS_EXTENSION);
         scriptBody = this.#extractMetadataAndGet(scriptName, scriptBody);
 
         const scriptDependencies = this.#getScriptDependencies(scriptBody);
@@ -182,7 +179,7 @@ class Bundler {
         for (let match of dependencyMatches) {
 
             let importModuleBlock = match[0];
-            scriptBody = scriptBody.replaceAll(importModuleBlock, conf.emptyString);
+            scriptBody = scriptBody.replaceAll(importModuleBlock, EMPTY_STRING);
         }
 
         const exportMatches = [...scriptBody.matchAll(Bundler.#MODULE_EXPORTS_REGEXP)];
@@ -190,7 +187,7 @@ class Bundler {
         for (let match of exportMatches) {
 
             let exportBlock = match[0];
-            scriptBody = scriptBody.replaceAll(exportBlock, conf.emptyString);
+            scriptBody = scriptBody.replaceAll(exportBlock, EMPTY_STRING);
         }
 
         return scriptBody;
