@@ -10,5 +10,10 @@
     "mockSeriesData": {
         "__enabled": true,
         "__type": "boolean"
+    },
+    "cacheRefreshRateHours": {
+        "value": 6,
+        "__enabled": false,
+        "__type": "number"
     }
 }

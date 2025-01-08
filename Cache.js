@@ -311,13 +311,28 @@ class Metadata {
  */
 class CacheRequest {
 
+    static #HOUR_MILLISECONDS = 3_600_000;
+    static #FETCH_TIMESTAMP_FIELD = "fetchTimesamp";
     static #FILE_NAME = "cache.json";
     static #manager = FileManager.local();
     
     #metadata;
+    #cacheRefreshRateMillis = 0;
 
-    constructor(metadata) {
+    /**
+     * Creates an instance of CacheRequest.
+     * 
+     * @param {Object} metadata request metadata
+     * @param {Number} cacheRefreshRateHours amount of hours request ca be taken from cache
+     * before refreshing it
+     * @memberof CacheRequest
+     */
+    constructor(metadata, cacheRefreshRateHours) {
         this.#metadata = metadata;
+
+        if (cacheRefreshRateHours) {
+            this.#cacheRefreshRateMillis = cacheRefreshRateHours * CacheRequest.#HOUR_MILLISECONDS;
+        }
     }
 
     /**
@@ -332,16 +347,28 @@ class CacheRequest {
 
         let processedResponse = null;
 
+        const responseFromCache = this.#getResponseFromCache(url);
+        const timeSinceLastRequest = this.#getTimestampSinceLastRequest(responseFromCache);
+        const isCacheEmpty = responseFromCache.length === 0;
+
+        // Get data from cache when time since last request is less than
+        // defined refresh rate.
+        if (!isCacheEmpty && timeSinceLastRequest < this.#cacheRefreshRateMillis) {
+            return responseFromCache;
+        }
+
+        // Get value from cache if there was an issue sending request.
         try {
             let responseData = await new Request(url).loadJSON();
-
             processedResponse = await this.#processResponse(this.#metadata, responseData);
+            processedResponse[CacheRequest.#FETCH_TIMESTAMP_FIELD] = Number(new Date());
+
             await this.#cacheResponse(url, processedResponse);
 
         } catch (error) {
             console.log(error);
             console.warn("Getting data from cache");
-            processedResponse = this.#getResponseFromCache(url);
+            processedResponse = responseFromCache;
         }
 
         return processedResponse;
@@ -466,6 +493,20 @@ class CacheRequest {
     }
 
     /**
+     * Used to get amount of milliseconds
+     * that have past since response was obtained.
+     * 
+     * @param {Object} response JSON repsonse with 'fetchTimestamp' property
+     * @returns {Number} milliseconds since data was retrieved
+     */
+    #getTimestampSinceLastRequest(response) {
+        const fetchTimestamp = response[CacheRequest.#FETCH_TIMESTAMP_FIELD];
+        const currentTimestamp = Number(new Date());
+
+        return currentTimestamp - fetchTimestamp;
+    }
+
+    /**
      * Used to cache response for later use.
      *
      * @param {String} key string that identifies response
@@ -508,8 +549,8 @@ function metadata() {
 }
 
 
-function cacheRequest(metadata) {
-    return new CacheRequest(metadata);
+function cacheRequest(metadata, refreshRateHours) {
+    return new CacheRequest(metadata, refreshRateHours);
 }
 
 

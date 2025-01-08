@@ -5,7 +5,7 @@
 const { FileUtil } = importModule("File Util");
 const { metadata, cacheRequest } = importModule("Cache");
 const { tr } = importModule("Localization");
-const { debugFeatureEnabled } = importModule("Feature");
+const { debugFeatureEnabled, getFeature } = importModule("Feature");
 
 const {
     spacer,
@@ -153,7 +153,7 @@ class StopWatcherRepository {
         const that = this;
 
         return async (record) => {
-            const request = cacheRequest(that.#getMetadata());
+            const request = cacheRequest(that.#getMetadata(), getFeature("cacheRefreshRateHours"));
             
             let response = await request.get(that.#apiURI + record.serieId);
             let episodeQualifier = that.#getEpisodeId(record);
