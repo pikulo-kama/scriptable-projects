@@ -15,6 +15,7 @@ const {
     UIDataTable
 } = importModule("CRUD Module");
 
+
 /**
  * ENTRY POINT
  */
@@ -31,16 +32,60 @@ async function main() {
 }
 
 
+/**
+ * Enum for feature type.
+ *
+ * @class FeatureType
+ */
 class FeatureType {
 
+    /**
+     * Boolean type features.
+     * These don't have values
+     * only feature state should be used.
+     *
+     * @static
+     * @memberof FeatureType
+     */
     static Bool = "boolean";
+
+    /**
+     * Text type features.
+     * Can have both state and value.
+     *
+     * @static
+     * @memberof FeatureType
+     */
     static Text = "string";
+
+    /**
+     * Number type features.
+     * Can have both state and value,
+     * value should be positive number.
+     *
+     * @static
+     * @memberof FeatureType
+     */
     static Number = "number";
 }
 
 
+/**
+ * Used to select script for which
+ * features should be created/modified.
+ *
+ * @class ScriptSelector
+ */
 class ScriptSelector {
 
+    /**
+     * Used to select script for which features
+     * should be created/modified.
+     *
+     * @static
+     * @return {String} name of the selected script
+     * @memberof ScriptSelector
+     */
     static async selectScript() {
 
         const debugDirectories = FileUtil.findFeatureDirectories()
@@ -75,6 +120,14 @@ class ScriptSelector {
     }
 }
 
+
+/**
+ * Main component.
+ * Responsible for creating and
+ * maintaining features UI table.
+ *
+ * @class FeaturesTable
+ */
 class FeaturesTable {
 
     static #FEATURE_NAME_FIELD = "featureName";
@@ -91,10 +144,22 @@ class FeaturesTable {
     #featureTypeDataField = new TextDataField(FeaturesTable.#FEATUTE_TYPE_FIELD, FeatureType.Number);
     #featureValueDataField = new TextDataField(FeaturesTable.#FEATURE_VALUE_FIELD, FeaturesTable.#NUMBER_FEATURE_FALLBACK_VALUE);
 
+    /**
+     * Creates an instance of FeaturesTable.
+     * 
+     * @param {String} selectedScript script name for which feature table should be presented
+     * @memberof FeaturesTable
+     */
     constructor(selectedScript) {
         this.#selectedScript = selectedScript;
     }
 
+    /**
+     * Used to build UI data table.
+     *
+     * @return {UIDataTable} UI table
+     * @memberof FeaturesTable
+     */
     async build() {
 
         const dataFields = [
@@ -121,6 +186,15 @@ class FeaturesTable {
         return table;
     }
 
+    /**
+     * Callback function that is invoked
+     * each time feature is being modified.
+     * 
+     * @param {Object} feature JSON with feature data
+     * @param {DataField} field field that was modified
+     * @param {String} updatedValue new value of field
+     * @param {String} previousValue previous value of field
+     */
     async #onFieldChange(feature, field, updatedValue, previousValue) {
 
         const featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
@@ -148,6 +222,8 @@ class FeaturesTable {
             }
         }
 
+        // Show an error and remove feature value during attempt
+        // to modify value for boolean features.
         if (isFeatureValueField && featureType === FeatureType.Bool) {
             showError(tr("featureUI_cannotModifyValueForBoolFeature"));
             feature[FeaturesTable.#FEATURE_VALUE_FIELD] = undefined;
@@ -165,6 +241,11 @@ class FeaturesTable {
         }
     }
 
+    /**
+     * Used to get list of UI fields for the table.
+     * 
+     * @returns {List<UIField>} list of UI fields
+     */
     #getUIFields() {
 
         // Feature Enabled Field
@@ -231,6 +312,12 @@ class FeaturesTable {
         ];
     }
 
+    /**
+     * Used to get label for feature value UI field.
+     * 
+     * @param {Object} feature JSON with feature data
+     * @returns 
+     */
     #getFeatureValueFieldLabel(feature) {
 
         const isBool = feature[FeaturesTable.#FEATUTE_TYPE_FIELD] === FeatureType.Bool;
@@ -242,12 +329,24 @@ class FeaturesTable {
         return feature[FeaturesTable.#FEATURE_VALUE_FIELD];
     }
 
+    /**
+     * Used to get label for feature toggle state UI field.
+     * 
+     * @param {Object} feature JSON with feature data
+     * @returns 
+     */
     #getFeatureStateFieldLabel(feature) {
         return feature[FeaturesTable.#FEATURE_STATE_FIELD] ?
             tr("featureUI_featureStateOnLabel") : 
             tr("featureUI_featureStateOffLabel");
     }
 
+    /**
+     * Used to get label for feature toggle type UI field.
+     * 
+     * @param {Object} feature JSON with feature data
+     * @returns 
+     */
     #getFeatureTypeFieldLabel(feature) {
 
         switch (feature[FeaturesTable.#FEATUTE_TYPE_FIELD]) {
@@ -263,6 +362,13 @@ class FeaturesTable {
         }
     }
 
+    /**
+     * Used to read script's feature file and
+     * then format it so CRUD Module will be able 
+     * to operate with data.
+     * 
+     * @returns {List<Object>} list of feature records
+     */
     #retrieveDebugConfiguration() {
 
         const formattedData = [];
@@ -293,6 +399,15 @@ class FeaturesTable {
         return formattedData;
     }
 
+    /**
+     * Used to get callback function which is
+     * triggered when any changes in UI table were made.
+     * 
+     * Will transform data from list to single object
+     * and then persist it into features storage.
+     * 
+     * @returns {Function} callback function
+     */
     #getOnLocaleModificationCallback() {
 
         const that = this;
