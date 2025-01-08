@@ -123,47 +123,50 @@ class StopWatcherRepository {
                 episode = 99;
             }
 
-            let processedRecord = {
+            processedRecords.push({
                 serieId: stopWatcherRecord.serieId,
                 showInSummary: stopWatcherRecord.showInSummary,
                 season,
                 episode
-            };
-
-            let additionalInformation = await this.#fetchAdditionalData(processedRecord);
-            processedRecord = {...processedRecord, ...additionalInformation};
-
-            if (processedRecord.count > 0) {
-                processedRecords.push(processedRecord);
-            }
+            });
         }
 
-        return processedRecords;
+        const additionalData = await Promise.all(
+            processedRecords.map(this.#fetchAdditionalDataCallback())
+        );
+
+        return processedRecords
+            .map((series, idx) => ({...series, ...additionalData[idx]}))
+            .filter(series => series.count > 0);
     }
 
     /**
-     * Used to get additional data from Episodate API.
+     * Callback function which is used to get additional data from Episodate API.
      * Gets name of series and amount of unwatched episodes.
      *
      * @param {Object} record series record from Stop Watcher script
      * @return {Object} series record from Stop Watcher script with additional information
      * @memberof StopWatcherRepository
      */
-    async #fetchAdditionalData(record) {
-    
-        const request = cacheRequest(this.#getMetadata());
+    #fetchAdditionalDataCallback() {
         
-        let response = await request.get(this.#apiURI + record.serieId);
-        let episodeQualifier = this.#getEpisodeId(record);
-        
-        const unwatchedEpisodeCount = response.episodes
-            .filter(episode => this.#getEpisodeId(episode) > episodeQualifier)
-            .filter(episode => new Date(episode.airDate) < Date.now())
-            .length;
+        const that = this;
 
-        return {
-            count: unwatchedEpisodeCount,
-            name: response.name
+        return async (record) => {
+            const request = cacheRequest(that.#getMetadata());
+            
+            let response = await request.get(that.#apiURI + record.serieId);
+            let episodeQualifier = that.#getEpisodeId(record);
+            
+            const unwatchedEpisodeCount = response.episodes
+                .filter(episode => that.#getEpisodeId(episode) > episodeQualifier)
+                .filter(episode => new Date(episode.airDate) < Date.now())
+                .length;
+
+            return {
+                count: unwatchedEpisodeCount,
+                name: response.name
+            };
         };
     }
     
