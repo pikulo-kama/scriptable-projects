@@ -384,7 +384,7 @@ class Modal {
 
                 let messageFunction = validation.getMessageFunction();
                 let errorMessage = messageFunction(field);
-                await this.#presentErrorModal(errorMessage);
+                await showError(errorMessage);
                 
                 field.value = field.previousValue;
                 hasErrors = true;
@@ -413,27 +413,44 @@ class Modal {
 
         return fieldData;
     }
+}
 
-    /**
-     * Used to present simple popup
-     * with provided error message.
-     * 
-     * Used to indicate that field
-     * validation has failed.
-     *
-     * @param {String} message error message
-     * @memberof Modal
-     */
-    async #presentErrorModal(message) {
 
-        let errorAlert = new Alert();
+async function presentModal(title, message, confirmAction) {
+    let alert = new Alert();
 
-        errorAlert.addAction(tr("modal_errorModalOkActionName"));
-        errorAlert.title = tr("modal_errorModalTitle");
-        errorAlert.message = message;
-        
-        await errorAlert.present();
-    }
+    alert.addAction(confirmAction);
+    alert.title = title;
+    alert.message = message;
+    
+    await alert.present();
+}
+
+
+/**
+ * Used to present simple popup
+ * with provided error message.
+ * 
+ * Used to indicate that field
+ * validation has failed.
+ *
+ * @param {String} message error message
+ */
+async function showError(message) {
+    return await presentModal(
+        tr("modal_errorModalTitle"),
+        message,
+        tr("modal_errorModalOkActionName")
+    );
+}
+
+
+async function showWarning(message) {
+    return await presentModal(
+        tr("modal_warnModalTitle"),
+        message,
+        tr("modal_warnModalOkActionName")
+    )
 }
 
 
@@ -441,7 +458,10 @@ function modal() {
     return new Modal();
 }
 
+
 module.exports = {
     modal,
+    showError,
+    showWarning,
     ModalRule
 };
