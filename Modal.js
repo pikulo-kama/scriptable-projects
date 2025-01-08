@@ -71,6 +71,19 @@ class ModalRule {
     getRuleFunction()  {
         return this.#ruleFunction;
     }
+
+
+    /**
+     * Used to validate provided
+     * value against the rule.
+     *
+     * @param {Object} value value that should be validated
+     * @return {Boolean} True if value satisfies the rule otherwise false
+     * @memberof ModalRule
+     */
+    validate(value) {
+        return this.#ruleFunction(value);
+    }
 }
 
 
