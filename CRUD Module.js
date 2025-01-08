@@ -725,8 +725,8 @@ class UIFormHandler extends UIFieldHandler {
             let originalValue = this.#tableRecord[dataField.getName()];
             let updatedValue = result.get(dataField.getName());
 
-            this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
             this.#tableRecord[dataField.getName()] = updatedValue;
+            await this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
         }
     }
 
@@ -748,8 +748,8 @@ class UIFormHandler extends UIFieldHandler {
             let originalValue = this.#tableRecord[dataField.getName()];
             let updatedValue = callback(this.#tableRecord, action);
 
-            this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
             this.#tableRecord[dataField.getName()] = updatedValue;
+            await this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
         }
     }
 }
@@ -778,9 +778,12 @@ class UIDatePickerHandler extends UIFieldHandler {
   
         const updatedHours = Math.floor(resultSeconds / 3600);
         const updatedMinutes = resultSeconds / 60 - (updatedHours * 60);
+
+        tableRecord[hourField.getName()] = updatedHours;
+        tableRecord[minuteField.getName()] = updatedMinutes;
         
         if (originalHours !== updatedHours) {
-            uiTable.__onChange(
+            await uiTable.__onChange(
                 tableRecord, 
                 hourField, 
                 updatedHours, 
@@ -789,16 +792,13 @@ class UIDatePickerHandler extends UIFieldHandler {
         }
 
         if (originalMinutes !== updatedMinutes) {
-            uiTable.__onChange(
+            await uiTable.__onChange(
                 tableRecord, 
                 minuteField, 
                 updatedMinutes, 
                 originalMinutes
             );
         }
-
-        tableRecord[hourField.getName()] = updatedHours;
-        tableRecord[minuteField.getName()] = updatedMinutes;
         
         uiTable.__upsertTableRecord(tableRecord);
     }
@@ -1495,8 +1495,8 @@ class UIDataTable {
      * @param {Object} updatedValue new value
      * @param {Object} originalValue previous value
      */
-    __onChange(tableRecord, dataField, updatedValue, originalValue) {
-        this.#onChangeFunction(tableRecord, dataField, updatedValue, originalValue);
+    async __onChange(tableRecord, dataField, updatedValue, originalValue) {
+        await this.#onChangeFunction(tableRecord, dataField, updatedValue, originalValue);
     }
 
     /**
