@@ -177,6 +177,15 @@ class UIField {
     }
 
     /**
+     * Used to align field content on conter.
+     *
+     * @memberof UIField
+     */
+    centerAligned() {
+        this.#cellAligningFunction = (cell) => cell.centerAligned();
+    }
+
+    /**
      * Used to get cell aligning function.
      *
      * @return {Function} table cell aligning function
