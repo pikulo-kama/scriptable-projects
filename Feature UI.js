@@ -1,10 +1,10 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: teal; icon-glyph: magic;
+// icon-color: teal; icon-glyph: check-circle;
 
 const { tr } = importModule("Localization");
 const { FileUtil } = importModule("File Util");
-const { modal, showWarning } = importModule("Modal");
+const { modal, ModalRule, showWarning, showError } = importModule("Modal");
 const {
     BoolDataField,
     TextDataField,
@@ -24,7 +24,7 @@ async function main() {
 
     if (selectedScript) {
 
-        const tableBuilder = new DebugConfigTable(selectedScript);
+        const tableBuilder = new FeaturesTable(selectedScript);
         const table = await tableBuilder.build();
         await table.present();
     }
@@ -75,19 +75,21 @@ class ScriptSelector {
     }
 }
 
-class DebugConfigTable {
+class FeaturesTable {
 
     static #FEATURE_NAME_FIELD = "featureName";
     static #FEATURE_STATE_FIELD = "__enabled";
     static #FEATUTE_TYPE_FIELD = "__type";
     static #FEATURE_VALUE_FIELD = "value";
 
+    static #NUMBER_FEATURE_FALLBACK_VALUE = "123";
+
     #selectedScript;
 
-    #featureNameDataField = new TextDataField(DebugConfigTable.#FEATURE_NAME_FIELD, "feature");
-    #featureStateDataField = new BoolDataField(DebugConfigTable.#FEATURE_STATE_FIELD, false);
-    #featureTypeDataField = new TextDataField(DebugConfigTable.#FEATUTE_TYPE_FIELD, FeatureType.Number);
-    #featureValueDataField = new TextDataField(DebugConfigTable.#FEATURE_VALUE_FIELD, "123");
+    #featureNameDataField = new TextDataField(FeaturesTable.#FEATURE_NAME_FIELD, "feature");
+    #featureStateDataField = new BoolDataField(FeaturesTable.#FEATURE_STATE_FIELD, false);
+    #featureTypeDataField = new TextDataField(FeaturesTable.#FEATUTE_TYPE_FIELD, FeatureType.Number);
+    #featureValueDataField = new TextDataField(FeaturesTable.#FEATURE_VALUE_FIELD, FeaturesTable.#NUMBER_FEATURE_FALLBACK_VALUE);
 
     constructor(selectedScript) {
         this.#selectedScript = selectedScript;
@@ -119,12 +121,47 @@ class DebugConfigTable {
         return table;
     }
 
-    #onFieldChange(feature, field, newType) {
+    async #onFieldChange(feature, field, updatedValue, previousValue) {
 
-        const isFeatureTypeField = field.getName() === DebugConfigTable.#FEATUTE_TYPE_FIELD;
+        const featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
+        const featureValue = feature[FeaturesTable.#FEATURE_VALUE_FIELD];
 
-        if (isFeatureTypeField && newType === FeatureType.Bool) {
-            feature[DebugConfigTable.#FEATURE_VALUE_FIELD] = undefined;
+        const isFeatureTypeField = field.getName() === FeaturesTable.#FEATUTE_TYPE_FIELD;
+        const isFeatureValueField = field.getName() === FeaturesTable.#FEATURE_VALUE_FIELD;
+
+        // Remove previous value when feature type changes to bool
+        // we don't need a value for boolean fields since feature state
+        // would be used as value.
+        if (isFeatureTypeField && updatedValue === FeatureType.Bool) {
+            feature[FeaturesTable.#FEATURE_VALUE_FIELD] = undefined;
+        }
+
+        // When type changes to number need to check whether value is
+        // a number, if not then we should update feature value.
+        if (isFeatureTypeField && updatedValue === FeatureType.Number) {
+
+            // Don't validate only when user changes type to number
+            // but set it to fallback value in case if current
+            // value is not a number.
+            if (!ModalRule.Number.validate(featureValue)) {
+                feature[FeaturesTable.#FEATURE_VALUE_FIELD] = FeaturesTable.#NUMBER_FEATURE_FALLBACK_VALUE;
+            }
+        }
+
+        if (isFeatureValueField && featureType === FeatureType.Bool) {
+            showError(tr("featureUI_cannotModifyValueForBoolFeature"));
+            feature[FeaturesTable.#FEATURE_VALUE_FIELD] = undefined;
+        }
+
+        // When number feature value changes validate if it's a
+        // number, if it's not then change value to previous and
+        // show an error to the user.
+        if (isFeatureValueField && 
+            featureType === FeatureType.Number && 
+            !ModalRule.Number.validate(updatedValue)
+        ) {
+            showError(tr("featureUI_invalidNumberValueErrorMessage"));
+            feature[FeaturesTable.#FEATURE_VALUE_FIELD] = previousValue;
         }
     }
 
@@ -135,7 +172,7 @@ class DebugConfigTable {
         featureEnabledUIField.setFormTitleFunction(() => tr("featureUI_swapStateConfirmMessage"));
         const swapStateAction = new UIFormAction(tr("featureUI_swapStateActionName"));
         swapStateAction.addCallback(this.#featureStateDataField, (feature) => 
-            !feature[DebugConfigTable.#FEATURE_STATE_FIELD]
+            !feature[FeaturesTable.#FEATURE_STATE_FIELD]
         );
 
         featureEnabledUIField.addFormAction(swapStateAction);
@@ -149,15 +186,15 @@ class DebugConfigTable {
         const changeToNumberAction = new UIFormAction(tr("featureUI_changeTypeToNumberAction"));
 
         changeToTextAction.addCallback(this.#featureTypeDataField, (feature) => 
-            feature[DebugConfigTable.#FEATUTE_TYPE_FIELD] = FeatureType.Text
+            feature[FeaturesTable.#FEATUTE_TYPE_FIELD] = FeatureType.Text
         );
 
         changeToBoolAction.addCallback(this.#featureTypeDataField, (feature) => 
-            feature[DebugConfigTable.#FEATUTE_TYPE_FIELD] = FeatureType.Bool
+            feature[FeaturesTable.#FEATUTE_TYPE_FIELD] = FeatureType.Bool
         );
 
         changeToNumberAction.addCallback(this.#featureTypeDataField, (feature) => 
-            feature[DebugConfigTable.#FEATUTE_TYPE_FIELD] = FeatureType.Number
+            feature[FeaturesTable.#FEATUTE_TYPE_FIELD] = FeatureType.Number
         );
 
         featureTypeUIField.addFormAction(changeToTextAction);
@@ -196,24 +233,24 @@ class DebugConfigTable {
 
     #getFeatureValueFieldLabel(feature) {
 
-        const isBool = feature[DebugConfigTable.#FEATUTE_TYPE_FIELD] === FeatureType.Bool;
+        const isBool = feature[FeaturesTable.#FEATUTE_TYPE_FIELD] === FeatureType.Bool;
 
         if (isBool) {
             return tr("featureUI_boolFieldValuePlaceholder");
         }
 
-        return feature[DebugConfigTable.#FEATURE_VALUE_FIELD];
+        return feature[FeaturesTable.#FEATURE_VALUE_FIELD];
     }
 
     #getFeatureStateFieldLabel(feature) {
-        return feature[DebugConfigTable.#FEATURE_STATE_FIELD] ?
+        return feature[FeaturesTable.#FEATURE_STATE_FIELD] ?
             tr("featureUI_featureStateOnLabel") : 
             tr("featureUI_featureStateOffLabel");
     }
 
     #getFeatureTypeFieldLabel(feature) {
 
-        switch (feature[DebugConfigTable.#FEATUTE_TYPE_FIELD]) {
+        switch (feature[FeaturesTable.#FEATUTE_TYPE_FIELD]) {
 
             case FeatureType.Text:
                 return tr("featureUI_featureTypeTextLabel");
@@ -236,16 +273,20 @@ class DebugConfigTable {
 
             let feature = debugConfiguration[featureName];
 
-            let featureValue = feature[DebugConfigTable.#FEATURE_VALUE_FIELD];
-            let featureState = feature[DebugConfigTable.#FEATURE_STATE_FIELD];
-            let featureType = feature[DebugConfigTable.#FEATUTE_TYPE_FIELD];
+            let featureValue = feature[FeaturesTable.#FEATURE_VALUE_FIELD];
+            let featureState = feature[FeaturesTable.#FEATURE_STATE_FIELD];
+            let featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
+
+            if (featureValue !== undefined) {
+                featureValue = String(featureValue);
+            }
 
             formattedData.push({
                 id: id++,
-                [DebugConfigTable.#FEATURE_NAME_FIELD]: featureName,
-                [DebugConfigTable.#FEATURE_VALUE_FIELD]: String(featureValue),
-                [DebugConfigTable.#FEATURE_STATE_FIELD]: featureState,
-                [DebugConfigTable.#FEATUTE_TYPE_FIELD]: featureType
+                [FeaturesTable.#FEATURE_NAME_FIELD]: featureName,
+                [FeaturesTable.#FEATURE_VALUE_FIELD]: featureValue,
+                [FeaturesTable.#FEATURE_STATE_FIELD]: featureState,
+                [FeaturesTable.#FEATUTE_TYPE_FIELD]: featureType
             });
         }
 
@@ -262,15 +303,19 @@ class DebugConfigTable {
 
             for (let feature of featuresList) {
                 
-                let featureName = feature[DebugConfigTable.#FEATURE_NAME_FIELD];
-                let featureValue = feature[DebugConfigTable.#FEATURE_VALUE_FIELD];
-                let isEnabled = feature[DebugConfigTable.#FEATURE_STATE_FIELD];
-                let featureType = feature[DebugConfigTable.#FEATUTE_TYPE_FIELD];
+                let featureName = feature[FeaturesTable.#FEATURE_NAME_FIELD];
+                let featureValue = feature[FeaturesTable.#FEATURE_VALUE_FIELD];
+                let isEnabled = feature[FeaturesTable.#FEATURE_STATE_FIELD];
+                let featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
+
+                if (featureType === FeatureType.Number) {
+                    featureValue = Number(featureValue);
+                }
 
                 featuresObject[featureName] = {
-                    [DebugConfigTable.#FEATURE_VALUE_FIELD]: featureValue,
-                    [DebugConfigTable.#FEATURE_STATE_FIELD]: isEnabled,
-                    [DebugConfigTable.#FEATUTE_TYPE_FIELD]: featureType
+                    [FeaturesTable.#FEATURE_VALUE_FIELD]: featureValue,
+                    [FeaturesTable.#FEATURE_STATE_FIELD]: isEnabled,
+                    [FeaturesTable.#FEATUTE_TYPE_FIELD]: featureType
                 };
             }
 
