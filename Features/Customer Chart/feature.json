@@ -1,0 +1,22 @@
+{
+    "__debug": {
+        "value": "undefined",
+        "__enabled": true,
+        "__type": "boolean"
+    },
+    "period": {
+        "value": "5",
+        "__enabled": true,
+        "__type": "number"
+    },
+    "calendar": {
+        "value": "Робочий",
+        "__enabled": true,
+        "__type": "string"
+    },
+    "trimBlank": {
+        "value": "undefined",
+        "__enabled": true,
+        "__type": "boolean"
+    }
+}

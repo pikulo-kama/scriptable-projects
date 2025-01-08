@@ -1,0 +1,17 @@
+{
+    "__debug": {
+        "value": "undefined",
+        "__enabled": true,
+        "__type": "boolean"
+    },
+    "forceWidget": {
+        "value": "undefined",
+        "__enabled": true,
+        "__type": "boolean"
+    },
+    "mockSeriesName": {
+        "value": "Naruto",
+        "__enabled": true,
+        "__type": "string"
+    }
+}
