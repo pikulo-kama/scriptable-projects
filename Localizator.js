@@ -253,21 +253,36 @@ class LocalizatorTable {
      * 
      * If file doesn't exists new one would be created
      * using 'en' locale translation as template.
+     * 
+     * When loading translation file in case if 
+     * there are translations in main 'en' file that
+     * are not present in the one that is being retrieved
+     * then these translations would be copied.
      *
      * @return {Object} translations object
      * @memberof LocalizatorTable
      */
     async #readTranslationFile() {
 
+        const defaultLocaleFile = FileUtil.readLocale(this.#scriptName, LocalizatorTable.#DEFAULT_LOCALE);
         const localeExists = FileUtil.localeExists(this.#scriptName, this.#languageCode);
         
         if (!localeExists) {
-            
-            let mainLocaleFile = FileUtil.readLocale(this.#scriptName, LocalizatorTable.#DEFAULT_LOCALE);
-            await FileUtil.updateLocale(this.#scriptName, this.#languageCode, mainLocaleFile);
+            await FileUtil.updateLocale(this.#scriptName, this.#languageCode, defaultLocaleFile);
         }
 
-        return FileUtil.readLocale(this.#scriptName, this.#languageCode);
+        const localeFile = FileUtil.readLocale(this.#scriptName, this.#languageCode);
+
+        for (let translationKey of Object.keys(defaultLocaleFile)) {
+
+            let translationIsPresent = localeFile[translationKey] !== undefined;
+
+            if (!translationIsPresent) {
+                localeFile[translationKey] = defaultLocaleFile[translationKey];
+            }
+        }
+
+        return localeFile;
     }
 }
 
