@@ -1,5 +1,6 @@
 {
     "featureUI_boolFieldValuePlaceholder": "",
+    "featureUI_cannotModifyValueForBoolFeature": "Values for bool feature cannot be modified.",
     "featureUI_changeFeatureNameModalTitle": "Change Feature Name",
     "featureUI_changeFeatureValueModalTitle": "Change Feature Value",
     "featureUI_changeTypeToBoolAction": "Bool",
@@ -14,6 +15,7 @@
     "featureUI_featureTypeNumberLabel": "🔢",
     "featureUI_featureTypeTextLabel": "📝",
     "featureUI_featureValueFormFieldPlaceholder": "Feature Value",
+    "featureUI_invalidNumberValueErrorMessage": "Provided value is not a number. Your changes have been reverted.",
     "featureUI_noScriptsWithFeatureFileWarning": "There are no scripts with features available.",
     "featureUI_removeFeatureConfirmationMessage": "Remove feature?",
     "featureUI_removeFeatureFieldLabel": "❌",
