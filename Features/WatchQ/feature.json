@@ -1,19 +1,19 @@
 {
     "__debug": {
-        "__enabled": false,
-        "__type": "boolean"
-    },
-    "forceWidget": {
-        "__enabled": false,
-        "__type": "boolean"
-    },
-    "mockSeriesData": {
         "__enabled": true,
         "__type": "boolean"
     },
-    "cacheRefreshRateHours": {
-        "value": 6,
+    "forceWidget": {
+        "__enabled": true,
+        "__type": "boolean"
+    },
+    "mockSeriesData": {
         "__enabled": false,
+        "__type": "boolean"
+    },
+    ".cacheRefreshRateHours": {
+        "value": 6,
+        "__enabled": true,
         "__type": "number"
     }
 }
