@@ -1,11 +1,13 @@
 {
     "featureUI_boolFieldValuePlaceholder": "",
+    "featureUI_cannotChangeConfigFeatureStateMessage": "Зміна стану конфігураційних переключателів заборонена.",
     "featureUI_cannotModifyValueForBoolFeature": "Зміна значення переключателів з типом 'Так/Ні' заборонена.",
     "featureUI_changeFeatureNameModalTitle": "Назва переключателя",
     "featureUI_changeFeatureValueModalTitle": "Значення переключателя",
     "featureUI_changeTypeToBoolAction": "Так/Ні",
     "featureUI_changeTypeToNumberAction": "Число",
     "featureUI_changeTypeToTextAction": "Текст",
+    "featureUI_configFeatureStateLabel": "⚙️",
     "featureUI_featureNameFormFieldPlaceholder": "Назва",
     "featureUI_featureNameValueUpdateAction": "Оновити",
     "featureUI_featureStateOffLabel": "⚪",
