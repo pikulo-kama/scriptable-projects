@@ -249,7 +249,11 @@ class FileUtil {
      */
     static readFeatureFile(scriptName) {
 
-        const defaultValue = {enabled: false};
+        const defaultValue = {
+            __debug: {
+                __enabled: false
+            }
+        };
 
         let content = this.#readFileInternal(
             scriptName, 
