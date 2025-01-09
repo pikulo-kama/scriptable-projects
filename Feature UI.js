@@ -136,6 +136,7 @@ class FeaturesTable {
     static #FEATURE_VALUE_FIELD = "value";
 
     static #NUMBER_FEATURE_FALLBACK_VALUE = "123";
+    static #CONFIG_FEATURE_INDICATOR = ".";
 
     #selectedScript;
 
@@ -199,9 +200,25 @@ class FeaturesTable {
 
         const featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
         const featureValue = feature[FeaturesTable.#FEATURE_VALUE_FIELD];
+        const featureName = feature[FeaturesTable.#FEATURE_NAME_FIELD];
 
         const isFeatureTypeField = field.getName() === FeaturesTable.#FEATUTE_TYPE_FIELD;
         const isFeatureValueField = field.getName() === FeaturesTable.#FEATURE_VALUE_FIELD;
+        const isFeatureNameField = field.getName() === FeaturesTable.#FEATURE_NAME_FIELD;
+        const isFeatureStateField = field.getName() === FeaturesTable.#FEATURE_STATE_FIELD;
+
+        const isConfigFeature = (name) => name.startsWith(FeaturesTable.#CONFIG_FEATURE_INDICATOR);
+
+        // Config features should always be enabled.
+        if (isFeatureNameField && isConfigFeature(updatedValue)) {
+            feature[FeaturesTable.#FEATURE_STATE_FIELD] = true;
+        }
+
+        // Show an erorr during attempt to change state of config feature.
+        if (isFeatureStateField && isConfigFeature(featureName)) {
+            showError(tr("featureUI_cannotChangeConfigFeatureStateMessage"));
+            feature[FeaturesTable.#FEATURE_STATE_FIELD] = true;
+        }
 
         // Remove previous value when feature type changes to bool
         // we don't need a value for boolean fields since feature state
@@ -336,6 +353,13 @@ class FeaturesTable {
      * @returns 
      */
     #getFeatureStateFieldLabel(feature) {
+
+        const featureName = feature[FeaturesTable.#FEATURE_NAME_FIELD];
+
+        if (featureName.startsWith(FeaturesTable.#CONFIG_FEATURE_INDICATOR)) {
+            return tr("featureUI_configFeatureStateLabel");
+        }
+
         return feature[FeaturesTable.#FEATURE_STATE_FIELD] ?
             tr("featureUI_featureStateOnLabel") : 
             tr("featureUI_featureStateOffLabel");
