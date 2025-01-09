@@ -63,7 +63,7 @@ function getSeriesName() {
     }
 
     if (!seriesName) {
-        throw new Error("Series name was not provided")
+        throw new Error("Series name was not provided");
     }
 
     return seriesName;
