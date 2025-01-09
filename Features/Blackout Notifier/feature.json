@@ -36,10 +36,5 @@
     "mockWebView": {
         "__enabled": true,
         "__type": "boolean"
-    },
-    "feature": {
-        "value": 1234,
-        "__enabled": false,
-        "__type": "number"
     }
 }

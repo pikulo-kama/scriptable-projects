@@ -728,7 +728,7 @@ class UIFormHandler extends UIFieldHandler {
             let updatedValue = result.get(dataField.getName());
 
             this.#tableRecord[dataField.getName()] = updatedValue;
-            await this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
+             this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
         }
     }
 
@@ -751,7 +751,7 @@ class UIFormHandler extends UIFieldHandler {
             let updatedValue = callback(this.#tableRecord, action);
 
             this.#tableRecord[dataField.getName()] = updatedValue;
-            await this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
+            this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
         }
     }
 }
@@ -785,7 +785,7 @@ class UIDatePickerHandler extends UIFieldHandler {
         tableRecord[minuteField.getName()] = updatedMinutes;
         
         if (originalHours !== updatedHours) {
-            await uiTable.__onChange(
+            uiTable.__onChange(
                 tableRecord, 
                 hourField, 
                 updatedHours, 
@@ -794,7 +794,7 @@ class UIDatePickerHandler extends UIFieldHandler {
         }
 
         if (originalMinutes !== updatedMinutes) {
-            await uiTable.__onChange(
+            uiTable.__onChange(
                 tableRecord, 
                 minuteField, 
                 updatedMinutes, 

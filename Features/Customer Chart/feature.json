@@ -1,6 +1,6 @@
 {
     "__debug": {
-        "__enabled": true,
+        "__enabled": false,
         "__type": "boolean"
     },
     "period": {

@@ -14,7 +14,29 @@ const { FileUtil } = importModule("File Util");
 class Locale {
 
     static #DEFAULT_LOCALE = "en";
-    static #translations = null;
+    static #instance;
+
+    #translations;
+
+    constructor() {
+        this.#translations = this.#loadTranslations();
+    }
+
+    /**
+     * Used to get instance of Locale..
+     *
+     * @static
+     * @return {Locale} instance of locale class
+     * @memberof Locale
+     */
+    static getInstance() {
+
+        if (!this.#instance) {
+            this.#instance = new Locale();
+        }
+
+        return this.#instance;
+    }
 
     /**
      * Used to retrieve translation for provided key 
@@ -26,8 +48,7 @@ class Locale {
      * @return {String} translation corresponding provided key
      * @memberof Locale
      */
-    static tr(key, args) {
-        this.#ensureTranslationsLoaded();
+    tr(key, args) {
         let translation = this.#translations[key];
 
         if (translation === undefined) {
@@ -46,20 +67,13 @@ class Locale {
     /**
      * Loads all available translations
      * for user locale (or default - en - if doesn't exists).
-     * 
-     * This is invoked only once after that all translations
-     * would be in memory until script is completed or stopped.
      *
      * @static
      * @memberof Locale
      */
-    static #ensureTranslationsLoaded() {
+    #loadTranslations() {
 
-        if (this.#translations) {
-            return;
-        }
-
-        this.#translations = {};
+        let translations = {};
         const languageCode = this.#getLanguageCode();
         const localeDirectories = FileUtil.findLocaleDirectories();
         
@@ -67,20 +81,22 @@ class Locale {
 
             let localeContent = {};
             const customLocaleExists = FileUtil.localeExists(directory, languageCode);
-            const defaultLocaleExists = FileUtil.localeExists(directory, this.#DEFAULT_LOCALE);
+            const defaultLocaleExists = FileUtil.localeExists(directory, Locale.#DEFAULT_LOCALE);
 
             if (customLocaleExists) {
                 localeContent = FileUtil.readLocale(directory, languageCode);
             
             } else if (defaultLocaleExists) {
-                localeContent = FileUtil.readLocale(directory, this.#DEFAULT_LOCALE);
+                localeContent = FileUtil.readLocale(directory, Locale.#DEFAULT_LOCALE);
             }
 
-            this.#translations = {
-                ...this.#translations,
+            translations = {
+                ...translations,
                 ...localeContent
             };
         }
+
+        return translations;
     }
     
     /**
@@ -94,8 +110,7 @@ class Locale {
      * @return {String} language code
      * @memberof Locale
      */
-    static #getLanguageCode() {
-        
+    #getLanguageCode() {    
         const locale = Device.preferredLanguages()[0];
         return locale.substring(0, locale.indexOf('-'));
     }
@@ -103,7 +118,7 @@ class Locale {
 
 
 function tr(key, ...args) {
-    return Locale.tr(key, args);
+    return Locale.getInstance().tr(key, args);
 }
 
 

@@ -17,8 +17,8 @@ class ProtectedDataHolder {
      * protected fields to state.
      *
      * @static
-     * @param {*} stateOwner instance that is owner of provided state
-     * @param {*} state object with protected data
+     * @param {Object} stateOwner instance that is owner of provided state
+     * @param {Object} state object with protected data
      * @memberof ProtectedDataHolder
      */
     static addToStateMultiple(stateOwner, state) {
@@ -31,9 +31,9 @@ class ProtectedDataHolder {
      * to state.
      *
      * @static
-     * @param {*} stateOwner instance that is owner of provided state
-     * @param {*} name name of protected field
-     * @param {*} name value of protected field
+     * @param {Object} stateOwner instance that is owner of provided state
+     * @param {String} name name of protected field
+     * @param {Object} name value of protected field
      * @memberof ProtectedDataHolder
      */
     static addToState(stateOwner, name, value) {

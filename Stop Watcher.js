@@ -375,7 +375,9 @@ class SeriesTableView {
 
         table.allowCreation();
         table.setTableData(this.#seriesList);
-        table.onDataModification((tableData) => FileUtil.updateLocalJson(conf.storageFileName, tableData));
+        table.onDataModification(tableData =>
+            FileUtil.updateLocalJson(STORAGE_FILE_NAME, tableData)
+        );
         table.onFieldChange(this.#onFieldChange);
 
         table.setDataFields(dataFields);

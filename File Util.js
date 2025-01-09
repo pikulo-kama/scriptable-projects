@@ -19,7 +19,7 @@ class FileUtil {
     static #RESOURCES_DIR = "Resources";
     static #LOCALES_DIR = "i18n";
 
-    static #DEBUG_CONFIG_FILE_NAME = "feature.json";
+    static #FEATURE_FILE_NAME = "feature.json";
     static #JS_EXTENSION = ".js";
 
     /**
@@ -35,7 +35,7 @@ class FileUtil {
 
         await this.#updateFileInternal(
             scriptName,
-            this.#DEBUG_CONFIG_FILE_NAME,
+            this.#FEATURE_FILE_NAME,
             JSON.stringify(content, null, 4),
             this.#getFeaturesDirectory()
         );
@@ -171,7 +171,7 @@ class FileUtil {
      */
     static featureFileExists(scriptName) {
         return this.#fileExistsInternal(
-            scriptName, this.#DEBUG_CONFIG_FILE_NAME, this.#getFeaturesDirectory()
+            scriptName, this.#FEATURE_FILE_NAME, this.#getFeaturesDirectory()
         );
     }
 
@@ -257,7 +257,7 @@ class FileUtil {
 
         let content = this.#readFileInternal(
             scriptName, 
-            this.#DEBUG_CONFIG_FILE_NAME, 
+            this.#FEATURE_FILE_NAME, 
             defaultValue, 
             this.#getFeaturesDirectory()
         );
