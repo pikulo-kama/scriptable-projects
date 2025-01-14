@@ -71,7 +71,7 @@ class FileUtil {
      */
     static async updateLocale(scriptName, languageCode, content) {
         
-        let localeFileName = `locale_${languageCode}.json`;
+        const localeFileName = `locale_${languageCode}.json`;
         await this.#updateFileInternal(
             scriptName,
             localeFileName,
@@ -186,7 +186,7 @@ class FileUtil {
      * @memberof FileUtil
      */
     static localeExists(scriptName, languageCode) {
-        let localeFileName = `locale_${languageCode}.json`;
+        const localeFileName = `locale_${languageCode}.json`;
         return this.#fileExistsInternal(scriptName, localeFileName, this.#getLocalesDirectory());
     }
 
@@ -255,7 +255,7 @@ class FileUtil {
             }
         };
 
-        let content = this.#readFileInternal(
+        const content = this.#readFileInternal(
             scriptName, 
             this.#FEATURE_FILE_NAME, 
             defaultValue, 
@@ -293,8 +293,8 @@ class FileUtil {
      */
     static readLocale(scriptName, languageCode) {
 
-        let localeFileName = `locale_${languageCode}.json`;
-        let content = this.#readFileInternal(
+        const localeFileName = `locale_${languageCode}.json`;
+        const content = this.#readFileInternal(
             scriptName,
             localeFileName,
             {},
@@ -330,7 +330,7 @@ class FileUtil {
      * @memberof FileUtil
      */
     static readJson(scriptName, fileName, defaultValue) {
-        let content = this.readFile(scriptName, fileName, defaultValue);
+        const content = this.readFile(scriptName, fileName, defaultValue);
         return this.#toJSON(content);
     }
     
@@ -384,7 +384,7 @@ class FileUtil {
         );
         
         if (!this.#manager.fileExists(targetFile)) {
-            console.warn("File does not exist: " + targetFile);
+            console.warn(`File does not exist: ${targetFile}`);
             return defaultValue;
         }
         
@@ -440,7 +440,7 @@ class FileUtil {
         
         let filePath = "";
         
-        for (let segment of segments) {
+        for (const segment of segments) {
             filePath = this.#manager.joinPath(filePath, segment);
         }
         
@@ -517,7 +517,7 @@ class FileUtil {
     static #toJSON(content) {
 
         if (typeof content === 'string') {
-            content = JSON.parse(content);
+            return JSON.parse(content);
         }
 
         return content;

@@ -49,7 +49,6 @@ class ColorBuilder {
      */
     color(color) {
         addToState(this, {color});
-        // this.#color = color;
         return this;
     }
 }
@@ -373,7 +372,7 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
             parent.addSpacer(this.#marginLeading);
         }
 
-        let stack = parent.addStack();
+        const stack = parent.addStack();
         stack.size = new Size(this.#width, this.#height);
 
         if (this.#marginTrailing) {
@@ -476,7 +475,7 @@ class TextWidgetBuilder extends Classes(
             text = this.#truncate(text, this.#limit);
         }
 
-        let textWidget = parent.addText(text);
+        const textWidget = parent.addText(text);
         
         if (leftAlign) {
             parent.addSpacer();
@@ -509,8 +508,8 @@ class TextWidgetBuilder extends Classes(
 
         if (text.length > maxLength) {
             
-            let truncated = text.substring(0, maxLength - 2);
-            text = truncated + "..";
+            const truncated = text.substring(0, maxLength - 2);
+            return `${truncated}..`;
         }
 
         return text;
@@ -659,17 +658,17 @@ class ImageWidgetBuilder extends Classes(
         const parentTransform = getFromState(this, "parentTransform", (parent) => parent);
         
         let image = this.#image;
-        let iconCode = this.#iconCode;
+        const iconCode = this.#iconCode;
         
         if (!image && iconCode) {
-            let icon = SFSymbol.named(iconCode);
+            const icon = SFSymbol.named(iconCode);
             this.#applyIconWeight(icon);
             
             image = icon.image;
         }
 
         parent = parentTransform(parent);
-        let imageWidget = parent.addImage(image);
+        const imageWidget = parent.addImage(image);
 
         if (leftAlign) {
             parent.addSpacer();
@@ -737,7 +736,7 @@ class DateWidgetBuilder extends Classes(
         const aligningFunction = getFromState(this, "aligningFunction", (widget) => widget.centerAlignText());
         
         parent = parentTransform(parent);
-        let dateWidget = parent.addDate(content);
+        const dateWidget = parent.addDate(content);
 
         if (leftAlign) {
             parent.addSpacer();

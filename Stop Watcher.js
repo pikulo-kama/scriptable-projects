@@ -52,12 +52,12 @@ async function main() {
             const builder = new WidgetBuilder(seriesInfo);
             present(builder.build());
         }
-    
-    // Runs in app - show table
-    } else {
-        const tableView = new SeriesTableView(seriesList);
-        await tableView.present();
+        return;
     }
+
+    // Runs in app - show table
+    const tableView = new SeriesTableView(seriesList);
+    await tableView.present();
 }
 
 
@@ -97,10 +97,10 @@ function getSeriesName() {
  * @return {String} padded string representation of hour/minute
  */
 function pad(text) {
-    let castedText = String(text);
+    const castedText = String(text);
 
     if (castedText.length < 2) {
-        castedText = "0" + castedText;
+        return `0${castedText}`;
     }
 
     return castedText;
@@ -494,7 +494,7 @@ class SeriesTableView {
      * @memberof SeriesTableView
      */
     #getApiIntegrationLabel(series) {
-        return !!series.serieId ? 
+        return series.serieId ? 
             tr("stopWatcher_integrationIdSetLabel") : 
             tr("stopWatcher_integrationIdUnsetLabel");
     }

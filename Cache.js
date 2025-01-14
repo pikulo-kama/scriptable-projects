@@ -3,6 +3,7 @@
 // icon-color: deep-purple; icon-glyph: hdd;
 
 const { FileUtil } = importModule("File Util");
+const { Logger } = importModule("Logger");
 
 
 /**
@@ -210,7 +211,7 @@ class ListMetadata extends PropertyMetadata {
 
     __getPropertyMetadata() {
 
-        let metadata = super.__getPropertyMetadata();
+        const metadata = super.__getPropertyMetadata();
         metadata.listPropertyMetadata = this.#listPropertyMetadata;
         
         return metadata;
@@ -311,6 +312,8 @@ class Metadata {
  */
 class CacheRequest {
 
+    static #logger = new Logger(CacheRequest.name);
+
     static #HOUR_MILLISECONDS = 3_600_000;
     static #FETCH_TIMESTAMP_FIELD = "fetchTimesamp";
     static #FILE_NAME = "cache.json";
@@ -356,16 +359,17 @@ class CacheRequest {
 
         // Get value from cache if there was an issue sending request.
         try {
-            let responseData = await new Request(url).loadJSON();
+            const responseData = await new Request(url).loadJSON();
             processedResponse = await this.#processResponse(this.#metadata, responseData);
             processedResponse[CacheRequest.#FETCH_TIMESTAMP_FIELD] = Number(new Date());
 
             await this.#cacheResponse(url, processedResponse);
 
         } catch (error) {
-            console.log(error);
-            console.warn("Getting data from cache");
-            processedResponse = responseFromCache;
+            CacheRequest.#logger.error(error);
+            CacheRequest.#logger.warn("Retrieving data from cache", {url});
+            
+            return responseFromCache;
         }
 
         return processedResponse;
@@ -381,11 +385,11 @@ class CacheRequest {
      */
     async #processResponse(metadata, responseData) {
 
-        let processedResponse = {};
+        const processedResponse = {};
 
-        for (let fieldMetadata of metadata) {
+        for (const fieldMetadata of metadata) {
 
-            let property = this.#getPropertyFromResponse(fieldMetadata.property, responseData);
+            const property = this.#getPropertyFromResponse(fieldMetadata.property, responseData);
             let propertyName = property.name;
             let propertyValue;
 
@@ -424,7 +428,7 @@ class CacheRequest {
      */
     async #processImage(imageURI) {
 
-        let imagePath = CacheRequest.#manager.joinPath(
+        const imagePath = CacheRequest.#manager.joinPath(
             CacheRequest.#manager.cacheDirectory(), 
             `CIMG-${UUID.string()}.jpeg`
         );
@@ -444,13 +448,13 @@ class CacheRequest {
      */
     async #processList(listMetadata, collection) {
 
-        let processedCollection = [];
+        const processedCollection = [];
 
         if (!collection) {
             return [];
         }
 
-        for (let entry of collection) {
+        for (const entry of collection) {
             processedCollection.push(await this.#processResponse(listMetadata, entry));
         }
 
@@ -468,10 +472,10 @@ class CacheRequest {
      */
     #getPropertyFromResponse(composedProperty, response) {
 
-        let propertyChain = composedProperty.split(".");
+        const propertyChain = composedProperty.split(".");
         let propertyValue = response;
 
-        for (let property of propertyChain) {
+        for (const property of propertyChain) {
 
             // There should be no list objects
             // on the way.
@@ -518,7 +522,7 @@ class CacheRequest {
      */
     async #cacheResponse(key, response) {
 
-        let cache = FileUtil.readLocalJson(CacheRequest.#FILE_NAME, [])
+        const cache = FileUtil.readLocalJson(CacheRequest.#FILE_NAME, [])
             .filter(entry => entry.id != key);
 
         cache.push({

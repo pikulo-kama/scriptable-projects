@@ -23,12 +23,14 @@ async function main() {
     
     const selectedScript = await ScriptSelector.selectScript();
 
-    if (selectedScript) {
-
-        const tableBuilder = new FeaturesTable(selectedScript);
-        const table = await tableBuilder.build();
-        await table.present();
+    if (!selectedScript) {
+        return;
     }
+
+    const tableBuilder = new FeaturesTable(selectedScript);
+    const table = await tableBuilder.build();
+
+    await table.present();
 }
 
 
@@ -88,11 +90,10 @@ class ScriptSelector {
      */
     static async selectScript() {
 
-        const debugDirectories = FileUtil.findFeatureDirectories()
-            .sort();
         const actions = [];
+        const debugDirectories = FileUtil.findFeatureDirectories().sort();
 
-        for (let directoryName of debugDirectories) {
+        for (const directoryName of debugDirectories) {
 
             if (!FileUtil.featureFileExists(directoryName)) {
                 console.warn(`Script ${directoryName} doesn't have debug configuration.`);
@@ -229,14 +230,14 @@ class FeaturesTable {
 
         // When type changes to number need to check whether value is
         // a number, if not then we should update feature value.
-        if (isFeatureTypeField && updatedValue === FeatureType.Number) {
-
-            // Don't validate only when user changes type to number
-            // but set it to fallback value in case if current
-            // value is not a number.
-            if (!ModalRule.Number.validate(featureValue)) {
-                feature[FeaturesTable.#FEATURE_VALUE_FIELD] = FeaturesTable.#NUMBER_FEATURE_FALLBACK_VALUE;
-            }
+        // Don't validate only when user changes type to number
+        // but set it to fallback value in case if current
+        // value is not a number.
+        if (isFeatureTypeField && 
+            updatedValue === FeatureType.Number &&
+            !ModalRule.Number.validate(featureValue)
+        ) {
+            feature[FeaturesTable.#FEATURE_VALUE_FIELD] = FeaturesTable.#NUMBER_FEATURE_FALLBACK_VALUE;
         }
 
         // Show an error and remove feature value during attempt
@@ -399,13 +400,13 @@ class FeaturesTable {
         const debugConfiguration = FileUtil.readFeatureFile(this.#selectedScript);
         let id = 1;
 
-        for (let featureName of Object.keys(debugConfiguration)) {
+        for (const featureName of Object.keys(debugConfiguration)) {
 
-            let feature = debugConfiguration[featureName];
+            const feature = debugConfiguration[featureName];
 
             let featureValue = feature[FeaturesTable.#FEATURE_VALUE_FIELD];
-            let featureState = feature[FeaturesTable.#FEATURE_STATE_FIELD];
-            let featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
+            const featureState = feature[FeaturesTable.#FEATURE_STATE_FIELD];
+            const featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
 
             if (featureValue !== undefined) {
                 featureValue = String(featureValue);
@@ -433,19 +434,17 @@ class FeaturesTable {
      * @returns {Function} callback function
      */
     #getOnLocaleModificationCallback() {
-
-        const that = this;
-
-        return (featuresList) => {
+        
+        const callback = (featuresList) => {
 
             const featuresObject = {};
 
-            for (let feature of featuresList) {
+            for (const feature of featuresList) {
                 
-                let featureName = feature[FeaturesTable.#FEATURE_NAME_FIELD];
+                const featureName = feature[FeaturesTable.#FEATURE_NAME_FIELD];
                 let featureValue = feature[FeaturesTable.#FEATURE_VALUE_FIELD];
-                let isEnabled = feature[FeaturesTable.#FEATURE_STATE_FIELD];
-                let featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
+                const isEnabled = feature[FeaturesTable.#FEATURE_STATE_FIELD];
+                const featureType = feature[FeaturesTable.#FEATUTE_TYPE_FIELD];
 
                 if (featureType === FeatureType.Number) {
                     featureValue = Number(featureValue);
@@ -458,8 +457,10 @@ class FeaturesTable {
                 };
             }
 
-            FileUtil.updateFeatureFile(that.#selectedScript, featuresObject);
+            FileUtil.updateFeatureFile(this.#selectedScript, featuresObject);
         };
+
+        return callback.bind(this);
     }
 }
 

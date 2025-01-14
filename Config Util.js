@@ -144,14 +144,12 @@ class ConfigStore {
         
         const configValue = this.#getField(this.#config, propertyChain);
         const userConfigValue = this.#getField(this.#userConfig, propertyChain);
-        
-        let value = configValue;
 
         if (userConfigValue) {
-            value = userConfigValue;
+            return userConfigValue;
         }
 
-        return value;
+        return configValue;
     }
 
     /**
@@ -167,9 +165,9 @@ class ConfigStore {
 
         let configValue = config;
 
-        for (let property of propertyChain) {
+        for (const property of propertyChain) {
           
-            let nextValue = configValue[property];
+            const nextValue = configValue[property];
           
             if (nextValue == undefined) {
                 configValue = null;
@@ -180,7 +178,7 @@ class ConfigStore {
         }
         
         if (configValue instanceof ThemedProperty) {
-            configValue = configValue.get(this.#colorMode);
+            return configValue.get(this.#colorMode);
         }
         
         return configValue;

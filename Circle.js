@@ -55,17 +55,17 @@ class Circle {
         
         context.setLineWidth(this.#configStore.get("circleLineWidth"));
         
-        let circleData = [{
+        const circleData = [{
             color: null,
             percentage: 0
         }].concat(this.#configStore.get("data"));
         
         for (let i = 0; i + 1 < circleData.length; i++) {
 
-            let from = circleData[i];
-            let to = circleData[i + 1];
+            const from = circleData[i];
+            const to = circleData[i + 1];
             
-            let segment = this.#getSegment(
+            const segment = this.#getSegment(
                 from.percentage, 
                 to.percentage
             );
@@ -95,21 +95,21 @@ class Circle {
      */
     #getSegment(from, to) {
 
-        let step = Math.PI * 2 / this.#configStore.get("steps");
-        let points = [];
+        const step = Math.PI * 2 / this.#configStore.get("steps");
+        const points = [];
         
         const size = this.#configStore.get("size") + 1;
         const origin = size / 2;
         
-        let radius = this.#configStore.get("diameter") / 2;
+        const radius = this.#configStore.get("diameter") / 2;
         
         if (this.#configStore.get("fill")) {
             points.push(new Point(origin, origin));
         }
         
         for (let theta = Math.PI * (from * 2 / 100); theta < Math.PI * (to * 2 / 100); theta += step) {
-            let x = origin + Math.sin(theta) * radius;
-            let y = origin - Math.cos(theta) * radius;
+            const x = origin + Math.sin(theta) * radius;
+            const y = origin - Math.cos(theta) * radius;
 
             points.push(new Point(x, y));
         }

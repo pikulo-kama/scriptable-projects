@@ -77,7 +77,7 @@ class Locale {
         const languageCode = this.#getLanguageCode();
         const localeDirectories = FileUtil.findLocaleDirectories();
         
-        for (let directory of localeDirectories) {
+        for (const directory of localeDirectories) {
 
             let localeContent = {};
             const customLocaleExists = FileUtil.localeExists(directory, languageCode);

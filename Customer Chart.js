@@ -54,7 +54,7 @@ async function main() {
 function getArguments() {
 
     const logger = getLogger();
-    let arguments = JSON.parse(args.widgetParameter) ?? {};
+    const arguments = JSON.parse(args.widgetParameter) ?? {};
 
     if (!arguments.trimBlank) {
         arguments.trimBlank = false;
@@ -131,14 +131,14 @@ class CalendarChartDataRepository {
     async getChartData() {
   
         const monthNames = CalendarChartDataRepository.#MONTH_NAMES;
-        let dateRange = this.#getDateRange();
-        let eventSet = [];
+        const dateRange = this.#getDateRange();
+        const eventSet = [];
         const calendar = await Calendar.forEventsByTitle(parameters.calendar);
         
         for (let rangeId = 0; rangeId + 1 < dateRange.length; rangeId++) {
                 
-            let startDate = dateRange[rangeId];
-            let endDate = dateRange[rangeId + 1];
+            const startDate = dateRange[rangeId];
+            const endDate = dateRange[rangeId + 1];
 
             const events = await CalendarEvent.between(
                 startDate,
@@ -146,7 +146,7 @@ class CalendarChartDataRepository {
                 [calendar]
             );
             
-            let event = {
+            const event = {
                 month: monthNames[startDate.getMonth()],
                 eventCount: events.length
             };
@@ -158,17 +158,17 @@ class CalendarChartDataRepository {
         
         if (parameters.skipBlank) {
         
-            let eventSetCopy = eventSet;
+            const eventSetCopy = eventSet;
             
             for (let eventId = eventSetCopy.length - 1; eventId >= 0; eventId--) {
             
-                let event = eventSetCopy[eventId];
+                const event = eventSetCopy[eventId];
 
                 if (event.eventCount > 0) {
                     break;
                 }
                 
-                let idx = eventSet.indexOf(event);
+                const idx = eventSet.indexOf(event);
                 eventSet.splice(idx, 1);
                 this.#logger.debug("Removing blank segment", event);
             }
@@ -190,7 +190,7 @@ class CalendarChartDataRepository {
      */
     #getDateRange() {
     
-        let dates = new Array();
+        const dates = new Array();
         
         for (let monthIdx = parameters.period - 1; monthIdx >= 0; monthIdx--) {
             

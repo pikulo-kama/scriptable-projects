@@ -53,10 +53,10 @@ class ProtectedDataHolder {
      * @memberof ProtectedDataHolder
      */
     static getFromState(stateOwner, name, defaultValue) {
-        let stateValue = this.getState(stateOwner)[name];
+        const stateValue = this.getState(stateOwner)[name];
 
         if (!stateValue) {
-            stateValue = defaultValue;
+            return defaultValue;
         }
 
         return stateValue;

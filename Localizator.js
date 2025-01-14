@@ -22,12 +22,14 @@ async function main() {
 
     const selectedScript = await ScriptSelector.selectScript();
 
-    if (selectedScript) {
-
-        const tableBuilder = new LocalizatorTable(selectedScript);
-        const table = await tableBuilder.build();
-        await table.present();
+    if (!selectedScript) {
+        return;
     }
+
+    const tableBuilder = new LocalizatorTable(selectedScript);
+    const table = await tableBuilder.build();
+    
+    await table.present();
 }
 
 
@@ -166,17 +168,17 @@ class LocalizatorTable {
      */
     #getOnLocaleModificationCallback() {
 
-        const that = this;
-
-        return (translationList) => {
+        const callback = (translationList) => {
             const translationsObject = {};
 
-            for (let translation of translationList) {
+            for (const translation of translationList) {
                 translationsObject[translation.key] = translation.value;
             }
 
-            FileUtil.updateLocale(that.#scriptName, that.#languageCode, translationsObject);
+            FileUtil.updateLocale(this.#scriptName, this.#languageCode, translationsObject);
         };
+
+        return callback.bind(this);
     }
 
     /**
@@ -196,7 +198,7 @@ class LocalizatorTable {
         // which we don't need.
         let id = 1;
 
-        for (let translationKey of Object.keys(translations)) {
+        for (const translationKey of Object.keys(translations)) {
             
             translationList.push({
                 id: id++,
@@ -223,8 +225,8 @@ class LocalizatorTable {
      */
     #translationKeyToText(translationKey) {
 
-        let keyParts = translationKey.split("_");
-        let key = keyParts[keyParts.length - 1];
+        const keyParts = translationKey.split("_");
+        const key = keyParts[keyParts.length - 1];
 
         return key
             .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -272,9 +274,9 @@ class LocalizatorTable {
 
         const localeFile = FileUtil.readLocale(this.#scriptName, this.#languageCode);
 
-        for (let translationKey of Object.keys(defaultLocaleFile)) {
+        for (const translationKey of Object.keys(defaultLocaleFile)) {
 
-            let translationIsPresent = localeFile[translationKey] !== undefined;
+            const translationIsPresent = localeFile[translationKey] !== undefined;
 
             if (!translationIsPresent) {
                 localeFile[translationKey] = defaultLocaleFile[translationKey];

@@ -116,7 +116,7 @@ class EpisodateApiResource extends ApiResource {
         );
 
         seriesData.episodes.forEach(ep => {
-            let episode = new EpisodeInfo(
+            const episode = new EpisodeInfo(
                 ep.season,
                 ep.episode,
                 new Date(ep.airDate)
@@ -176,7 +176,7 @@ class EpisodateApiResource extends ApiResource {
                 .data()
                     .property("air_date")
                     .alias("airDate")
-                    .transformFunction(value => new Date(value.replace(" ", "T") + "Z"))
+                    .transformFunction(value => new Date(`${value.replace(" ", "T")}Z`))
                     .add()
                 .add()
             .create();
@@ -192,7 +192,7 @@ class StubApiResource extends ApiResource {
 
     async download() {
         
-        let seriesInfo = new SeriesInfo(
+        const seriesInfo = new SeriesInfo(
             "Debug",
             debugFeatureEnabled("forceEndedStatus") ? Status.Ended : Status.Ongoing
         );
@@ -255,7 +255,7 @@ class StubApiResource extends ApiResource {
      */
     #dateNMonthsInPast(months) {
 
-        let date = new Date();
+        const date = new Date();
         date.setMonth(date.getMonth() - months);
 
         return date;
@@ -270,7 +270,7 @@ class StubApiResource extends ApiResource {
      */
     #dateNMonthsInFuture(months) {
         
-        let date = new Date();
+        const date = new Date();
         date.setMonth(date.getMonth() + months);
 
         return date;
@@ -285,7 +285,7 @@ class StubApiResource extends ApiResource {
      */
     #dateNDaysInFuture(days) {
         
-        let date = new Date();
+        const date = new Date();
         date.setDate(date.getDate() + days);
 
         return date;
@@ -300,7 +300,7 @@ class StubApiResource extends ApiResource {
      */
     #dateNHoursInFuture(hours) {
         
-        let date = new Date();
+        const date = new Date();
         date.setHours(date.getHours() + hours);
 
         return date;
@@ -491,10 +491,23 @@ class Series {
         return !!this.#countdown;
     }
 
+    /**
+     * Used to get air date of last episode of the series
+     * that has been released.
+     * 
+     * @returns {Date} air date of last episode
+     */
     getLastEpisodeDate() {
         return this.#lastEpisode?.getAirDate();
     }
 
+    /**
+     * Used to get tag of last episode of the series
+     * that has been released.
+     *
+     * @return {String} tag of last episode
+     * @memberof Series
+     */
     getLastEpisode() {
         return this.#lastEpisode?.toString();
     }
@@ -509,6 +522,13 @@ class Series {
         return this.#nextEpisode?.getAirDate();
     }
     
+    /**
+     * Used to get tag of next episode of the series
+     * that hasn't been released yet.
+     *
+     * @return {String} tag of next episode
+     * @memberof Series
+     */
     getNextEpisode() {
         return this.#nextEpisode?.toString();
     }
@@ -522,8 +542,8 @@ class Series {
      */
     getCountdown() {
 
-        let time = this.#countdown.time;
-        let type = this.#countdown.type;
+        const time = this.#countdown.time;
+        const type = this.#countdown.type;
 
         switch (type) {
 
@@ -563,12 +583,12 @@ class Series {
             return;
         }
 
-        let colorMap = FileUtil.readLocalJson(fileName, {});
+        const colorMap = FileUtil.readLocalJson(fileName, {});
         let colorFromFile = colorMap[imageURI];
 
         if (!colorFromFile || featureEnabled("rerollColor")) {
 
-            let dominantColor = await this.#retrieveDominantColor();
+            const dominantColor = await this.#retrieveDominantColor();
             colorFromFile = {color: dominantColor};
             colorMap[imageURI] = colorFromFile;
 
@@ -611,8 +631,8 @@ class Series {
      */
     #processCountdown(seriesInfo) {
 
-        let now = new Date();
-        let nextEpisode = this.#getEpisodeAfter(seriesInfo, now);
+        const now = new Date();
+        const nextEpisode = this.#getEpisodeAfter(seriesInfo, now);
 
         this.#lastEpisode = this.#getEpisodeBefore(seriesInfo, now);
 
@@ -628,9 +648,9 @@ class Series {
             countdownString = countdownString.substring(0, countdownString.length - 1);
         }
 
-        let match = countdownString.match(Series.#REGEXP_COUNTDOWN);
-        let time = Number(match[1]);
-        let type = match[2];
+        const match = countdownString.match(Series.#REGEXP_COUNTDOWN);
+        const time = Number(match[1]);
+        const type = match[2];
 
         this.#nextEpisode = nextEpisode;
         this.#countdown = {
@@ -711,10 +731,10 @@ class Series {
      */
     async #retrieveDominantColor() {
 
-        let webView = new WebView();
+        const webView = new WebView();
         await webView.loadURL("https://example.com/");
 
-        let response = await webView.evaluateJavaScript(`
+        const response = await webView.evaluateJavaScript(`
             var xhr = new XMLHttpRequest();
 
             xhr.open('POST', "https://vision.googleapis.com/v1/images:annotate?alt=json&key=${GOOGLE_VISION_API_KEY}", false);
@@ -736,15 +756,14 @@ class Series {
             JSON.parse(xhr.responseText);
         `);
 
-        let colors = response.responses[0].imagePropertiesAnnotation.dominantColors.colors;        
-        let randomColor = colors[Math.floor(Math.random()* colors.length)];
+        const colors = response.responses[0].imagePropertiesAnnotation.dominantColors.colors;        
+        const randomColor = colors[Math.floor(Math.random()* colors.length)];
 
-        let red = Number(randomColor.color.red).toString(16);
-        let green = Number(randomColor.color.green).toString(16);
-        let blue = Number(randomColor.color.blue).toString(16);
+        const red = Number(randomColor.color.red).toString(16);
+        const green = Number(randomColor.color.green).toString(16);
+        const blue = Number(randomColor.color.blue).toString(16);
 
-        let hexColor = red + green + blue;
-        return hexColor;
+        return red + green + blue;
     }
 }
 
@@ -806,16 +825,14 @@ class EpisodeInfo {
      */
     toString() {
         
-        let episodeString = "";
-        
-        let season = this.#season;
-        let episode = this.#episode;
+        const season = this.#season;
+        const episode = this.#episode;
         
         if (season && episode) {
-            episodeString = `s${season}e${episode}`;
+            return `s${season}e${episode}`;
         }
         
-        return episodeString;
+        return "";
     }
 }
 

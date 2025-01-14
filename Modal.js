@@ -368,9 +368,9 @@ class Modal {
     async #processFields() {
 
         // Save values provided by user.
-        for (let field of this.#fields) {
+        for (const field of this.#fields) {
             
-            let newValue = this.#alert.textFieldValue(field.id);
+            const newValue = this.#alert.textFieldValue(field.id);
 
             field.previousValue = field.value;
             field.value = newValue;
@@ -383,10 +383,10 @@ class Modal {
         // fields have been taken, otherwise it's being lost
         // since error modal closes main modal we end up losing 
         // data provided by user.
-        for (let field of this.#fields) {
-            for (let validation of field.validations) {
+        for (const field of this.#fields) {
+            for (const validation of field.validations) {
 
-                let ruleFunction = validation.getRuleFunction();
+                const ruleFunction = validation.getRuleFunction();
                 
                 // Don't proceed with validation of field
                 // if one rule already failed.
@@ -394,8 +394,8 @@ class Modal {
                     break;
                 }
 
-                let messageFunction = validation.getMessageFunction();
-                let errorMessage = messageFunction(field);
+                const messageFunction = validation.getMessageFunction();
+                const errorMessage = messageFunction(field);
                 await showError(errorMessage);
                 
                 field.value = field.previousValue;
@@ -419,7 +419,7 @@ class Modal {
 
         const fieldData = {};
 
-        for (let field of this.#fields) {
+        for (const field of this.#fields) {
             fieldData[field.name] = field.value;
         }
 
@@ -437,7 +437,7 @@ class Modal {
  * @param {String} confirmAction name of action
  */
 async function presentModal(title, message, confirmAction) {
-    let alert = new Alert();
+    const alert = new Alert();
 
     alert.addAction(confirmAction);
     alert.title = title;

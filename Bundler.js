@@ -107,7 +107,7 @@ class Bundler {
         scriptBody += mainScriptMetadata;
 
         // Add all dependencies.
-        for (let dependencyBody of this.#dependencyScripts.values()) {
+        for (const dependencyBody of this.#dependencyScripts.values()) {
             scriptBody += dependencyBody;
         }
 
@@ -137,7 +137,7 @@ class Bundler {
         scriptBody = this.#removeDependenciesAndGet(scriptBody);
         this.#dependencyScripts.set(scriptName, scriptBody);
 
-        for (let dependencyName of scriptDependencies) {
+        for (const dependencyName of scriptDependencies) {
 
             // Don't process if it was already processed
             // in previous scripts.
@@ -176,17 +176,17 @@ class Bundler {
 
         const dependencyMatches = [...scriptBody.matchAll(Bundler.#DEPENDENCY_REGEXP)];
 
-        for (let match of dependencyMatches) {
+        for (const match of dependencyMatches) {
 
-            let importModuleBlock = match[0];
+            const importModuleBlock = match[0];
             scriptBody = scriptBody.replaceAll(importModuleBlock, EMPTY_STRING);
         }
 
         const exportMatches = [...scriptBody.matchAll(Bundler.#MODULE_EXPORTS_REGEXP)];
 
-        for (let match of exportMatches) {
+        for (const match of exportMatches) {
 
-            let exportBlock = match[0];
+            const exportBlock = match[0];
             scriptBody = scriptBody.replaceAll(exportBlock, EMPTY_STRING);
         }
 
@@ -205,8 +205,8 @@ class Bundler {
      * @memberof Bundler
      */
     #extractMetadataAndGet(scriptName, scriptBody) {
-        let scriptBodyLines = scriptBody.split('\n')
-        let metadataLines = scriptBodyLines.splice(0, 3)
+        const scriptBodyLines = scriptBody.split('\n');
+        const metadataLines = scriptBodyLines.splice(0, 3);
 
         // Store metadata to later use it when building
         // back composed script.

@@ -25,17 +25,17 @@ const parameters = getAddress();
  */
 async function main() {
 
-    let webView = ScheduleWebViewFactory.getWebView();
+    const webView = ScheduleWebViewFactory.getWebView();
 
     if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         const widget = new ScheduleWidget();
         
         await webView.downloadSchedules();
         await widget.render(webView);
-
-    } else {
-        await webView.present();
+        return;
     }
+
+    await webView.present();
 }
 
 
@@ -62,16 +62,16 @@ function getAddress() {
         throw new Error("Address was not provided.");
     }
 
-    let addressComponents = address.split(",");
+    const addressComponents = address.split(",");
 
     if (addressComponents.length !== 3) {
         throw new Error("Address should contain city, street and building number separated by comma.");
     }
 
-    let city = addressComponents[0];
-    let street = addressComponents[1];
-    let buildingNumber = addressComponents[2];
-    let shortAddress = buildingNumber + ", " + street;
+    const city = addressComponents[0];
+    const street = addressComponents[1];
+    const buildingNumber = addressComponents[2];
+    const shortAddress = `${buildingNumber}, ${street}`;
 
     return {
         address,
@@ -204,20 +204,21 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
     async downloadSchedules() {
 
-        let schedules = await this.#downloadSchedulesInternal();
+        const schedules = await this.#downloadSchedulesInternal();
 
-        if (schedules) {
-
-            this.#available = true;
-
-            this.#today = new Schedule(schedules.today);
-            this.#tomorrow = new Schedule(schedules.tomorrow);
+        if (!schedules) {
+            return;
         }
+
+        this.#available = true;
+
+        this.#today = new Schedule(schedules.today);
+        this.#tomorrow = new Schedule(schedules.tomorrow);
     }
 
     async present() {
 
-        let webView = await this.#getWebView();
+        const webView = await this.#getWebView();
 
         await webView.evaluateJavaScript(this.#getLoadScheduleReportJSPayload());
         await webView.present();
@@ -246,21 +247,21 @@ class OeIfScheduleWebView extends ScheduleWebView {
         let today;
         let tomorrow;
 
-        let queue = await this.#getQueueNumber();
+        const queue = await this.#getQueueNumber();
         
         if (!queue) {
             return null;
         }
 
-        let webView = await this.#getWebView();
-        let scheduleList = await webView.evaluateJavaScript(this.#getDownloadSchedulesByQueueJSPayload());
+        const webView = await this.#getWebView();
+        const scheduleList = await webView.evaluateJavaScript(this.#getDownloadSchedulesByQueueJSPayload());
 
-        let first = scheduleList[0];
-        let second = scheduleList[1];
+        const first = scheduleList[0];
+        const second = scheduleList[1];
 
         if (first) {
             
-            let info = this.#createOutageRecords(first.queues[queue]);
+            const info = this.#createOutageRecords(first.queues[queue]);
 
             if (this.#isFutureSchedule(first)) {
                 tomorrow = info;
@@ -272,7 +273,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
         if (second) {
 
-            let info = this.#createOutageRecords(second.queues[queue]);
+            const info = this.#createOutageRecords(second.queues[queue]);
 
             if (this.#isFutureSchedule(second)) {
                 tomorrow = info;
@@ -297,7 +298,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      */
     #createOutageRecords(outageEntries) {
 
-        let outageRecords = [];
+        const outageRecords = [];
 
         if (!outageEntries) {
             return null;
@@ -305,12 +306,12 @@ class OeIfScheduleWebView extends ScheduleWebView {
 
         let outageOrder = 1;
 
-        for (let outageEntry of outageEntries) {
+        for (const outageEntry of outageEntries) {
 
-            let startTime = Time.ofString(outageEntry.from);
-            let endTime = Time.ofString(outageEntry.to);
+            const startTime = Time.ofString(outageEntry.from);
+            const endTime = Time.ofString(outageEntry.to);
 
-            let isProbable = outageEntry.status !== 1;
+            const isProbable = outageEntry.status !== 1;
 
             outageRecords.push(new OutageRecord(startTime, endTime, isProbable, outageOrder++));
         }
@@ -326,17 +327,17 @@ class OeIfScheduleWebView extends ScheduleWebView {
      */
     async #getQueueNumber() {
 
-        let webView = await this.#getWebView();
-        let response = await webView.evaluateJavaScript(this.#getDownloadScheduleJSPayload());
+        const webView = await this.#getWebView();
+        const response = await webView.evaluateJavaScript(this.#getDownloadScheduleJSPayload());
         
         if (!response) {
             return null;
         }
 
-        let queue = response.current.queue;
-        let subQueue = response.current.subqueue;
+        const queue = response.current.queue;
+        const subQueue = response.current.subqueue;
 
-        return queue + "." + subQueue;
+        return `${queue}.${subQueue}`;
     }
 
     /**
@@ -351,13 +352,13 @@ class OeIfScheduleWebView extends ScheduleWebView {
             return false;
         }
 
-        let dateParts = schedule.eventDate.split(".");
+        const dateParts = schedule.eventDate.split(".");
         
-        let day = dateParts[0];
-        let month = dateParts[1];
-        let year = dateParts[2];
+        const day = dateParts[0];
+        const month = dateParts[1];
+        const year = dateParts[2];
 
-        let scheduleDate = new Date(`${year}-${month}-${day}`);
+        const scheduleDate = new Date(`${year}-${month}-${day}`);
         return scheduleDate > new Date();
     }
 
@@ -368,7 +369,7 @@ class OeIfScheduleWebView extends ScheduleWebView {
      */
     async #getWebView() {
 
-        let webView = new WebView();
+        const webView = new WebView();
         await webView.loadURL("https://svitlo.oe.if.ua");
 
         return webView;
@@ -542,9 +543,9 @@ class OutageRecord {
      */
     isPassed() {
 
-        let now = new Date();
+        const now = new Date();
 
-        let finishTime = this.#endTime;
+        const finishTime = this.#endTime;
         let currentTime = Time.of(now.getHours() , now.getMinutes());
         
         if (debugFeatureEnabled("mockCurrentHour")) {
@@ -650,8 +651,8 @@ class ScheduleWidget {
      */
     #renderOutageRecord(root, outageRecord) {
 
-        let outageIcon = image();
-        let outagePeriodText = text();
+        const outageIcon = image();
+        const outagePeriodText = text();
         
         // Change styling of outages that may not occur.
         if (outageRecord.isProbable()) {
@@ -659,7 +660,7 @@ class ScheduleWidget {
             outageIcon.color(Color.yellow());
                 
         } else {
-            let iconCode = outageRecord.getOrder() + ".square.fill"
+            const iconCode = `${outageRecord.getOrder()}.square.fill`
             outageIcon.icon(iconCode);
         }
 
@@ -669,7 +670,7 @@ class ScheduleWidget {
             outagePeriodText.opacity(0.6);
         }
 
-        let outageStack = stack().renderFor(root);
+        const outageStack = stack().renderFor(root);
         
         outageIcon
             .size(16)
@@ -692,11 +693,7 @@ class ScheduleWidget {
      */
     #renderTomorrowScheduleIndicator(root, tomorrowSchedule) {
 
-        let indicatorColor = Color.green();
-
-        if (tomorrowSchedule.hasNext()) {
-            indicatorColor = Color.red();
-        }
+        const indicatorColor = tomorrowSchedule.hasNext() ? Color.red() : Color.green();
 
         spacer().renderFor(root, 2);
             
@@ -805,9 +802,9 @@ class Time {
 
     static ofString(stringTime) {
 
-        let timeParts = stringTime.split(Time.#HOUR_MINUTE_SEPARATOR);
-        let hours = Number(timeParts[0]);
-        let minutes = Number(timeParts[1]);
+        const timeParts = stringTime.split(Time.#HOUR_MINUTE_SEPARATOR);
+        const hours = Number(timeParts[0]);
+        const minutes = Number(timeParts[1]);
 
         return new Time(hours, minutes);
     }
@@ -850,7 +847,7 @@ class Time {
         let minutes = String(this.getMinutes());
 
         if (minutes.length == 1) {
-            minutes = "0" + minutes;
+            minutes = `0${minutes}`;
         }
 
         return this.getHours() + Time.#HOUR_MINUTE_SEPARATOR + minutes;

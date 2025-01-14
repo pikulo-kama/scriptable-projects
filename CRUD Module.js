@@ -385,13 +385,14 @@ class UIForm extends UIField {
      */
     addDefaultAction(actionLabel) {
 
-        if (!this.#hasDefaultAction) {
-
-            const defaultAction = new UIDefaultFormAction(actionLabel);
-            this.addFormAction(defaultAction);
-
-            this.#hasDefaultAction = true;
+        if (this.#hasDefaultAction) {
+            return;
         }
+
+        const defaultAction = new UIDefaultFormAction(actionLabel);
+        this.addFormAction(defaultAction);
+
+        this.#hasDefaultAction = true;
     }
 
     /**
@@ -721,14 +722,14 @@ class UIFormHandler extends UIFieldHandler {
      */
     async #processFieldChanges(result) {
 
-        for (let formField of this.#uiField.getFormFields()) {
+        for (const formField of this.#uiField.getFormFields()) {
 
-            let dataField = formField.getDataField();
-            let originalValue = this.#tableRecord[dataField.getName()];
-            let updatedValue = result.get(dataField.getName());
+            const dataField = formField.getDataField();
+            const originalValue = this.#tableRecord[dataField.getName()];
+            const updatedValue = result.get(dataField.getName());
 
             this.#tableRecord[dataField.getName()] = updatedValue;
-             this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
+            this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
         }
     }
 
@@ -740,15 +741,15 @@ class UIFormHandler extends UIFieldHandler {
      */
     async #processCustomAction(action) {
 
-        for (let actionCallback of action.getCallbacks()) {
+        for (const actionCallback of action.getCallbacks()) {
 
             let {
                 dataField,
                 callback
             } = actionCallback;
 
-            let originalValue = this.#tableRecord[dataField.getName()];
-            let updatedValue = callback(this.#tableRecord, action);
+            const originalValue = this.#tableRecord[dataField.getName()];
+            const updatedValue = callback(this.#tableRecord, action);
 
             this.#tableRecord[dataField.getName()] = updatedValue;
             this.#uiTable.__onChange(this.#tableRecord, dataField, updatedValue, originalValue);
@@ -1088,13 +1089,7 @@ class BoolFilterHandler extends FilterHandler {
      * @memberof BoolFilterHandler
      */
     #getYesNoAction(isEnabled, actionKey) {
-
-        let enabledIndicator = "";
-
-        if (isEnabled) {
-            enabledIndicator = tr("crudModule_filterAppliedIndicator");
-        }
-
+        const enabledIndicator = isEnabled ? tr("crudModule_filterAppliedIndicator") : "";
         return tr(actionKey, enabledIndicator).trim();
     }
 }
@@ -1344,7 +1339,7 @@ class UIDataTable {
         this.#table.removeAllRows();
         await this.#addHeaderRow();
 
-        for (let tableRecord of this.#getFilteredTableData()) {
+        for (const tableRecord of this.#getFilteredTableData()) {
             await this.#addTableRow(tableRecord);
         }
 
@@ -1407,12 +1402,12 @@ class UIDataTable {
         const tableRow = new UITableRow();
         tableRow.height = this.rowHeight;
 
-        for (let uiField of this.#uiFields) {
+        for (const uiField of this.#uiFields) {
 
-            let fieldLabelFunction = uiField.getFieldLabelFunction();
-            let aligningFunction = uiField.getAligningFunction();
+            const fieldLabelFunction = uiField.getFieldLabelFunction();
+            const aligningFunction = uiField.getAligningFunction();
 
-            let uiFieldLabel = fieldLabelFunction(tableRecord);
+            const uiFieldLabel = fieldLabelFunction(tableRecord);
             let tableCell;
 
             if (uiField instanceof UIFormReadOnly) {
@@ -1426,7 +1421,7 @@ class UIDataTable {
             tableCell.widthWeight = uiField.getWeight();
             tableCell.titleColor = uiField.getColor();
 
-            let handler = UIFieldHandlerFactory.getHandler(uiField);
+            const handler = UIFieldHandlerFactory.getHandler(uiField);
 
             // Don't add on tap callback if there is no
             // handler for field.
@@ -1457,10 +1452,16 @@ class UIDataTable {
      */
     async __upsertTableRecord(updatedRecord) {
 
-        // Handle create
-        if (!updatedRecord?.id) {
+        // Handle update
+        if (updatedRecord?.id) {
+            const recordIndex = this.#tableData.findIndex(tableRecord =>
+                tableRecord.id === updatedRecord.id
+            );
+            this.#tableData[recordIndex] = updatedRecord;
 
-            let newRecord = {
+        // Handle create
+        } else {
+            const newRecord = {
                 id: await this.#nextSequenceValue()
             };
 
@@ -1469,14 +1470,6 @@ class UIDataTable {
             );
             
             this.#tableData.push(newRecord);
-
-        // Handle update
-        } else {
-            
-            const recordIndex = this.#tableData.findIndex(tableRecord =>
-                tableRecord.id === updatedRecord.id
-            );
-            this.#tableData[recordIndex] = updatedRecord;
         }
 
         this.#onDataModificationFunction(this.#tableData);
@@ -1525,7 +1518,7 @@ class UIDataTable {
      */
     async #nextSequenceValue() {
 
-        let sequence = FileUtil.readLocalJson(this.sequenceFileName, {next: 0});
+        const sequence = FileUtil.readLocalJson(this.sequenceFileName, {next: 0});
         sequence.next += 1
         
         await FileUtil.updateLocalJson(this.sequenceFileName, sequence);
@@ -1548,7 +1541,7 @@ class UIDataTable {
             let popupLabel = "";
 
             if (appliedFiltersList.includes(field.getDataField().getName())) {
-                popupLabel += tr("crudModule_filterAppliedIndicator") + " ";
+                popupLabel += `${tr("crudModule_filterAppliedIndicator")} `;
             }
 
             popupLabel += field.getLabel();
@@ -1593,22 +1586,22 @@ class UIDataTable {
 
         let filteredData = this.#tableData;
 
-        for (let filterField of this.#filterFields) {
+        for (const filterField of this.#filterFields) {
 
-            let dataField = filterField.getDataField();
-            let fieldName = dataField.getName();
-            let filterValue = this.#appliedFilters[fieldName];
+            const dataField = filterField.getDataField();
+            const fieldName = dataField.getName();
+            const filterValue = this.#appliedFilters[fieldName];
 
             // Skip if there is no filtering for this field.
             if (filterValue === undefined) {
                 continue;
             }
 
-            let handler = FilterHandlerFactory.getHandler(filterField);
+            const handler = FilterHandlerFactory.getHandler(filterField);
 
             if (handler) {
 
-                let filterFunction = handler.getFilterFunction();
+                const filterFunction = handler.getFilterFunction();
                 filteredData = filteredData.filter((tableRecord) => 
                     filterFunction(tableRecord[fieldName], filterValue)
                 );

@@ -14,7 +14,6 @@ const {
 
 const {
     spacer,
-    stack,
     text,
     rootWidget,
     present
@@ -49,13 +48,7 @@ async function main() {
  * @return {String} formatted episode count
  */
 function getEpisodeCountLabel(episodeCount) {
-    
-    let key = "watchQueue_episodeSingular";
-    
-    if (episodeCount > 1) {
-        key = "watchQueue_episodePlural";
-    }
-    
+    const key = episodeCount > 1 ? "watchQueue_episodePlural" : "watchQueue_episodeSingular";
     return tr(key, episodeCount);
 }
 
@@ -106,7 +99,7 @@ class StopWatcherRepository {
             // populated.
             .filter(seriesRecord => seriesRecord.serieId);
 
-        for (let stopWatcherRecord of stopWatcherData) {
+        for (const stopWatcherRecord of stopWatcherData) {
 
             let season = stopWatcherRecord.season;
             let episode = stopWatcherRecord.episode;
@@ -114,7 +107,7 @@ class StopWatcherRepository {
             // Need to shift back since current
             // episode in 'Stop Watcher' will always
             // be unwatched.
-            episode -= 1;
+            episode--;
 
             // In case if it was first episode
             // we need to shift season back as well.
@@ -150,16 +143,14 @@ class StopWatcherRepository {
      */
     #fetchAdditionalDataCallback() {
         
-        const that = this;
-
-        return async (record) => {
-            const request = cacheRequest(that.#getMetadata(), getFeature(".cacheRefreshRateHours"));
+        const callback = async (record) => {
+            const request = cacheRequest(this.#getMetadata(), getFeature(".cacheRefreshRateHours"));
             
-            let response = await request.get(that.#apiURI + record.serieId);
-            let episodeQualifier = that.#getEpisodeId(record);
+            const response = await request.get(this.#apiURI + record.serieId);
+            const episodeQualifier = this.#getEpisodeId(record);
             
             const unwatchedEpisodeCount = response.episodes
-                .filter(episode => that.#getEpisodeId(episode) > episodeQualifier)
+                .filter(episode => this.#getEpisodeId(episode) > episodeQualifier)
                 .filter(episode => new Date(episode.airDate) < Date.now())
                 .length;
 
@@ -168,6 +159,8 @@ class StopWatcherRepository {
                 name: response.name
             };
         };
+
+        return callback.bind(this);
     }
     
     /**
@@ -199,7 +192,7 @@ class StopWatcherRepository {
                 .data()
                     .property("air_date")
                     .alias("airDate")
-                    .transformFunction(value => new Date(value.replace(" ", "T") + "Z"))
+                    .transformFunction(value => new Date(`${value.replace(" ", "T")}Z`))
                     .add()
                 .data()
                     .property("season")
@@ -301,11 +294,11 @@ class WidgetBuilder {
      */
     static build(seriesRecords) {
         
-        let totalEpisodeCount = seriesRecords
+        const totalEpisodeCount = seriesRecords
             .filter(record => record.showInSummary)
             .reduce((totalEpisodes, record) => totalEpisodes + record.count, 0);
             
-        let episodeCountWidget = text();
+        const episodeCountWidget = text();
         
         // Nothing to be watched
         if (totalEpisodeCount === 0) {

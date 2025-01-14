@@ -160,7 +160,7 @@ class Logger {
      * @param {Object} log event log object
      */
     async #saveToJSONFile(log) {
-        let jsonLogFile = FileUtil.readJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, {logs: []});
+        const jsonLogFile = FileUtil.readJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, {logs: []});
 
         jsonLogFile.logs.push(log);
         await FileUtil.updateJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, jsonLogFile);
@@ -185,9 +185,9 @@ class Logger {
         delete log.service;
         delete log.message;
 
-        let dataArray = [];
+        const dataArray = [];
 
-        for (let key of Object.keys(log)) {
+        for (const key of Object.keys(log)) {
             dataArray.push(`${key}=${log[key]}`);
         }
 
