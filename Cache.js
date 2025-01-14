@@ -346,14 +346,11 @@ class CacheRequest {
     async get(url) {
 
         let processedResponse = null;
-
         const responseFromCache = this.#getResponseFromCache(url);
-        const timeSinceLastRequest = this.#getTimestampSinceLastRequest(responseFromCache);
-        const isCacheEmpty = responseFromCache.length === 0;
 
         // Get data from cache when time since last request is less than
         // defined refresh rate.
-        if (!isCacheEmpty && timeSinceLastRequest < this.#cacheRefreshRateMillis) {
+        if (!this.#shouldBeRefreshed(responseFromCache)) {
             return responseFromCache;
         }
 
@@ -493,17 +490,23 @@ class CacheRequest {
     }
 
     /**
-     * Used to get amount of milliseconds
-     * that have past since response was obtained.
+     * Used to check whether response should be
+     * refreshed.
      * 
-     * @param {Object} response JSON repsonse with 'fetchTimestamp' property
-     * @returns {Number} milliseconds since data was retrieved
+     * @param {Object} response JSON repsonse
+     * @returns {Boolean} True if should be refreshed otherwise false
      */
-    #getTimestampSinceLastRequest(response) {
+    #shouldBeRefreshed(response) {
+
+        if (!response) {
+            return true;
+        }
+
         const fetchTimestamp = response[CacheRequest.#FETCH_TIMESTAMP_FIELD];
         const currentTimestamp = Number(new Date());
 
-        return currentTimestamp - fetchTimestamp;
+        const timeSinceLastRequest = currentTimestamp - fetchTimestamp;
+        return timeSinceLastRequest >= this.#cacheRefreshRateMillis;
     }
 
     /**
