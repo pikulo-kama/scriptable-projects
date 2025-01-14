@@ -39,7 +39,7 @@ async function main() {
 class LoggingTable {
 
     #serviceNameDataField = new TextDataField("service", "Service");
-    #logLevelDataField = new TextDataField("level", LogLevel.INFO);
+    #logLevelDataField = new TextDataField("level", LogLevel.OFF);
 
     /**
      * Used to build UI table.
@@ -55,8 +55,8 @@ class LoggingTable {
         table.allowCreation();
         table.showSeparators();
 
-        table.setTableData(FileUtil.readJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, {levels: []}).levels);
-        table.onDataModification((levels) => FileUtil.updateJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, {levels}));
+        table.setTableData(FileUtil.readJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, []));
+        table.onDataModification((levels) => FileUtil.updateJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, levels));
 
         table.setDataFields([this.#serviceNameDataField, this.#logLevelDataField]);
         table.setUIFields(this.#getUIFields());
@@ -85,16 +85,19 @@ class LoggingTable {
         const logLevelUIField = new UIForm((log) => log.level, 30);
         logLevelUIField.setFormTitleFunction(() => tr("loggerUI_logLevelFormTitle"));
 
+        const turnOffAction = new UIFormAction(LogLevel.OFF);
         const setToInfoAction = new UIFormAction(LogLevel.INFO);
         const setToWarnAction = new UIFormAction(LogLevel.WARN);
         const setToErrorAction = new UIFormAction(LogLevel.ERROR);
         const setToDebugAction = new UIFormAction(LogLevel.DEBUG);
 
+        turnOffAction.addCallback(this.#logLevelDataField, (log) => log.level = LogLevel.OFF);
         setToInfoAction.addCallback(this.#logLevelDataField, (log) => log.level = LogLevel.INFO);
         setToWarnAction.addCallback(this.#logLevelDataField, (log) => log.level = LogLevel.WARN);
         setToErrorAction.addCallback(this.#logLevelDataField, (log) => log.level = LogLevel.ERROR);
         setToDebugAction.addCallback(this.#logLevelDataField, (log) => log.level = LogLevel.DEBUG);
 
+        logLevelUIField.addFormAction(turnOffAction);
         logLevelUIField.addFormAction(setToInfoAction);
         logLevelUIField.addFormAction(setToWarnAction);
         logLevelUIField.addFormAction(setToErrorAction);

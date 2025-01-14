@@ -13,6 +13,14 @@ const { FileUtil } = importModule("File Util");
 class LogLevel {
 
     /**
+     * States that service logging is turned off.
+     *
+     * @static
+     * @memberof LogLevel
+     */
+    static OFF = "OFF";
+
+    /**
      * For information messages.
      *
      * @static
@@ -64,6 +72,7 @@ class Logger {
      * @memberof Logger
      */
     static #logLevelList = [
+        LogLevel.OFF,
         LogLevel.INFO,
         LogLevel.WARN,
         LogLevel.ERROR,
@@ -226,8 +235,9 @@ class Logger {
         const logLevels = this.#getLogLevels();
         let loggingLevel = logLevels.find(record => record.service === service)?.level;
 
+        // Don't log if logging level is not set.
         if (!loggingLevel) {
-            loggingLevel = LogLevel.INFO;
+            loggingLevel = LogLevel.OFF;
         }
 
         return Logger.#logLevelList.indexOf(loggingLevel);
@@ -241,7 +251,7 @@ class Logger {
     #getLogLevels() {
 
         if (!Logger.#logLevels) {
-            Logger.#logLevels = FileUtil.readJson(Logger.name, Logger.#LEVELS_FILE_NAME, {levels: []}).levels;
+            Logger.#logLevels = FileUtil.readJson(Logger.name, Logger.#LEVELS_FILE_NAME, []);
         }
 
         return Logger.#logLevels;
