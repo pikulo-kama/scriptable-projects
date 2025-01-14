@@ -212,10 +212,15 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
     #height = 0;
     #borderColor;
     #borderWidth;
+
     #paddingTop;
     #paddingRight;
     #paddingBottom;
     #paddingLeft;
+
+    #marginLeading;
+    #marginTrailing;
+    
     #radius;
 
     #layoutFunction = (widget) => widget.layoutHorizontally();
@@ -318,6 +323,26 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
     }
 
     /**
+     * Allow to add spacing between elements.
+     *
+     * @param {Number} leading top or left spacing (depending on stack direction)
+     * @param {Number} trailing bottom or right spacing (depending on stack direction)
+     * @return {StackWidgetBuilder} current instance of builder
+     * @memberof StackWidgetBuilder
+     */
+    margin(leading, trailing) {
+
+        if (!trailing) {
+            trailing = leading;
+        }
+
+        this.#marginLeading = leading;
+        this.#marginTrailing = trailing;
+
+        return this;
+    }
+
+    /**
      * Used to set corner radius of stack.
      *
      * @param {Number} radius stack corner radius
@@ -344,8 +369,16 @@ class StackWidgetBuilder extends Classes(LayoutBuilder, ColorBuilder) {
 
         parent = parentTransform(parent);
 
+        if (this.#marginLeading) {
+            parent.addSpacer(this.#marginLeading);
+        }
+
         let stack = parent.addStack();
         stack.size = new Size(this.#width, this.#height);
+
+        if (this.#marginTrailing) {
+            parent.addSpacer(this.#marginTrailing);
+        }
         
         if (leftAlign) {
             parent.addSpacer();
