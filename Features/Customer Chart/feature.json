@@ -1,6 +1,6 @@
 {
     "__debug": {
-        "__enabled": false,
+        "__enabled": true,
         "__type": "boolean"
     },
     "period": {
@@ -16,5 +16,10 @@
     "trimBlank": {
         "__enabled": true,
         "__type": "boolean"
+    },
+    ".timeZone": {
+        "value": "Europe/Kiev",
+        "__enabled": true,
+        "__type": "string"
     }
 }
