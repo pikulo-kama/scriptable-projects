@@ -28,8 +28,7 @@ To use the scripts in this project, you'll need the **Scriptable** app installed
 1. Download or clone this repository to your local machine.
 2. Make sure contents of the repository are in Scriptable root directory.
 3. Open the Scriptable app on your iOS device.
-4. Copy the desired script(s) from the repository and paste them into Scriptable.
-5. Use already created scripts, or modules to create your own scripts.
+4. Use already created scripts, or modules to create your own scripts.
 
 ### Usage
 
