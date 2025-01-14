@@ -154,6 +154,7 @@ class WidgetBuilder {
         
         this.#renderTimeCode(contentStack);
         spacer().renderFor(contentStack, 4);
+        
         this.#renderInfo(contentStack);
         spacer().renderFor(contentStack);
         

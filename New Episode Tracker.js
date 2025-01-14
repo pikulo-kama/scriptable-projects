@@ -4,6 +4,7 @@
 
 const { cacheRequest, metadata } = importModule("Cache");
 const { FileUtil } = importModule("File Util");
+const { Logger } = importModule("Logger");
 
 const {
     debugEnabled,
@@ -414,12 +415,15 @@ class SeriesInfo {
  */
 class Series {
 
+    #logger = new Logger(Series.name);
+
     static #formatter = new RelativeDateTimeFormatter();
     static #REGEXP_COUNTDOWN = /in\s(\d+)\s(\w+)/;
 
     #seriesInfo;
     #image;
     #countdown = null;
+    #lastEpisode = null;
     #nextEpisode = null;
     #dominantColor = null;
 
@@ -485,6 +489,14 @@ class Series {
      */
     hasCountdown() {
         return !!this.#countdown;
+    }
+
+    getLastEpisodeDate() {
+        return this.#lastEpisode?.getAirDate();
+    }
+
+    getLastEpisode() {
+        return this.#lastEpisode?.toString();
     }
 
     /**
@@ -578,11 +590,16 @@ class Series {
      * @returns {Image} initialized image for the series
      */
     #processImage(imagePath) {
+        this.#logger.debug("Processing series image.", {title: this.#seriesInfo.getTitle()});
 
         if (imagePath) {
-            return Image.fromFile(imagePath);
+            const imageObject = Image.fromFile(imagePath);
+
+            this.#logger.debug("Image data have been loaded from file.", {imageObject, imagePath});
+            return imageObject;
         }
 
+        this.#logger.debug("Image path is missing. Question mark placeholder will be displayed instead.")
         return SFSymbol.named("questionmark").image;
     }
 
@@ -596,6 +613,8 @@ class Series {
 
         let now = new Date();
         let nextEpisode = this.#getEpisodeAfter(seriesInfo, now);
+
+        this.#lastEpisode = this.#getEpisodeBefore(seriesInfo, now);
 
         if (!nextEpisode) {
             return;
@@ -648,6 +667,31 @@ class Series {
         episodes.sort((first, second) => 
             first.getAirDate() - second.getAirDate()
         )
+
+        // Get first episode after the specifed date.
+        return episodes[0];
+    }
+
+    #getEpisodeBefore(seriesInfo, targetDate) {
+        let episodes = seriesInfo?.getEpisodes();
+
+        if (!episodes) {
+            return;
+        }
+
+        episodes = episodes.filter(episode =>
+            episode.getAirDate() < targetDate
+        )
+
+        if (episodes.length == 0) {
+            return null;
+        }
+
+        // Sort descending.
+        episodes.sort((first, second) => 
+            second.getAirDate() - first.getAirDate() ||
+            second.getEpisode() - first.getEpisode()
+        );
 
         // Get first episode after the specifed date.
         return episodes[0];
@@ -792,6 +836,7 @@ class Status {
 class SeriesWidget {
 
     static #backgroundColor = new Color("070d0d");
+    static #tagReleaseDateSeparator = "|";
 
     /**
      * Used to create widget based on
@@ -803,14 +848,19 @@ class SeriesWidget {
     create(series) {
 
         const root = this.#createRootWidget(series);
+        let episodeTagToDisplay = series.getLastEpisode();
+        let episodeDateToDisplay = series.getLastEpisodeDate();
 
-        // Render widget wrapper
-        // with small paddings on top and bottom.
-        spacer().renderFor(root, 4);
-        const rootStack = stack().renderFor(root);
-        spacer().renderFor(root, 4);
+        if (series.hasCountdown()) {
+            episodeTagToDisplay = series.getNextEpisode();
+            episodeDateToDisplay = series.getNextEpisodeDate();
+        }
 
-        // Series image
+        const rootStack = stack()
+            .margin(2)
+            .renderFor(root);
+
+        // Series image.
         image()
             .image(series.getImage())
             .radius(5)
@@ -822,7 +872,7 @@ class SeriesWidget {
             .vertical()
             .renderFor(rootStack);
         
-        // Series title
+        // Series title.
         text()
             .content(series.getTitle())
             .blackRoundedFont(24)
@@ -831,20 +881,19 @@ class SeriesWidget {
             .renderFor(contentStack);
 
         spacer().renderFor(contentStack);
+                            
+        // Countdown Block.
+        this.#renderCountdownBlock(contentStack, series);
+
+        spacer().renderFor(contentStack, 15);
         
-        if (series.hasCountdown()) {
-                    
-            // Countdown
-            spacer().renderFor(contentStack, 10);
-            this.#renderCountdown(contentStack, series);
-            spacer().renderFor(contentStack);
-            
-            this.#renderReleaseInformation(contentStack, series)
-        
-        } else {
-            // Other statuses (ended, waiting for next season)
-            this.#renderStatusPlaceholder(contentStack, series);
-        }
+        // Episode info block (tag + release date).
+        this.#renderEpisodeInformation(
+            contentStack,
+            series,
+            episodeTagToDisplay,
+            episodeDateToDisplay
+        );
         
         return root;
     }
@@ -852,42 +901,72 @@ class SeriesWidget {
     /**
      * Used to render countdown block of the series.
      * 
+     * If series has ended or there is no countdown
+     * then placeholder would be displayed instead.
+     * 
      * @param {*} root parent widget where block should be
      * @param {Series} series series
      */
-    #renderCountdown(root, series) {
+    #renderCountdownBlock(root, series) {
 
-        const countdownBox = stack()
-            .color(series.getDominantColor())
+        const boxBuilder = stack();
+        let boxContentBuilder;
+
+        // When we awaiting for next episode.
+        if (series.hasCountdown()) {
+
+            boxBuilder.color(series.getDominantColor());
+            boxContentBuilder = text()
+                .content(series.getCountdown())
+                .boldMonospacedFont(32);
+
+        } else {
+
+            boxContentBuilder = image()
+                .size(36);
+
+            // Series has ended.
+            if (series.isEnded()) {
+                boxBuilder.color(Color.green());
+                boxContentBuilder.icon('checkmark.circle');
+
+            // Not ended but no information when next episode would be.
+            } else {
+                boxBuilder.color(Color.yellow());
+                boxContentBuilder.icon('hourglass.circle');
+            }
+        }
+
+        const countdownBox = boxBuilder
+            .width(120)
             .padding(5)
             .radius(5)
             .rightAlign()
             .renderFor(root);
         
-        text()
-            .content(series.getCountdown())
+        boxContentBuilder
             .color(SeriesWidget.#backgroundColor)
-            .boldMonospacedFont(36)
             .renderFor(countdownBox);
     }
-    
+
     /**
      * Used to render release info block.
      * Contains season/episode string (s1e3)
-     * and actual date when next episode would air.
+     * and actual date when episode would/did air.
      * 
      * @param {*} root parent widget where block should be
      * @param {Series} series series
+     * @param {String} episodeTag season/episode string of episode (e.g. s3e2)
+     * @param {Date} episodeDate date when displayed episode will be/was released
      */
-    #renderReleaseInformation(root, series) {
-        
+    #renderEpisodeInformation(root, series, episodeTag, episodeDate) {
         const releaseInfoStack = stack()
             .rightAlign()
             .renderFor(root);
         
         // Season / episode 
         text()
-            .content(series.getNextEpisode())
+            .content(episodeTag)
             .blackFont(10)
             .opacity(0.9)
             .renderFor(releaseInfoStack);
@@ -895,7 +974,7 @@ class SeriesWidget {
         spacer().renderFor(releaseInfoStack, 4);
         
         text()
-            .content("|")
+            .content(SeriesWidget.#tagReleaseDateSeparator)
             .blackFont(10)
             .color(series.getDominantColor())
             .renderFor(releaseInfoStack);
@@ -904,42 +983,10 @@ class SeriesWidget {
         
         // Air date
         date()
-            .content(series.getNextEpisodeDate())
+            .content(episodeDate)
             .blackFont(8)
             .opacity(0.7)
             .renderFor(releaseInfoStack);
-    }
-    
-    /**
-     * Used to render series status.
-     * This is invoked when there are no information
-     * when next episode would be released.
-     * 
-     * Can render two statuses:
-     * - Series has ended
-     * - No info, but series has not ended (Wait)
-     * 
-     * @param {*} root parent widget where block should be
-     * @param {Series} series series
-     */
-    #renderStatusPlaceholder(root, series) {
-        
-        const statusWidget = image();
-        
-        if (series.isEnded()) {
-            statusWidget.icon("checkmark.circle");
-            statusWidget.color(Color.green());
-            
-        } else {
-            statusWidget.icon("hourglass.circle");
-            statusWidget.color(Color.yellow());
-        }
-        
-        statusWidget
-            .rightAlign()
-            .opacity(0.8)
-            .size(24)
-            .renderFor(root);
     }
 
     /**
