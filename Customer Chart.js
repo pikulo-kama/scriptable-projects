@@ -3,10 +3,11 @@
 // icon-color: cyan; icon-glyph: users;
 
 const { debugEnabled, debugFeatureEnabled, getFeature } = importModule("Feature");
-const { LinearChart } = importModule("Linear Chart");
-const { present } = importModule("UI");
 const { themed, ColorMode } = importModule("Config Util");
+const { LinearChart } = importModule("Linear Chart");
+const { Logger, getLogger } = importModule("Logger");
 const { tr } = importModule("Localization");
+const { present } = importModule("UI");
 
 
 const parameters = getArguments();
@@ -52,6 +53,7 @@ async function main() {
  */
 function getArguments() {
 
+    const logger = getLogger();
     let arguments = JSON.parse(args.widgetParameter) ?? {};
 
     if (!arguments.trimBlank) {
@@ -67,7 +69,7 @@ function getArguments() {
     }
 
     if (debugFeatureEnabled("trimBlank")) {
-        arguments.trimBlank = getFeature("trimBlank");
+        arguments.trimBlank = true;
     }
 
     if (debugFeatureEnabled("period")) {
@@ -85,6 +87,8 @@ function getArguments() {
     if (!arguments.calendar) {
         throw new Error("Calendar was not provided");
     }
+    
+    logger.debug("Using following script arguments", arguments);
 
     return arguments;
 }
@@ -97,6 +101,8 @@ function getArguments() {
  * @class CalendarChartDataRepository
  */
 class CalendarChartDataRepository {
+
+    #logger = new Logger(CalendarChartDataRepository.name);
 
     static #FIRST_DAY_OF_MONTH = 1;
     static #MONTH_NAMES = [
@@ -140,10 +146,14 @@ class CalendarChartDataRepository {
                 [calendar]
             );
             
-            eventSet.push({
+            let event = {
                 month: monthNames[startDate.getMonth()],
                 eventCount: events.length
-            });
+            };
+            
+            this.#logger.debug("Adding chart segment", event);
+            
+            eventSet.push(event);
         }
         
         if (parameters.skipBlank) {
@@ -160,6 +170,7 @@ class CalendarChartDataRepository {
                 
                 let idx = eventSet.indexOf(event);
                 eventSet.splice(idx, 1);
+                this.#logger.debug("Removing blank segment", event);
             }
         }
     
@@ -186,15 +197,19 @@ class CalendarChartDataRepository {
             let monthStartDate = new Date();
             monthStartDate.setMonth(monthStartDate.getMonth() - monthIdx);
             monthStartDate.setDate(CalendarChartDataRepository.#FIRST_DAY_OF_MONTH);
-
+            
+            monthStartDate = new Date(
+                monthStartDate.toLocaleString('en-US', {
+                    timeZone: getFeature(".timeZone")
+                })
+            );
+            
+            this.#logger.debug("Adding date to chart ranges", {monthStartDate});
             dates.push(monthStartDate);
         }
         
         dates.push(new Date());
-        
-        return dates.map(date => 
-            new Date(date.toLocaleString('en-US', {timeZone: tr("customerChart_timezone")}))
-        );
+        return dates;
     }
 }
 
