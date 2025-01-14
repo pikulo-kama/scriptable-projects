@@ -2,9 +2,9 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: teal; icon-glyph: check-circle;
 
-const { tr } = importModule("Localization");
-const { FileUtil } = importModule("File Util");
 const { modal, ModalRule, showWarning, showError } = importModule("Modal");
+const { FileUtil } = importModule("File Util");
+const { tr } = importModule("Localization");
 const {
     BoolDataField,
     TextDataField,

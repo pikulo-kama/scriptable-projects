@@ -2,8 +2,8 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: globe;
 
-const { FileUtil } = importModule("File Util");
 const { modal, ModalRule } = importModule("Modal");
+const { FileUtil } = importModule("File Util");
 const { tr } = importModule("Localization");
 
 const {

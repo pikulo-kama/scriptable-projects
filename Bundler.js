@@ -3,8 +3,8 @@
 // icon-color: purple; icon-glyph: file-archive;
 
 const { FileUtil } = importModule("File Util");
-const { modal } = importModule("Modal");
 const { tr } = importModule("Localization");
+const { modal } = importModule("Modal");
 
 
 const JS_EXTENSION = ".js";

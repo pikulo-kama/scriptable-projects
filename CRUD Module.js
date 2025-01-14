@@ -3,8 +3,8 @@
 // icon-color: deep-purple; icon-glyph: database;
 
 const { FileUtil } = importModule("File Util");
-const { modal } = importModule("Modal");
 const { tr } = importModule("Localization");
+const { modal } = importModule("Modal");
 
 
 /**

@@ -2,10 +2,15 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: pink; icon-glyph: tv;
 
-const { FileUtil } = importModule("File Util");
-const { metadata, cacheRequest } = importModule("Cache");
-const { tr } = importModule("Localization");
 const { debugFeatureEnabled, getFeature } = importModule("Feature");
+const { metadata, cacheRequest } = importModule("Cache");
+const { FileUtil } = importModule("File Util");
+const { tr } = importModule("Localization");
+
+const {
+    UIFormReadOnly,
+    UIDataTable
+} = importModule("CRUD Module");
 
 const {
     spacer,
@@ -14,11 +19,6 @@ const {
     rootWidget,
     present
 } = importModule("UI");
-
-const {
-    UIFormReadOnly,
-    UIDataTable
-} = importModule("CRUD Module");
 
 
 /**

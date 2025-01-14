@@ -2,8 +2,8 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: exclamation-triangle;
 
-const { tr } = importModule("Localization");
 const { addToState, getFromState } = importModule("Core");
+const { tr } = importModule("Localization");
 
 
 /**
