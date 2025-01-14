@@ -1,0 +1,8 @@
+{
+    "loggerUI_deleteFieldLabel": "🗑️",
+    "loggerUI_logLevelFormTitle": "Select new log level",
+    "loggerUI_serviceNameFieldFormLabel": "Name",
+    "loggerUI_serviceNameFormTitle": "Service Name",
+    "loggerUI_tableTitle": "Log Levels",
+    "loggerUI_updateServiceNameAction": "Update"
+}

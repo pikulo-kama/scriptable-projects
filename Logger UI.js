@@ -4,6 +4,7 @@
 
 const { FileUtil } = importModule("File Util");
 const { LogLevel } = importModule("Logger");
+const { tr } = importModule("Localization");
 const {
     TextDataField,
     UIDataTable,
@@ -49,7 +50,7 @@ class LoggingTable {
     build() {
 
         const table = new UIDataTable();
-        table.title = "Logging Levels";
+        table.title = tr("loggerUI_tableTitle");
 
         table.allowCreation();
         table.showSeparators();
@@ -74,15 +75,15 @@ class LoggingTable {
 
         // Service Name Field
         const serviceNameUIField = new UIForm((log) => log.service, 70);
-        serviceNameUIField.setFormTitleFunction(() => "Service");
-        const serviceNameFormField = new UIFormField(this.#serviceNameDataField, "Name");
+        serviceNameUIField.setFormTitleFunction(() => tr("loggerUI_serviceNameFormTitle"));
+        const serviceNameFormField = new UIFormField(this.#serviceNameDataField, tr("loggerUI_serviceNameFieldFormLabel"));
 
-        serviceNameUIField.addDefaultAction("Update");
+        serviceNameUIField.addDefaultAction(tr("loggerUI_updateServiceNameAction"));
         serviceNameUIField.addFormField(serviceNameFormField);
 
         // Logging Level Field
         const logLevelUIField = new UIForm((log) => log.level, 30);
-        logLevelUIField.setFormTitleFunction(() => "Select new level");
+        logLevelUIField.setFormTitleFunction(() => tr("loggerUI_logLevelFormTitle"));
 
         const setToInfoAction = new UIFormAction(LogLevel.INFO);
         const setToWarnAction = new UIFormAction(LogLevel.WARN);
@@ -100,7 +101,7 @@ class LoggingTable {
         logLevelUIField.addFormAction(setToDebugAction);
 
         // Delete Field
-        const deleteUIField = new UIDeleteRowField(() => "X", 15);
+        const deleteUIField = new UIDeleteRowField(() => tr("loggerUI_deleteFieldLabel"), 15);
 
         return [
             serviceNameUIField,
