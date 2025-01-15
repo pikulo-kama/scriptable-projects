@@ -1,8 +1,0 @@
-{
-    "loggerUI_deleteFieldLabel": "🗑️",
-    "loggerUI_logLevelFormTitle": "Оберіть новий рівень логування",
-    "loggerUI_serviceNameFieldFormLabel": "Ім'я",
-    "loggerUI_serviceNameFormTitle": "Ім'я сервісу",
-    "loggerUI_tableTitle": "Рівні Логування",
-    "loggerUI_updateServiceNameAction": "Оновити"
-}

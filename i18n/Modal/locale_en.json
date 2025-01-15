@@ -1,9 +1,0 @@
-{
-    "modal_cancelActionName": "Cancel",
-    "modal_errorModalOkActionName": "OK",
-    "modal_errorModalTitle": "⛔️ Error",
-    "modal_fieldCantBeEmptyMessage": "Field '%1' cannot be empty",
-    "modal_fieldShouldBeNumberMessage": "Field '%1' should be a number",
-    "modal_warnModalOkActionName": "OK",
-    "modal_warnModalTitle": "⚠️ Warning"
-}

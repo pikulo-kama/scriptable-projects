@@ -1,9 +1,0 @@
-{
-    "modal_cancelActionName": "Скасувати",
-    "modal_errorModalOkActionName": "OK",
-    "modal_errorModalTitle": "⛔️ Помилка",
-    "modal_fieldCantBeEmptyMessage": "Поле '%1' не заповнене",
-    "modal_fieldShouldBeNumberMessage": "Поле '%1' має бути числом",
-    "modal_warnModalOkActionName": "OK",
-    "modal_warnModalTitle": "⚠️ Застереження"
-}
