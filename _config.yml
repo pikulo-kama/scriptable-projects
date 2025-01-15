@@ -11,7 +11,7 @@ description: >-
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
 
 url: "pikulo-kama.github.io"
-baseurl: "scriptable-projects"
+baseurl: "/scriptable-projects"
 
 github:
   username: pikulo-kama
