@@ -54,5 +54,25 @@
           {{- site.data.locales[include.lang].layout[page.layout] | default: page.layout | capitalize -}}
         {% endif %}
       </div>
+  
+      <button type="button" id="search-trigger" class="btn btn-link invisible">
+        <i class="fas fa-search fa-fw"></i>
+      </button>
+  
+      <search id="search" class="align-items-center ms-3 ms-lg-0 invisible">
+        <i class="fas fa-search fa-fw"></i>
+        <input
+          class="form-control"
+          id="search-input"
+          type="search"
+          aria-label="search"
+          autocomplete="off"
+          placeholder="{{ site.data.locales[include.lang].search.hint | capitalize }}..."
+        >
+      </search>
+      <button type="button" class="btn btn-link text-decoration-none invisible" id="search-cancel">
+        {{- site.data.locales[include.lang].search.cancel -}}
+      </button>
     </div>
   </header>
+  
