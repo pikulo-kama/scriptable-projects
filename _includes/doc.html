@@ -6,7 +6,7 @@
 
     <div class="d-flex gap-1">
 
-        {%- if include.specifity != null -%}
+        {%- if include.specificity != null -%}
             <span class="badge bg-warning text-dark">
                 <i class="fa-solid fa-image"></i>
                 Region Specific
@@ -29,16 +29,18 @@
     </div>
 
     {%- if include.widgetSupport -%}
-        <div class="scriptable-doc__widget-info mt-5 p-1 d-flex align-items-center justify-content-between">
+        <div class="scriptable-doc__widget mt-5 p-1">
 
-            {% assign specifityIcon = "text-success fa-globe" %}
-            {% assign specifityRegion = "Global" %}
+            {% assign widgetSize = include.widgetSize | default 'small' %}
+
+            {% assign specificityIcon = "text-success fa-globe" %}
+            {% assign specificityRegion = "Global" %}
 
             {% assign sizeOne = "fa-regular" %}
             {% assign sizeTwo = "fa-regular" %}
             {% assign sizeThree = "fa-regular" %}
 
-            {% case include.widgetSize %}
+            {% case widgetSize %}
                 {% when 'small' %}
                     {% assign sizeOne = "fa-solid" %}
 
@@ -52,13 +54,13 @@
                     {% assign sizeThree = "fa-solid" %}
             {% endcase %}
 
-            {% case include.specifity %}
+            {% case include.specificity %}
                 {% when 'uk' %}
-                    {% assign specifityIcon = "text-warning fa-flag" %}
-                    {% assign specifityRegion = "Ukraine" %}
+                    {% assign specificityIcon = "text-warning fa-flag" %}
+                    {% assign specificityRegion = "Ukraine" %}
             {% endcase %}
 
-            <div class="p-4 h-100 d-flex flex-column align-items-start">
+            <div class="scriptable-doc__widget-details p-4 h-100">
 
                 <span data-toc-skip class="mb-5 h4">Widget</span>
 
@@ -70,14 +72,14 @@
                         <i class="{{ sizeThree }} fa-circle"></i>
                     </div>
                     <div class="d-inline-flex align-items-center gap-1">
-                        <span class="scriptable-doc__widget-attribute">Specifity:</span>
-                        <i class="fa-solid {{ specifityIcon }}"></i>
-                        <span>{{ specifityRegion }}</span>
+                        <span class="scriptable-doc__widget-attribute">Specificity:</span>
+                        <i class="fa-solid {{ specificityIcon }}"></i>
+                        <span>{{ specificityRegion }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="scriptable-doc__widget-preview d-flex align-items-center">
+            <div class="scriptable-doc__widget-preview {{ widgetSize }} d-flex align-items-center">
                 {%- if include.widgetPreview != null -%}
                     <img
                         src="{{ include.widgetPreview }}" 

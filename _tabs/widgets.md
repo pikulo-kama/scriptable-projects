@@ -15,7 +15,7 @@ Some scripts have only UI table functionality implemented, but some of them have
 
 {% include doc.html
     name="Blackout Notifier"
-    specifity="uk"
+    specificity="uk"
 
     widgetSupport=true
     widgetSize="small"

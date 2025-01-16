@@ -1,22 +1,46 @@
+@use '../_sass/abstracts/breakpoints' as bp;
 
-.scriptable-doc__widget-info {
-    height: 260px;
+
+.scriptable-doc__widget {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+
     border-radius: 35px;
     background-color: var(--sidebar-bg);
     border: 1px solid var(--sidebar-border-color);
-}
 
-.scriptable-doc__widget-attribute {
-    color: var(--sidebar-muted-color);
-    margin-right: 10px;
-}
+    @include bp.lte(bp.get(lg)) {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+        width: max-content;
+    }
 
-.scriptable-doc__widget-preview img {
-    border-radius: 35px;
-    height: 250px;
-    filter: grayscale(35%);
-}
+    &-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-.scriptable-doc__widget-preview > a {
-    margin: 0 !important;
+    &-attribute {
+        color: var(--sidebar-muted-color);
+        margin-right: 10px;
+    }
+
+    &-preview img {
+        border-radius: 35px;
+        height: 250px;
+        filter: grayscale(35%);
+
+        @include bp.lte(bp.get(lg)) {
+            height: auto;
+            width: 90vw;
+        }
+    }
+
+    &-preview > a {
+        margin: 0 !important;
+    }
 }
