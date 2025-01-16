@@ -6,9 +6,9 @@ lang: en
 
 
 title: pikulo-kama's Scriptable projects
-tagline: A text-focused Jekyll theme
+tagline: Collection of awesome Scriptable scripts and modules
 description: >-
-  A minimal, responsive and feature-rich Jekyll theme for technical writing.
+  Collection of awesome Scriptable scripts and modules.
 
 url: "pikulo-kama.github.io"
 baseurl: "/scriptable-projects"
