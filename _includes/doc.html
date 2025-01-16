@@ -1,0 +1,90 @@
+
+{%- assign script_id = include.name | replace: ' ', '-' | downcase -%}
+
+<div class="mb-5">
+    <h3 id="{{ script_id }}">{{include.name}}</h3>
+
+    <div class="d-flex gap-1">
+
+        {%- if include.specifity != null -%}
+            <span class="badge bg-warning text-dark">
+                <i class="fa-solid fa-image"></i>
+                Region Specific
+            </span>
+        {%- endif -%}
+
+        {%- if include.widgetSupport -%}
+            <span class="badge bg-success">
+                <i class="fa-solid fa-image"></i>
+                Widget Support
+            </span>
+        {%- endif -%}
+
+        {%- if include.tableUISupport -%}
+            <span class="badge bg-primary">
+                <i class="fa-solid fa-table"></i>
+                Table UI Support
+            </span>
+        {%- endif -%}
+    </div>
+
+    {%- if include.widgetSupport -%}
+        <div class="scriptable-doc__widget-info mt-5 p-1 d-flex align-items-center justify-content-between">
+
+            {% assign specifityIcon = "text-success fa-globe" %}
+            {% assign specifityRegion = "Global" %}
+
+            {% assign sizeOne = "fa-regular" %}
+            {% assign sizeTwo = "fa-regular" %}
+            {% assign sizeThree = "fa-regular" %}
+
+            {% case include.widgetSize %}
+                {% when 'small' %}
+                    {% assign sizeOne = "fa-solid" %}
+
+                {% when 'medium' %}
+                    {% assign sizeOne = "fa-solid" %}
+                    {% assign sizeTwo = "fa-solid" %}
+
+                {% when 'large' %}
+                    {% assign sizeOne = "fa-solid" %}
+                    {% assign sizeTwo = "fa-solid" %}
+                    {% assign sizeThree = "fa-solid" %}
+            {% endcase %}
+
+            {% case include.specifity %}
+                {% when 'uk' %}
+                    {% assign specifityIcon = "text-warning fa-flag" %}
+                    {% assign specifityRegion = "Ukraine" %}
+            {% endcase %}
+
+            <div class="p-4 h-100 d-flex flex-column align-items-start">
+
+                <span data-toc-skip class="mb-5 h4">Widget</span>
+
+                <div class="d-flex flex-column align-items-start">
+                    <div class="d-inline-flex align-items-center gap-1">
+                        <span class="scriptable-doc__widget-attribute">Size:</span>
+                        <i class="{{ sizeOne }} fa-circle"></i>
+                        <i class="{{ sizeTwo }} fa-circle"></i>
+                        <i class="{{ sizeThree }} fa-circle"></i>
+                    </div>
+                    <div class="d-inline-flex align-items-center gap-1">
+                        <span class="scriptable-doc__widget-attribute">Specifity:</span>
+                        <i class="fa-solid {{ specifityIcon }}"></i>
+                        <span>{{ specifityRegion }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="scriptable-doc__widget-preview d-flex align-items-center">
+                {%- if include.widgetPreview != null -%}
+                    <img
+                        src="{{ include.widgetPreview }}" 
+                        alt="Preview of {{ include.name }} widget"
+                    >
+                {%- endif -%}
+            </div>
+        </div>
+    {%- endif -%}
+</div>
