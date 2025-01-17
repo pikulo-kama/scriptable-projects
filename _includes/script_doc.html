@@ -1,33 +1,44 @@
 
+<!-- 
+    Represents script documentation header
+    which contains summary of script capabilities.
+-->
+
 {%- assign script_id = include.name | replace: ' ', '-' | downcase -%}
 
 <div class="mb-5 mt-5">
+    <!-- Script name -->
     <h3 id="{{ script_id }}">{{include.name}}</h3>
 
+    <!-- Chips Section -->
     <div class="d-flex gap-1">
+        <!-- Region Specific Chip -->
+        {% include doc_chip.html
+            controlValue=include.specificity
+            color="warning"
+            textColor="dark"
+            icon="flag"
+            content="Region Specific"
+        %}
+        
+        <!-- Widget Support Chip -->
+        {% include doc_chip.html
+            controlValue=include.widgetSupport
+            color="success"
+            icon="image"
+            content="Widget Support"
+        %}
 
-        {%- if include.specificity != null -%}
-            <span class="badge bg-warning text-dark">
-                <i class="fa-solid fa-image"></i>
-                Region Specific
-            </span>
-        {%- endif -%}
-
-        {%- if include.widgetSupport -%}
-            <span class="badge bg-success">
-                <i class="fa-solid fa-image"></i>
-                Widget Support
-            </span>
-        {%- endif -%}
-
-        {%- if include.uiTableSupport -%}
-            <span class="badge bg-primary">
-                <i class="fa-solid fa-table"></i>
-                UI Table Support
-            </span>
-        {%- endif -%}
+        <!-- UI Table Support Chip -->
+        {% include doc_chip.html
+            controlValue=include.uiTableSupport
+            color="primary"
+            icon="table"
+            content="UI Table Support"
+        %}
     </div>
 
+    <!-- Widget Information Block -->
     {%- if include.widgetSupport -%}
         <div class="scriptable-doc__widget mt-5 p-1">
 
@@ -90,6 +101,7 @@
         </div>
     {%- endif -%}
 
+    <!-- UI Table Information Block -->
     {%- if include.uiTableSupport -%}
         <div class="scriptable-doc__widget mt-5 p-1">
 
@@ -150,7 +162,7 @@
                 {%- if include.uiTablePreview != null -%}
                     <img
                         src="{{ include.uiTablePreview }}" 
-                        alt="Preview of {{ include.name }} widget"
+                        alt="Preview of {{ include.name }} UI Table"
                     >
                 {%- endif -%}
             </div>

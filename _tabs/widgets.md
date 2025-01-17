@@ -13,7 +13,7 @@ toc: true
 The following section contains list of scripts that could be used directly by end-user.\
 Some scripts have only UI table functionality implemented, but some of them have both Widget and UI table.
 
-{% include doc.html
+{% include script_doc.html
     name="Blackout Notifier"
     specificity="uk"
 
@@ -26,7 +26,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="Customer Chart"
 
     widgetSupport=true
@@ -38,7 +38,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="New Episode Tracker"
 
     widgetSupport=true
@@ -50,7 +50,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="Stop Watcher"
 
     widgetSupport=true
@@ -69,7 +69,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="WatchQ"
 
     widgetSupport=true
@@ -88,7 +88,7 @@ The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for t
 
 ## Internal Scripts
 
-{% include doc.html
+{% include script_doc.html
     name="Feature UI"
 
     uiTableSupport=true
@@ -102,7 +102,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="Localizator"
 
     uiTableSupport=true
@@ -114,7 +114,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="Bundler"
 %}
 
@@ -122,7 +122,7 @@ Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots 
 
 The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
 
-{% include doc.html
+{% include script_doc.html
     name="Logger UI"
 
     uiTableSupport=true

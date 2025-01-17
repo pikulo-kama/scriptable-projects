@@ -1,0 +1,14 @@
+
+<!-- 
+    Represents script chip that gives
+    information about script functionality.
+-->
+
+{%- assign textColor = include.textColor | default: 'light' -%}
+
+{%- if include.controlValue != null -%}
+    <span class="badge bg-{{ include.color }} text-{{ textColor }}">
+        <i class="fa-solid fa-{{ include.icon }}"></i>
+        {{ include.content }}
+    </span>
+{%- endif -%}
