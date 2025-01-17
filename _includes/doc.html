@@ -1,7 +1,7 @@
 
 {%- assign script_id = include.name | replace: ' ', '-' | downcase -%}
 
-<div class="mb-5">
+<div class="mb-5 mt-5">
     <h3 id="{{ script_id }}">{{include.name}}</h3>
 
     <div class="d-flex gap-1">
@@ -20,10 +20,10 @@
             </span>
         {%- endif -%}
 
-        {%- if include.tableUISupport -%}
+        {%- if include.uiTableSupport -%}
             <span class="badge bg-primary">
                 <i class="fa-solid fa-table"></i>
-                Table UI Support
+                UI Table Support
             </span>
         {%- endif -%}
     </div>
@@ -79,10 +79,77 @@
                 </div>
             </div>
 
-            <div class="scriptable-doc__widget-preview {{ widgetSize }} d-flex align-items-center">
+            <div class="scriptable-doc__widget-preview {{ widgetSize }}">
                 {%- if include.widgetPreview != null -%}
                     <img
                         src="{{ include.widgetPreview }}" 
+                        alt="Preview of {{ include.name }} widget"
+                    >
+                {%- endif -%}
+            </div>
+        </div>
+    {%- endif -%}
+
+    {%- if include.uiTableSupport -%}
+        <div class="scriptable-doc__widget mt-5 p-1">
+
+            <div class="scriptable-doc__widget-details p-4 h-100">
+
+                <span data-toc-skip class="mb-5 h4">UI Table</span>
+
+                <div class="d-flex flex-row align-items-start gap-5">
+
+                    {%- 
+                        if include.uiTableAllowCreation 
+                        or include.uiTableAllowEditing 
+                        or include.uiTableAllowDeletion
+                    -%}
+                        <div class="d-flex flex-column gap-1">
+                            {%- if include.uiTableAllowCreation -%}
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-plus text-success"></i>
+                                    <span>Create</span>
+                                </div>
+                            {%- endif -%}
+
+                            {%- if include.uiTableAllowEditing -%}
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-pen-to-square text-success"></i>
+                                    <span>Edit</span>
+                                </div>
+                            {%- endif -%}
+
+                            {%- if include.uiTableAllowDeletion -%}
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <i class="fa-solid fa-trash text-success"></i>
+                                    <span>Delete</span>
+                                </div>
+                            {%- endif -%}
+                        </div>
+                    {%- endif -%}
+
+                    <div class="d-flex flex-column gap-1">
+                        {%- if include.uiTableAllowFiltering -%}
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <i class="fa-solid fa-filter text-success"></i>
+                                <span>Filter</span>
+                            </div>
+                        {%- endif -%}
+
+                        {%- if include.uiTableReadonly -%}
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <i class="fa-brands fa-readme text-warning"></i>
+                                <span>Readonly</span>
+                            </div>
+                        {%- endif -%}
+                    </div>
+                </div>
+            </div>
+
+            <div class="scriptable-doc__uiTable-preview d-flex align-items-center">
+                {%- if include.uiTablePreview != null -%}
+                    <img
+                        src="{{ include.uiTablePreview }}" 
                         alt="Preview of {{ include.name }} widget"
                     >
                 {%- endif -%}

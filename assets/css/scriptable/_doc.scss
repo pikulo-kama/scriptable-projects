@@ -41,6 +41,26 @@
     }
 
     &-preview > a {
-        margin: 0 !important;
+        margin-right: 0.5rem !important;
+    }
+}
+
+.scriptable-doc__uiTable-preview {
+    overflow: hidden;
+    width: 70%;
+    height: 250px;
+    position: relative;
+    border-radius: 35px;
+
+    @include bp.lte(bp.get(lg)) {
+        width: 90vw;
+    }
+
+    & img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: auto;
+        width: 100%;
     }
 }
