@@ -1,10 +1,9 @@
 @use '../_sass/abstracts/breakpoints' as bp;
 
-
-.scriptable-doc__widget {
+.scriptable-doc {
 
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     flex-direction: row;
 
@@ -18,49 +17,48 @@
         width: max-content;
     }
 
-    &-details {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-    }
+    &__preview {
 
-    &-attribute {
-        color: var(--sidebar-muted-color);
-        margin-right: 10px;
-    }
+        & img {
+            border-radius: 35px;
+            height: 250px;
+            filter: grayscale(35%);
+        }
 
-    &-preview img {
-        border-radius: 35px;
-        height: 250px;
-        filter: grayscale(35%);
+        &.widget img {
+            @include bp.lte(bp.get(lg)) {
+                height: auto;
+                width: 90vw;
+            }
+        }
 
-        @include bp.lte(bp.get(lg)) {
-            height: auto;
-            width: 90vw;
+        &.ui-table {
+            overflow: hidden;
+            width: 70%;
+            height: 250px;
+            position: relative;
+            border-radius: 35px;
+
+            @include bp.lte(bp.get(lg)) {
+                width: 90vw;
+            }
+
+            & img {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: auto;
+                width: 100%;
+            }
         }
     }
 
-    &-preview > a {
-        margin-right: 0.5rem !important;
+    &__preview > a {
+        margin-right: 0.5rem;
     }
 }
 
-.scriptable-doc__uiTable-preview {
-    overflow: hidden;
-    width: 70%;
-    height: 250px;
-    position: relative;
-    border-radius: 35px;
 
-    @include bp.lte(bp.get(lg)) {
-        width: 90vw;
-    }
-
-    & img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: auto;
-        width: 100%;
-    }
+.color-muted {
+    color: var(--sidebar-muted-color);
 }

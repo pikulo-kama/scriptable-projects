@@ -40,57 +40,25 @@
 
     <!-- Widget Information Block -->
     {%- if include.widgetSupport -%}
-        <div class="scriptable-doc__widget mt-5 p-1">
 
-            {% assign widgetSize = include.widgetSize | default 'small' %}
+        <div class="scriptable-doc mt-5 p-1">
+            <div class="d-flex flex-column align-items-start p-4">
 
-            {% assign specificityIcon = "text-success fa-globe" %}
-            {% assign specificityRegion = "Global" %}
+                <span class="mb-4 h4">Widget</span>
 
-            {% assign sizeOne = "fa-regular" %}
-            {% assign sizeTwo = "fa-regular" %}
-            {% assign sizeThree = "fa-regular" %}
-
-            {% case widgetSize %}
-                {% when 'small' %}
-                    {% assign sizeOne = "fa-solid" %}
-
-                {% when 'medium' %}
-                    {% assign sizeOne = "fa-solid" %}
-                    {% assign sizeTwo = "fa-solid" %}
-
-                {% when 'large' %}
-                    {% assign sizeOne = "fa-solid" %}
-                    {% assign sizeTwo = "fa-solid" %}
-                    {% assign sizeThree = "fa-solid" %}
-            {% endcase %}
-
-            {% case include.specificity %}
-                {% when 'uk' %}
-                    {% assign specificityIcon = "text-warning fa-flag" %}
-                    {% assign specificityRegion = "Ukraine" %}
-            {% endcase %}
-
-            <div class="scriptable-doc__widget-details p-4 h-100">
-
-                <span data-toc-skip class="mb-5 h4">Widget</span>
-
+                <!-- Widget Attributes -->
                 <div class="d-flex flex-column align-items-start">
-                    <div class="d-inline-flex align-items-center gap-1">
-                        <span class="scriptable-doc__widget-attribute">Size:</span>
-                        <i class="{{ sizeOne }} fa-circle"></i>
-                        <i class="{{ sizeTwo }} fa-circle"></i>
-                        <i class="{{ sizeThree }} fa-circle"></i>
-                    </div>
-                    <div class="d-inline-flex align-items-center gap-1">
-                        <span class="scriptable-doc__widget-attribute">Specificity:</span>
-                        <i class="fa-solid {{ specificityIcon }}"></i>
-                        <span>{{ specificityRegion }}</span>
-                    </div>
+                    {% include widget_size.html 
+                        size=include.widgetSize 
+                    %}
+                    {% include widget_specificity.html 
+                        specificity=include.specificity
+                    %}
                 </div>
             </div>
 
-            <div class="scriptable-doc__widget-preview {{ widgetSize }}">
+            <!-- Widget Image Preview -->
+            <div class="scriptable-doc__preview widget">
                 {%- if include.widgetPreview != null -%}
                     <img
                         src="{{ include.widgetPreview }}" 
@@ -103,62 +71,55 @@
 
     <!-- UI Table Information Block -->
     {%- if include.uiTableSupport -%}
-        <div class="scriptable-doc__widget mt-5 p-1">
+        <div class="scriptable-doc mt-5 p-1">
+            <div class="d-flex flex-column align-items-start p-4">
 
-            <div class="scriptable-doc__widget-details p-4 h-100">
+                <span class="mb-4 h4">UI Table</span>
 
-                <span data-toc-skip class="mb-5 h4">UI Table</span>
-
+                <!-- UI Table Attributes -->
                 <div class="d-flex flex-row align-items-start gap-5">
-
                     {%- 
                         if include.uiTableAllowCreation 
                         or include.uiTableAllowEditing 
                         or include.uiTableAllowDeletion
                     -%}
                         <div class="d-flex flex-column gap-1">
-                            {%- if include.uiTableAllowCreation -%}
-                                <div class="d-inline-flex align-items-center gap-1">
-                                    <i class="fa-solid fa-plus text-success"></i>
-                                    <span>Create</span>
-                                </div>
-                            {%- endif -%}
-
-                            {%- if include.uiTableAllowEditing -%}
-                                <div class="d-inline-flex align-items-center gap-1">
-                                    <i class="fa-solid fa-pen-to-square text-success"></i>
-                                    <span>Edit</span>
-                                </div>
-                            {%- endif -%}
-
-                            {%- if include.uiTableAllowDeletion -%}
-                                <div class="d-inline-flex align-items-center gap-1">
-                                    <i class="fa-solid fa-trash text-success"></i>
-                                    <span>Delete</span>
-                                </div>
-                            {%- endif -%}
+                            {% include ui_table_attr.html
+                                controlValue=include.uiTableAllowCreation
+                                content="Create"
+                                icon="fa-plus"
+                            %}
+                            {% include ui_table_attr.html
+                                controlValue=include.uiTableAllowEditing
+                                content="Edit"
+                                icon="fa-pen-to-square"
+                            %}
+                            {% include ui_table_attr.html
+                                controlValue=include.uiTableAllowDeletion
+                                content="Delete"
+                                icon="fa-trash"
+                            %}
                         </div>
                     {%- endif -%}
 
                     <div class="d-flex flex-column gap-1">
-                        {%- if include.uiTableAllowFiltering -%}
-                            <div class="d-inline-flex align-items-center gap-1">
-                                <i class="fa-solid fa-filter text-success"></i>
-                                <span>Filter</span>
-                            </div>
-                        {%- endif -%}
-
-                        {%- if include.uiTableReadonly -%}
-                            <div class="d-inline-flex align-items-center gap-1">
-                                <i class="fa-brands fa-readme text-warning"></i>
-                                <span>Readonly</span>
-                            </div>
-                        {%- endif -%}
+                        {% include ui_table_attr.html
+                            controlValue=include.uiTableAllowFiltering
+                            content="Filter"
+                            icon="fa-filter"
+                        %}
+                        {% include ui_table_attr.html
+                            controlValue=include.uiTableReadonly
+                            content="Readonly"
+                            color="warning"
+                            icon="fa-book-open"
+                        %}
                     </div>
                 </div>
             </div>
 
-            <div class="scriptable-doc__uiTable-preview d-flex align-items-center">
+            <!-- UI Table Image Preview -->
+            <div class="scriptable-doc__preview ui-table">
                 {%- if include.uiTablePreview != null -%}
                     <img
                         src="{{ include.uiTablePreview }}" 

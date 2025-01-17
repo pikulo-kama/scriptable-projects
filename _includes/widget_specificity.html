@@ -1,0 +1,21 @@
+<!-- 
+    Represents widget attribute that
+    shows specifity of widget, whether
+    it's usable only in some selected region(s)
+    or globally.
+-->
+
+{% assign specificityClasses = "text-success fa-globe" %}
+{% assign specificityRegion = "Global" %}        
+
+{% case include.specificity %}
+    {% when 'uk' %}
+        {% assign specificityClasses = "text-warning fa-flag" %}
+        {% assign specificityRegion = "Ukraine" %}
+{% endcase %}
+
+<div class="d-inline-flex align-items-center gap-2">
+    <span class="me-2 color-muted">Specificity:</span>
+    <i class="fa-solid {{ specificityClasses }}"></i>
+    <span>{{ specificityRegion }}</span>
+</div>

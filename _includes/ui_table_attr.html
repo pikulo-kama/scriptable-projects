@@ -1,0 +1,15 @@
+<!-- 
+    Represents attribute of UI table.
+-->
+
+{%- assign display = include.controlValue -%}
+{%- assign icon = include.icon -%}
+{%- assign content = include.content -%}
+{%- assign color = include.color | default: "success" -%}
+
+{%- if display -%}
+    <div class="d-inline-flex align-items-center gap-1">
+        <i class="fa-solid {{ icon }} text-{{ color }}"></i>
+        <span>{{ content }}</span>
+    </div>
+{%- endif -%}

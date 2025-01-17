@@ -1,0 +1,32 @@
+
+<!-- 
+    Represents widget attribute that 
+    show size of widget.
+-->
+
+{% assign size = include.size | default 'small' %}
+
+{% assign firstCircle = "fa-regular" %}
+{% assign secondCircle = "fa-regular" %}
+{% assign thirdCircle = "fa-regular" %}
+
+{% case size %}
+    {% when 'small' %}
+        {% assign firstCircle = "fa-solid" %}
+
+    {% when 'medium' %}
+        {% assign firstCircle = "fa-solid" %}
+        {% assign secondCircle = "fa-solid" %}
+
+    {% when 'large' %}
+        {% assign firstCircle = "fa-solid" %}
+        {% assign secondCircle = "fa-solid" %}
+        {% assign thirdCircle = "fa-solid" %}
+{% endcase %}
+
+<div class="d-inline-flex align-items-center gap-1">
+    <span class="me-2 color-muted">Size:</span>
+    <i class="{{ firstCircle }} fa-circle"></i>
+    <i class="{{ secondCircle }} fa-circle"></i>
+    <i class="{{ thirdCircle }} fa-circle"></i>
+</div>

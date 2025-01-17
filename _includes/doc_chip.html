@@ -4,11 +4,18 @@
     information about script functionality.
 -->
 
+{%- assign display = include.controlValue != null -%}
+{%- assign content = include.content -%}
+{%- assign bgColor = include.color -%}
 {%- assign textColor = include.textColor | default: 'light' -%}
 
-{%- if include.controlValue != null -%}
-    <span class="badge bg-{{ include.color }} text-{{ textColor }}">
+{%- if display -%}
+    <span class="d-inline-flex 
+                align-items-center 
+                justify-content-center 
+                gap-1 badge bg-{{ bgColor }} text-{{ textColor }}"
+    >
         <i class="fa-solid fa-{{ include.icon }}"></i>
-        {{ include.content }}
+        {{ content }}
     </span>
 {%- endif -%}
