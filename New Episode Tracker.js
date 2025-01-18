@@ -756,6 +756,11 @@ class Series {
             JSON.parse(xhr.responseText);
         `);
 
+        // If API key is invalid then use fallback color.
+        if (response?.error?.status === "INVALID_ARGUMENT") {
+            return featureEnabled(".fallbackDominantColor");
+        }
+
         const colors = response.responses[0].imagePropertiesAnnotation.dominantColors.colors;        
         const randomColor = colors[Math.floor(Math.random()* colors.length)];
 
@@ -905,12 +910,15 @@ class SeriesWidget {
         spacer().renderFor(contentStack, 15);
         
         // Episode info block (tag + release date).
-        this.#renderEpisodeInformation(
-            contentStack,
-            series,
-            episodeTagToDisplay,
-            episodeDateToDisplay
-        );
+        if (episodeTagToDisplay && episodeDateToDisplay) {
+
+            this.#renderEpisodeInformation(
+                contentStack,
+                series,
+                episodeTagToDisplay,
+                episodeDateToDisplay
+            );
+        }
         
         return root;
     }

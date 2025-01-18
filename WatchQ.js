@@ -221,6 +221,11 @@ class DebugRepository {
      * @memberof DebugRepository
      */
     async getData() {
+        
+        if (debugFeatureEnabled("forceNoData")) {
+            return [];
+        }
+        
         return [
             {
                 serieId: "dark-matter-apple-tv",

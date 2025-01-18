@@ -39,5 +39,10 @@
     "mockSeriesData": {
         "__enabled": true,
         "__type": "boolean"
+    },
+    ".fallbackDominantColor": {
+        "value": "ffffff",
+        "__enabled": true,
+        "__type": "string"
     }
 }

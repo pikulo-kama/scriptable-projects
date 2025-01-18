@@ -15,5 +15,9 @@
         "value": 6,
         "__enabled": true,
         "__type": "number"
+    },
+    "forceNoData": {
+        "__enabled": true,
+        "__type": "boolean"
     }
 }
