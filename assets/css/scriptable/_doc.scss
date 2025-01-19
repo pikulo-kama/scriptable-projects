@@ -63,11 +63,23 @@
     color: var(--sidebar-muted-color);
 }
 
-.widget-image {
+.widget-small-image {
     width: 25%;
 
     @include bp.lte(bp.get(xl)) {
         width: 50%;
+    }
+
+    & img {
+        border-radius: 35px;
+    }
+}
+
+.widget-medium-image {
+    width: 50%;
+
+    @include bp.lte(bp.get(xl)) {
+        width: 100%;
     }
 
     & img {
