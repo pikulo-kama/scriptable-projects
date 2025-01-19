@@ -22,7 +22,7 @@ Some scripts have only UI table functionality implemented, but some of them have
     widgetPreview="assets/blackout_notifier/schedule-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 This widget is usable for Ukrainians due to frequent power outages, widget may benefit you
 by allowing you to see daily outage schedule right on your phone home page.
@@ -97,7 +97,7 @@ This state may also be triggered when OE website is not available.
     widgetPreview="assets/customer_chart/chart-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 If you want to have a summary of events then this widget is what you need.
 It reads calendar events and plots them on linear chart widget.
@@ -121,7 +121,7 @@ It reads calendar events and plots them on linear chart widget.
     widgetPreview="assets/new_episode_tracker/series-countdown-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 If you like to follow releases of new episodes of your favorite series 
 then this widget is exactly what you need. Widget uses [Episodate Open API](https://www.episodate.com/)
@@ -200,7 +200,7 @@ is basically last episode of the series.
     uiTablePreview="assets/stop_watcher/table-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 If you enjoy watching series and always forget place where
 you left off then this widget might just be for you. You can add
@@ -269,23 +269,49 @@ In this state both timecode block and season/episode tag block contain question 
 
     widgetSupport=true
     widgetSize="small"
-    widgetPreview="assets/watchq/watchlist-not-empy-preview.jpg"
+    widgetPreview="assets/watchq/watchlist-not-empty-preview.jpg"
 
     uiTableSupport=true
     uiTableReadonly=true
     uiTablePreview="assets/watchq/table-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
-#### Limitations
+Widget should be only used together with <a href="#stop-watcher">Stop Watcher</a> widget
+it will pull series with serie ID set as well as information where you left of and will pull
+datat from Scriptable API to calculate how many episodes is left for you to watch.
+
+#### UI Table Structure
+
+- **Series Name**\
+*Name of the series that you haven't finished yet*
+- **Episode Count**\
+*Amount of episodes that you still need to watch in order to catch up*
 
 #### Widget Configuration
 
+1. When Interacting - **Run Script**
+2. Parameter - No parameters
+
 #### Running from widget
+
+When running script from widget UI table with detailed
+list of how much episodes for each of the series have left to watch.
 
 #### Widget States
 
+![Widget image not empty watchlist](assets/watchq/watchlist-not-empty-preview.jpg){: .left .widget-small-image }
+_Watchlist is not emtpy_
+In this state widget contains total amount of episodes from all series that you still need to watch.
+<br><br>
+{: .pb-5 }
+
+![Widget image empty watchlist](assets/watchq/watchlist-empty-preview.jpg){: .right .widget-small-image }
+_Watchlist is empty_
+This state is triggered when there are no new episodes for the series from Stop Watcher that you can watch.
+<br><br><br><br>
+{: .pb-5 }
 
 ## Internal Scripts
 
@@ -299,7 +325,7 @@ In this state both timecode block and season/episode tag block contain question 
     uiTablePreview="assets/feature_ui/table-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 #### Limitations
 
@@ -317,7 +343,7 @@ In this state both timecode block and season/episode tag block contain question 
     uiTablePreview="assets/localizator/table-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 #### Limitations
 
@@ -331,7 +357,7 @@ In this state both timecode block and season/episode tag block contain question 
     name="Bundler"
 %}
 
-#### Widget Description
+#### Script Description
 
 #### Limitations
 
@@ -351,7 +377,7 @@ In this state both timecode block and season/episode tag block contain question 
     uiTablePreview="assets/logger_ui/table-preview.jpg"
 %}
 
-#### Widget Description
+#### Script Description
 
 #### Limitations
 
