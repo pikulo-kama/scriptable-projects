@@ -129,7 +129,7 @@ to obtain series information.
 
 #### Widget Configuration
 
-1. When Interacting - *any*
+1. When Interacting - *Run Script*
 2. Parameter - series ID from Episodate API (e.g. round-six)
 
 #### How to obtain series ID
@@ -154,6 +154,12 @@ losses resulting from exceeding API usage limit.
 
 In case if you don't want to use Google Vision API you can just avoid this step, in cases when API key is
 invalid fallback dominant color would be used, which could be configured through `.fallbackDominantColor` feature.
+
+#### Rerolling Dominant Color
+
+If you're using Google Vision API script will request three dominant colors and then pick random from the list,
+if you're not satisfied with the color you can reroll it by enabling `rerollColor` feature. After enabling click on the widget you want
+to change color for, once color satisfies you make sure to turn off `rerollColor` feature.
 
 #### Widget States
 
@@ -196,13 +202,67 @@ is basically last episode of the series.
 
 #### Widget Description
 
-#### Limitations
+If you enjoy watching series and always forget place where
+you left off then this widget might just be for you. You can add
+series to the widget and keep track of the season, episode and timecode
+you're watching currently.
+
+#### UI Table Structure
+
+- **Status**\
+*Whether you are still watching series or have already finished it and waiting for next season.*
+    - Could be either 'Done' or 'In-progress'
+    - If status is 'Done' then series/episode and timecode fields would be hidden
+- **WatchQ Integration Field**\
+*This field should be used if you want to use WatchQ along with Stop Watcher*
+    - Has series ID field (see <a href="#how-to-obtain-series-id">how to obtain series ID section</a>)
+    - Has action to toggle visibility of series in WatchQ widget (would still be visible in UI table if toggle if OFF)
+- **Series Name**\
+*Name of the series, you can put anything you want here*
+    - Value of this field is used to as parameter for the widget
+- **Season/Episode**\
+*Used to update season and episode of the series*
+    - Has Season form field
+    - Has Episode form field
+    - Has action to update episode number by one
+    - Each time season or episode is updated - timecode would reset
+- **Timecode**\
+*Used to update timecode where you left off watching*
+    - Contains hours and minutes sliders
+- **Delete field**\
+*Generic delete field used to remove series from table*
+{: .pb-3 }
 
 #### Widget Configuration
 
+1. When interacting - **Run Script**
+2. Parameter - *%Series Name from UI table%*
+{: .pb-3 }
+
 #### Running from widget
 
+Running script from widget will open UI table where you can view and update series information.
+
 #### Widget States
+
+![Widget image when episode was partially watched](assets/stop_watcher/episode-started-preview.jpg){: .left .widget-small-image }
+_Episode partially watched_
+There are several blocks you can see, such as series title, block with timecode of the episode as well as season/episode tag.
+<br><br><br>
+{: .pb-5 }
+
+![Widget image when episode was not watched](assets/stop_watcher/episode-not-started-preview.jpg){: .right .widget-small-image }
+_Episode not watched_
+As you can see this state is not much different from the previous one, except here you can see that timecode block displays 'TBW' which
+stands for 'To be watched'.
+<br><br><br>
+{: .pb-5 }
+
+![Widget image when series has Ended status](assets/stop_watcher/watched-preview.jpg){: .left .widget-small-image }
+_Series has ended status_
+In this state both timecode block and season/episode tag block contain question mark placeholder.
+<br><br><br><br><br>
+{: .pb-5 }
 
 {% include script_doc.html
     name="WatchQ"

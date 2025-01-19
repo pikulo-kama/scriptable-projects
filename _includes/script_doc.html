@@ -38,37 +38,6 @@
         %}
     </div>
 
-    <!-- Widget Information Block -->
-    {%- if include.widgetSupport -%}
-
-        <div class="scriptable-doc mt-5 p-1">
-            <div class="d-flex flex-column align-items-start p-4">
-
-                <span class="mb-4 h4">Widget</span>
-
-                <!-- Widget Attributes -->
-                <div class="d-flex flex-column align-items-start">
-                    {% include widget_size.html 
-                        size=include.widgetSize 
-                    %}
-                    {% include widget_specificity.html 
-                        specificity=include.specificity
-                    %}
-                </div>
-            </div>
-
-            <!-- Widget Image Preview -->
-            <div class="scriptable-doc__preview widget">
-                {%- if include.widgetPreview != null -%}
-                    <img
-                        src="{{ include.widgetPreview }}" 
-                        alt="Preview of {{ include.name }} widget"
-                    >
-                {%- endif -%}
-            </div>
-        </div>
-    {%- endif -%}
-
     <!-- UI Table Information Block -->
     {%- if include.uiTableSupport -%}
         <div class="scriptable-doc mt-5 p-1">
@@ -124,6 +93,37 @@
                     <img
                         src="{{ include.uiTablePreview }}" 
                         alt="Preview of {{ include.name }} UI Table"
+                    >
+                {%- endif -%}
+            </div>
+        </div>
+    {%- endif -%}
+
+    <!-- Widget Information Block -->
+    {%- if include.widgetSupport -%}
+
+        <div class="scriptable-doc mt-5 p-1">
+            <div class="d-flex flex-column align-items-start p-4">
+
+                <span class="mb-4 h4">Widget</span>
+
+                <!-- Widget Attributes -->
+                <div class="d-flex flex-column align-items-start">
+                    {% include widget_size.html 
+                        size=include.widgetSize 
+                    %}
+                    {% include widget_specificity.html 
+                        specificity=include.specificity
+                    %}
+                </div>
+            </div>
+
+            <!-- Widget Image Preview -->
+            <div class="scriptable-doc__preview widget">
+                {%- if include.widgetPreview != null -%}
+                    <img
+                        src="{{ include.widgetPreview }}" 
+                        alt="Preview of {{ include.name }} widget"
                     >
                 {%- endif -%}
             </div>
