@@ -1160,6 +1160,81 @@ class FilterHandlerFactory {
 
 
 /**
+ * Represents a row that contains a single cell with
+ * message to the user or summary of table data.
+ *
+ * @class NoticeRow
+ */
+class NoticeRow {
+
+    #contentFunction;
+    #backgroundColor;
+    #textColor;
+
+    /**
+     * Creates an instance of NoticeRow.
+     * 
+     * @param {Function} contentFunciton function which is used to get content of notice row
+     * @memberof NoticeRow
+     */
+    constructor(contentFunciton) {
+        this.#contentFunction = contentFunciton;
+    }
+
+    /**
+     * Function which is used to get content of
+     * notice row.
+     *
+     * @return {Function} content function
+     * @memberof NoticeRow
+     */
+    getContentFunction() {
+        return this.#contentFunction;
+    }
+
+    /**
+     * Used to set background color of notice row.
+     *
+     * @param {Color} color background color
+     * @memberof NoticeRow
+     */
+    setBackgroundColor(color) {
+        this.#backgroundColor = color;
+    }
+
+    /**
+     * Used to get background color of notice row.
+     *
+     * @return {Color} background color
+     * @memberof NoticeRow
+     */
+    getBackgroundColor() {
+        return this.#backgroundColor;
+    }
+
+    /**
+     * Used to set text color of notice row.
+     *
+     * @param {Color} color text color
+     * @memberof NoticeRow
+     */
+    setTextColor(color) {
+        this.#textColor = color;
+    }
+
+    /**
+     * Used to get text color of notice row.
+     *
+     * @return {Color} text color
+     * @memberof NoticeRow
+     */
+    getTextColor() {
+        return this.#textColor;
+    }
+}
+
+
+/**
  * Main component.
  * Used to compose and maintain UITable.
  *
@@ -1174,6 +1249,8 @@ class UIDataTable {
     #dataFields = [];
     #uiFields = [];
     #filterFields = [];
+    #headerNotices = [];
+    #footerNotices = [];
 
     #sortingFunction = () => 1;
     #onChangeFunction = () => {};
@@ -1307,6 +1384,28 @@ class UIDataTable {
     }
 
     /**
+     * Used to add notice at the beginning of table
+     * right after main table header.
+     *
+     * @param {NoticeRow} notice header notice
+     * @memberof UIDataTable
+     */
+    addHeader(notice) {
+        this.#headerNotices.push(notice);
+    }
+
+    /**
+     * Used to add notice at the end of table
+     * right after last table record.
+     *
+     * @param {NoticeRow} notice footer notice
+     * @memberof UIDataTable
+     */
+    addFooter(notice) {
+        this.#footerNotices.push(notice);
+    }
+
+    /**
      * Main entry point.
      * Used to present UITable.
      *
@@ -1338,12 +1437,37 @@ class UIDataTable {
 
         this.#table.removeAllRows();
         await this.#addHeaderRow();
+        this.#addNoticeRows(this.#headerNotices);
 
         for (const tableRecord of this.#getFilteredTableData()) {
             await this.#addTableRow(tableRecord);
         }
 
+        this.#addNoticeRows(this.#footerNotices);
         this.#table.reload();
+    }
+
+    /**
+     * Used to add collection of notice rows to the table.
+     * 
+     * @param {List<NoticeRow>} noticeCollection collections of notices
+     * @memberof UIDataTable
+     */
+    #addNoticeRows(noticeCollection) {
+
+        for (const notice of noticeCollection) {
+
+            const noticeRow = new UITableRow();
+            noticeRow.backgroundColor = notice.getBackgroundColor();
+
+            const rowContentFunction = notice.getContentFunction();
+            const rowContent = rowContentFunction(this.#tableData);
+
+            const noticeText = noticeRow.addText(String(rowContent));
+            noticeText.titleColor = notice.getTextColor();
+
+            this.#table.addRow(noticeRow);
+        }
     }
 
     /**
@@ -1679,5 +1803,6 @@ module.exports = {
     UIForm,
     UIDatePicker,
     UIDeleteRowField,
+    NoticeRow,
     UIDataTable
 };

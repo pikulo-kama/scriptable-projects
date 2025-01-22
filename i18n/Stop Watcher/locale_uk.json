@@ -4,6 +4,7 @@
     "stopWatcher_doneStatusFieldPlaceholder": "➖",
     "stopWatcher_doneStatusLabel": "✅",
     "stopWatcher_episodeFieldFormLabel": "Серія",
+    "stopWatcher_integrationIdNotInSummary": "🚫",
     "stopWatcher_integrationIdSetLabel": "🆔",
     "stopWatcher_integrationIdUnsetLabel": "❓",
     "stopWatcher_integrationTitleWhenInSummary": "✅ Показується в WatchQ",

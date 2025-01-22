@@ -330,7 +330,7 @@ class SeriesTableView {
 
     #isDoneField = new BoolDataField("isDone", false);
     #seriesIdField = new TextDataField("serieId");
-    #showInSummaryField = new BoolDataField("showInSummary", false);
+    #showInSummaryField = new BoolDataField("showInSummary", true);
     #serieNameField = new TextDataField("serieName", tr("stopWatcher_serieNamePlaceholder"));
     #seasonField = new TextDataField("season", "1");
     #episodeField = new TextDataField("episode", "1");
@@ -494,6 +494,12 @@ class SeriesTableView {
      * @memberof SeriesTableView
      */
     #getApiIntegrationLabel(series) {
+
+        // When serie ID is set but it's hidden in WatchQ. 
+        if (series.serieId && !series.showInSummary) {
+            return tr("stopWatcher_integrationIdNotInSummary");
+        }
+
         return series.serieId ? 
             tr("stopWatcher_integrationIdSetLabel") : 
             tr("stopWatcher_integrationIdUnsetLabel");

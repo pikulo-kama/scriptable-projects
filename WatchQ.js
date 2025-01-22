@@ -9,6 +9,7 @@ const { tr } = importModule("Localization");
 
 const {
     UIFormReadOnly,
+    NoticeRow,
     UIDataTable
 } = importModule("CRUD Module");
 
@@ -31,11 +32,13 @@ async function main() {
     if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         const widget = WidgetBuilder.build(seriesData);
         present(widget);
-
-    } else {
-        const table = await TableBuilder.build(seriesData);
-        await table.present();
+        return;
     }
+
+    const tableBuilder = new TableBuilder(seriesData);
+    const table = await tableBuilder.build();
+
+    await table.present();
 }
 
 
@@ -347,17 +350,33 @@ class WidgetBuilder {
  */
 class TableBuilder {
 
+    #visibleRecords;
+    #hiddenRecords
+
+    /**
+     * Creates an instance of TableBuilder.
+     * 
+     * @param {List<Object>} seriesRecords list of records
+     * @memberof TableBuilder
+     */
+    constructor(seriesRecords) {
+        
+        this.#visibleRecords = seriesRecords
+            .filter(seriesRecord => seriesRecord.showInSummary);
+
+        this.#hiddenRecords = seriesRecords
+            .filter(seriesRecord => !seriesRecord.showInSummary);
+    }
+
     /**
      * Used to build readonly table
      * with detailed information on how much
      * episodes are left to watch.
      *
-     * @static
-     * @param {List<Object>} seriesRecords list of records
      * @return {UITable} UI table
      * @memberof TableBuilder
      */
-    static async build(seriesRecords) {
+    async build() {
 
         const uiFields = [
             new UIFormReadOnly((seriesData) => tr("watchQueue_tableSeriesNameLabel", seriesData.name), 75),
@@ -369,13 +388,47 @@ class TableBuilder {
         table.rowHeight = 55;
         table.showSeparators();
 
-        table.setTableData(seriesRecords);
+        // Don't show summary if nothing is hidden.
+        if (this.#hiddenRecords.length > 0) {
+
+            const headerNotice = new NoticeRow(this.#getSummaryCallback());
+            headerNotice.setBackgroundColor(new Color("ff9800"));
+            headerNotice.setTextColor(new Color("333333"));
+
+            table.addHeader(headerNotice);
+        }
+        
+        table.setTableData(this.#visibleRecords);
         table.setUIFields(uiFields);
+
         table.setSortingFunction((first, second) =>
             second.count - first.count
         );
 
         return table;
+    }
+
+    /**
+     * Returns callback function.
+     * Function is used to obtain content of summary
+     * header notice row.
+     *
+     * @return {Function} callback function to get summary content
+     * @memberof TableBuilder
+     */
+    #getSummaryCallback() {
+
+        const callback = () => {
+
+            const hiddenEpisodeCount = this.#hiddenRecords
+                .map(seriesRecord => seriesRecord.count)
+                .reduce((total, count) => total + count, 0);
+
+            const hiddenEpisodeCountMessage = getEpisodeCountLabel(hiddenEpisodeCount);
+            return tr("watchQueue_tableSummaryRowContent", this.#hiddenRecords.length, hiddenEpisodeCountMessage);
+        };
+
+        return callback.bind(this);
     }
 }
 

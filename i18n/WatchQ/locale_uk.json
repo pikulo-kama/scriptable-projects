@@ -3,6 +3,7 @@
     "watchQueue_episodeSingular": "%1 ep",
     "watchQueue_nothingLabel": "Нічого",
     "watchQueue_tableSeriesNameLabel": "⚪️ %1",
+    "watchQueue_tableSummaryRowContent": "🚨 %1 серіал(ів) з %2 приховано.",
     "watchQueue_tableTitle": "⚫ Список до перегляду",
     "watchQueue_toBeWatchedLabel": "До Перегляду"
 }

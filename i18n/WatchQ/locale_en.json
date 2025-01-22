@@ -3,6 +3,7 @@
     "watchQueue_episodeSingular": "%1 ep",
     "watchQueue_nothingLabel": "Nothing",
     "watchQueue_tableSeriesNameLabel": "⚪️ %1",
+    "watchQueue_tableSummaryRowContent": "🚨 %1 serie(s) with %2 are not shown.",
     "watchQueue_tableTitle": "⚫ Watch List",
     "watchQueue_toBeWatchedLabel": "to be Watched"
 }
