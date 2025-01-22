@@ -289,6 +289,13 @@ datat from Scriptable API to calculate how many episodes is left for you to watc
 - **Episode Count**\
 *Amount of episodes that you still need to watch in order to catch up*
 
+#### UI Table Notices
+
+- **Hidden Series Summary**\
+*This notice contains summary on how many series and episodes in total are not being shown in UI table
+and not being displayed in widget. Only series that have unwatched episodes but have **WatchQ visibility turned off**
+in Stop Watcher are not shown.*
+
 #### Widget Configuration
 
 1. When Interacting - **Run Script**
