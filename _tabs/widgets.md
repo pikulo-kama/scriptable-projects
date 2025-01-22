@@ -19,7 +19,7 @@ Some scripts have only UI table functionality implemented, but some of them have
 
     widgetSupport=true
     widgetSize="small"
-    widgetPreview="assets/blackout_notifier/schedule-preview.jpg"
+    widgetPreview="assets/img/blackout_notifier/schedule-preview.jpg"
 %}
 
 #### Script Description
@@ -49,7 +49,7 @@ showing today's and tomorrow's schedule (if available).
 
 #### Widget States
 
-![Widget image with schedules for today](assets/blackout_notifier/schedule-preview.jpg){: .left .widget-small-image }
+![Widget image with schedules for today](assets/img/blackout_notifier/schedule-preview.jpg){: .left .widget-small-image }
 _Today's schedule available_
 In this widget state you can see two blocks, first contains location for which schedule is displayed
 and the second one shows list of daily outage range scheduled for today.
@@ -63,7 +63,7 @@ If outage has already passed it would be semi transparent, in this example curre
 first two outages are already in the past.
 {: .pb-5 }
 
-![Widget image with indicator that notifies that tomorrow schedule is available](assets/blackout_notifier/tomorrow-schedule-avail-preview.jpg){: .right .widget-small-image }
+![Widget image with indicator that notifies that tomorrow schedule is available](assets/img/blackout_notifier/tomorrow-schedule-avail-preview.jpg){: .right .widget-small-image }
 _Tomorrow's schedule available_
 This state is not much different from the previous one, except in this state below location block you can see an indicator.
 This indicator is visible only if there are schedules for tomorrow available.
@@ -72,7 +72,7 @@ Color of the indicator dot may vary, if tomorrow schedule is available and there
 If tomorrow schedule is available but at the moment there are no outages planned then color would be green.
 {: .pb-5 }
 
-![Widget when no schedules are available](assets/blackout_notifier/no-schedule-preview.jpg){: .left .widget-small-image }
+![Widget when no schedules are available](assets/img/blackout_notifier/no-schedule-preview.jpg){: .left .widget-small-image }
 _Today's schedule has not outages_
 This state is displayed when there are no outages in today schedule. When no outages in today's schedule then large
 yellow light bulb placeholder image would be displayed.
@@ -81,7 +81,7 @@ As you can see even if there are no outages for today, tomorrow schedule indicat
 tomorrow schedule is available.
 {: .pb-5 }
 
-![Widget when there is no connection](assets/blackout_notifier/no-connection-preview.jpg){: .right .widget-small-image }
+![Widget when there is no connection](assets/img/blackout_notifier/no-connection-preview.jpg){: .right .widget-small-image }
 _Internet connection not available_
 This state is displayed mainly when there are no internet connection on user's device in this case
 placeholder showed on image would be displayed to the user.
@@ -94,7 +94,7 @@ This state may also be triggered when OE website is not available.
 
     widgetSupport=true
     widgetSize="medium"
-    widgetPreview="assets/customer_chart/chart-preview.jpg"
+    widgetPreview="assets/img/customer_chart/chart-preview.jpg"
 %}
 
 #### Script Description
@@ -118,7 +118,7 @@ It reads calendar events and plots them on linear chart widget.
 
     widgetSupport=true
     widgetSize="medium"
-    widgetPreview="assets/new_episode_tracker/series-countdown-preview.jpg"
+    widgetPreview="assets/img/new_episode_tracker/series-countdown-preview.jpg"
 %}
 
 #### Script Description
@@ -163,7 +163,7 @@ to change color for, once color satisfies you make sure to turn off `rerollColor
 
 #### Widget States
 
-![Widget image with next episode countdown available](assets/new_episode_tracker/series-countdown-preview.jpg){: .left .widget-medium-image }
+![Widget image with next episode countdown available](assets/img/new_episode_tracker/series-countdown-preview.jpg){: .left .widget-medium-image }
 _Countdown is available_
 First of all you can see several key elements, series thumbnail, title, countdown to the next episode as well as identificator of the
 season/episode that should be released and also date on which episode would air.
@@ -171,14 +171,14 @@ season/episode that should be released and also date on which episode would air.
 Countdown block displays amount of time that is left before next episode would be released.
 {: .pb-5 }
 
-![Widget image when next episode countdown is not available](assets/new_episode_tracker/series-no-countdown-preview.jpg){: .right .widget-medium-image }
+![Widget image when next episode countdown is not available](assets/img/new_episode_tracker/series-no-countdown-preview.jpg){: .right .widget-medium-image }
 _Countdown is not available_
 In this state you can see that countodwn block is slightly different, it displays icon of hourglass instead of actual countdown
 this screen is displayed in scenarios when there is no information on when next episode would air. Block below countdown in this state
 displays information about last available episode.
 {: .pb-5 }
 
-![Widget image when series has already ended](assets/new_episode_tracker/series-completed-preview.jpg){: .left .widget-medium-image }
+![Widget image when series has already ended](assets/img/new_episode_tracker/series-completed-preview.jpg){: .left .widget-medium-image }
 _Series has ended_
 This state has similar behavior when compared to the previous state. This one is displayed when series has already finished and
 no new episode would air for the series. Block below the countdown here also displays information about last available episode, which
@@ -190,14 +190,14 @@ is basically last episode of the series.
 
     widgetSupport=true
     widgetSize="small"
-    widgetPreview="assets/stop_watcher/episode-started-preview.jpg"
+    widgetPreview="assets/img/stop_watcher/episode-started-preview.jpg"
 
     uiTableSupport=true
     uiTableAllowCreation=true
     uiTableAllowEditing=true
     uiTableAllowDeletion=true
     uiTableAllowFiltering=true
-    uiTablePreview="assets/stop_watcher/table-preview.jpg"
+    uiTablePreview="assets/img/stop_watcher/table-preview.jpg"
 %}
 
 #### Script Description
@@ -245,20 +245,20 @@ Running script from widget will open UI table where you can view and update seri
 
 #### Widget States
 
-![Widget image when episode was partially watched](assets/stop_watcher/episode-started-preview.jpg){: .left .widget-small-image }
+![Widget image when episode was partially watched](assets/img/stop_watcher/episode-started-preview.jpg){: .left .widget-small-image }
 _Episode partially watched_
 There are several blocks you can see, such as series title, block with timecode of the episode as well as season/episode tag.
 <br><br><br>
 {: .pb-5 }
 
-![Widget image when episode was not watched](assets/stop_watcher/episode-not-started-preview.jpg){: .right .widget-small-image }
+![Widget image when episode was not watched](assets/img/stop_watcher/episode-not-started-preview.jpg){: .right .widget-small-image }
 _Episode not watched_
 As you can see this state is not much different from the previous one, except here you can see that timecode block displays 'TBW' which
 stands for 'To be watched'.
 <br><br><br>
 {: .pb-5 }
 
-![Widget image when series has Ended status](assets/stop_watcher/watched-preview.jpg){: .left .widget-small-image }
+![Widget image when series has Ended status](assets/img/stop_watcher/watched-preview.jpg){: .left .widget-small-image }
 _Series has ended status_
 In this state both timecode block and season/episode tag block contain question mark placeholder.
 <br><br><br><br><br>
@@ -269,11 +269,11 @@ In this state both timecode block and season/episode tag block contain question 
 
     widgetSupport=true
     widgetSize="small"
-    widgetPreview="assets/watchq/watchlist-not-empty-preview.jpg"
+    widgetPreview="assets/img/watchq/watchlist-not-empty-preview.jpg"
 
     uiTableSupport=true
     uiTableReadonly=true
-    uiTablePreview="assets/watchq/table-preview.jpg"
+    uiTablePreview="assets/img/watchq/table-preview.jpg"
 %}
 
 #### Script Description
@@ -301,13 +301,13 @@ list of how much episodes for each of the series have left to watch.
 
 #### Widget States
 
-![Widget image not empty watchlist](assets/watchq/watchlist-not-empty-preview.jpg){: .left .widget-small-image }
+![Widget image not empty watchlist](assets/img/watchq/watchlist-not-empty-preview.jpg){: .left .widget-small-image }
 _Watchlist is not emtpy_
 In this state widget contains total amount of episodes from all series that you still need to watch.
 <br><br>
 {: .pb-5 }
 
-![Widget image empty watchlist](assets/watchq/watchlist-empty-preview.jpg){: .right .widget-small-image }
+![Widget image empty watchlist](assets/img/watchq/watchlist-empty-preview.jpg){: .right .widget-small-image }
 _Watchlist is empty_
 This state is triggered when there are no new episodes for the series from Stop Watcher that you can watch.
 <br><br><br><br>
@@ -322,7 +322,7 @@ This state is triggered when there are no new episodes for the series from Stop 
     uiTableAllowCreation=true
     uiTableAllowEditing=true
     uiTableAllowDeletion=true
-    uiTablePreview="assets/feature_ui/table-preview.jpg"
+    uiTablePreview="assets/img/feature_ui/table-preview.jpg"
 %}
 
 #### Script Description
@@ -340,7 +340,7 @@ This state is triggered when there are no new episodes for the series from Stop 
 
     uiTableSupport=true
     uiTableAllowEditing=true
-    uiTablePreview="assets/localizator/table-preview.jpg"
+    uiTablePreview="assets/img/localizator/table-preview.jpg"
 %}
 
 #### Script Description
@@ -374,7 +374,7 @@ This state is triggered when there are no new episodes for the series from Stop 
     uiTableAllowCreation=true
     uiTableAllowEditing=true
     uiTableAllowDeletion=true
-    uiTablePreview="assets/logger_ui/table-preview.jpg"
+    uiTablePreview="assets/img/logger_ui/table-preview.jpg"
 %}
 
 #### Script Description
