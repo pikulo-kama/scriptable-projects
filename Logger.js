@@ -61,8 +61,8 @@ class LogLevel {
  */
 class Logger {
 
-    static #PLAIN_LOG_FILE_NAME = "scriptable.log";
-    static #JSON_LOG_FILE_NAME = "scriptable.log.json";
+    static #PLAIN_LOG_FILE_NAME = "scriptable.user.log";
+    static #JSON_LOG_FILE_NAME = "scriptable.user.log.json";
     static #LEVELS_FILE_NAME = "levels.json";
     static #logLevels;
 

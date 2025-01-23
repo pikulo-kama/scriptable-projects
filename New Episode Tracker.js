@@ -24,7 +24,7 @@ const {
 } = importModule("UI");
 
 
-const GOOGLE_VISION_API_KEY = FileUtil.readLocalFile("google_vision_api_key.txt", "<your API key>");
+const GOOGLE_VISION_API_KEY = FileUtil.readLocalFile("google_vision_api_key.user.txt", "<your API key>");
 const seriesNameParameter = getSeriesName();
 
 /**
@@ -575,7 +575,7 @@ class Series {
      */
     async obtainDominantColor() {
         
-        const fileName = "dominant_colors.json";
+        const fileName = "dominant_colors.user.json";
         const imageURI = this.#seriesInfo.getImageURI();
         
         if (!imageURI) {

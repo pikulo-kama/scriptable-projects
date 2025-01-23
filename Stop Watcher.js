@@ -33,7 +33,7 @@ const {
 } = importModule("CRUD Module");
 
 
-const STORAGE_FILE_NAME = "watchlist.json";
+const STORAGE_FILE_NAME = "watchlist.user.json";
 
 /**
  * ENTRY POINT

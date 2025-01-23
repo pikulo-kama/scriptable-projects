@@ -1266,8 +1266,8 @@ class UIDataTable {
     headerTitleColor = Color.darkGray();
     rowHeight = 44;
 
-    sequenceFileName = "sequence.json";
-    filtersFileName = "filter.json";
+    sequenceFileName = "sequence.user.json";
+    filtersFileName = "filter.user.json";
 
     /**
      * Will add create button that allows

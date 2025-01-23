@@ -97,7 +97,7 @@ class StopWatcherRepository {
     async getData() {
 
         const processedRecords = [];
-        const stopWatcherData = FileUtil.readJson("Stop Watcher", "watchlist.json", [])
+        const stopWatcherData = FileUtil.readJson("Stop Watcher", "watchlist.user.json", [])
             // Only get those that have 'episodate' API field
             // populated.
             .filter(seriesRecord => seriesRecord.serieId);

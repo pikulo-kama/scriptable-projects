@@ -316,7 +316,7 @@ class CacheRequest {
 
     static #HOUR_MILLISECONDS = 3_600_000;
     static #FETCH_TIMESTAMP_FIELD = "fetchTimesamp";
-    static #FILE_NAME = "cache.json";
+    static #FILE_NAME = "cache.user.json";
     static #manager = FileManager.local();
     
     #metadata;

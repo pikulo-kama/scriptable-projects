@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "service": "CacheRequest",
+        "level": "OFF"
+    },
+    {
+        "id": 3,
+        "service": "CustomerChart",
+        "level": "OFF"
+    },
+    {
+        "id": 4,
+        "service": "Series",
+        "level": "OFF"
+    }
+]
