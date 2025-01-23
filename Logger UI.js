@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-alt;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { LogLevel } = importModule("Logger");
 const { tr } = importModule("Localization");
 const {
@@ -55,8 +55,8 @@ class LoggingTable {
         table.allowCreation();
         table.showSeparators();
 
-        table.setTableData(FileUtil.readJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, []));
-        table.onDataModification((levels) => FileUtil.updateJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, levels));
+        table.setTableData(Files.readJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, []));
+        table.onDataModification((levels) => Files.updateJson(LOGGER_SCRIPT_NAME, LEVELS_FILE_NAME, levels));
 
         table.setDataFields([this.#serviceNameDataField, this.#logLevelDataField]);
         table.setUIFields(this.#getUIFields());

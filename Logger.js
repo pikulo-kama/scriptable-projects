@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: file-alt;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 
 
 /**
@@ -169,10 +169,10 @@ class Logger {
      * @param {Object} log event log object
      */
     async #saveToJSONFile(log) {
-        const jsonLogFile = FileUtil.readJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, {logs: []});
+        const jsonLogFile = Files.readJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, {logs: []});
 
         jsonLogFile.logs.push(log);
-        await FileUtil.updateJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, jsonLogFile);
+        await Files.updateJson(Logger.name, Logger.#JSON_LOG_FILE_NAME, jsonLogFile);
     }
 
     /**
@@ -204,11 +204,11 @@ class Logger {
             message += '.';
         }
 
-        let logFile = FileUtil.readFile(Logger.name, Logger.#PLAIN_LOG_FILE_NAME, "");
+        let logFile = Files.readFile(Logger.name, Logger.#PLAIN_LOG_FILE_NAME, "");
         const logMessage = `${timestamp} [${level}] [${service}] ${message} ${dataArray.join(", ")}\n`;
 
         logFile += logMessage;
-        await FileUtil.updateFile(Logger.name, Logger.#PLAIN_LOG_FILE_NAME, logFile);
+        await Files.updateFile(Logger.name, Logger.#PLAIN_LOG_FILE_NAME, logFile);
     }
 
     /**
@@ -251,7 +251,7 @@ class Logger {
     #getLogLevels() {
 
         if (!Logger.#logLevels) {
-            Logger.#logLevels = FileUtil.readJson(Logger.name, Logger.#LEVELS_FILE_NAME, []);
+            Logger.#logLevels = Files.readJson(Logger.name, Logger.#LEVELS_FILE_NAME, []);
         }
 
         return Logger.#logLevels;

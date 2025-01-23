@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: hdd;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { Logger } = importModule("Logger");
 
 
@@ -522,7 +522,7 @@ class CacheRequest {
      */
     async #cacheResponse(key, response) {
 
-        const cache = FileUtil.readLocalJson(CacheRequest.#FILE_NAME, [])
+        const cache = Files.readLocalJson(CacheRequest.#FILE_NAME, [])
             .filter(entry => entry.id != key);
 
         cache.push({
@@ -530,7 +530,7 @@ class CacheRequest {
             value: response
         });
 
-        FileUtil.updateLocalJson(CacheRequest.#FILE_NAME, cache);
+        Files.updateLocalJson(CacheRequest.#FILE_NAME, cache);
     }
 
     /**
@@ -543,7 +543,7 @@ class CacheRequest {
      */
     #getResponseFromCache(key) {
         
-        const entryFromCache = FileUtil.readLocalJson(CacheRequest.#FILE_NAME, [])
+        const entryFromCache = Files.readLocalJson(CacheRequest.#FILE_NAME, [])
             .find(entry => entry.id == key);
 
         return entryFromCache?.value;

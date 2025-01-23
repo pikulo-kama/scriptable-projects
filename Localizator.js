@@ -3,7 +3,7 @@
 // icon-color: purple; icon-glyph: globe;
 
 const { modal, ModalRule } = importModule("Modal");
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { tr } = importModule("Localization");
 
 const {
@@ -51,7 +51,7 @@ class ScriptSelector {
 
         const result = await modal()
             .title(tr("localizator_scriptSelectionModalTitle"))
-            .actions(FileUtil.findLocaleDirectories())
+            .actions(Files.findLocaleDirectories())
             .present();
 
         if (result.isCancelled()) {
@@ -175,7 +175,7 @@ class LocalizatorTable {
                 translationsObject[translation.key] = translation.value;
             }
 
-            FileUtil.updateLocale(this.#scriptName, this.#languageCode, translationsObject);
+            Files.updateLocale(this.#scriptName, this.#languageCode, translationsObject);
         };
 
         return callback.bind(this);
@@ -265,14 +265,14 @@ class LocalizatorTable {
      */
     async #readTranslationFile() {
 
-        const defaultLocaleFile = FileUtil.readLocale(this.#scriptName, LocalizatorTable.#DEFAULT_LOCALE);
-        const localeExists = FileUtil.localeExists(this.#scriptName, this.#languageCode);
+        const defaultLocaleFile = Files.readLocale(this.#scriptName, LocalizatorTable.#DEFAULT_LOCALE);
+        const localeExists = Files.localeExists(this.#scriptName, this.#languageCode);
         
         if (!localeExists) {
-            await FileUtil.updateLocale(this.#scriptName, this.#languageCode, defaultLocaleFile);
+            await Files.updateLocale(this.#scriptName, this.#languageCode, defaultLocaleFile);
         }
 
-        const localeFile = FileUtil.readLocale(this.#scriptName, this.#languageCode);
+        const localeFile = Files.readLocale(this.#scriptName, this.#languageCode);
 
         for (const translationKey of Object.keys(defaultLocaleFile)) {
 

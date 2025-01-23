@@ -6,12 +6,12 @@
  * Helper class.
  * Used to simplify work with file system.
  *
- * FileUtil only operates in iCloud no
- * changes to physical file system is being made.
+ * Files only operates in iCloud no
+ * changes to device file system is being made.
  * 
- * @class FileUtil
+ * @class Files
  */
-class FileUtil {
+class Files {
 
     static #manager = FileManager.iCloud();
     
@@ -29,7 +29,7 @@ class FileUtil {
      * @static
      * @param {String} scriptName name of script
      * @param {Object} content features object
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateFeatureFile(scriptName, content) {
 
@@ -47,7 +47,7 @@ class FileUtil {
      * @static
      * @param {String} scriptName name of script
      * @param {String} script script content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateScript(scriptName, script) {
 
@@ -67,14 +67,13 @@ class FileUtil {
      * @param {String} scriptName script name for which locale is being updated
      * @param {String} languageCode language code associated with locale
      * @param {String} content locale file content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateLocale(scriptName, languageCode, content) {
         
-        const localeFileName = `locale_${languageCode}.json`;
         await this.#updateFileInternal(
             scriptName,
-            localeFileName,
+            this.#getLocaleFileName(languageCode),
             JSON.stringify(content, null, 4),
             this.#getLocalesDirectory()
         );
@@ -87,7 +86,7 @@ class FileUtil {
      * @static
      * @param {String} fileName name of resource file
      * @param {String} content JSON file content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateLocalJson(fileName, content) {
         await this.updateJson(Script.name(), fileName, content);
@@ -101,7 +100,7 @@ class FileUtil {
      * @param {String} scriptName name of script for which file is updated
      * @param {String} fileName name of resource file
      * @param {String} content JSON file content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateJson(scriptName, fileName, content) {
         await this.updateFile(scriptName, fileName, JSON.stringify(content, null, 4));
@@ -114,7 +113,7 @@ class FileUtil {
      * @static
      * @param {String} fileName name of resource file
      * @param {String} content file content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateLocalFile(fileName, content) {
         await this.updateFile(Script.name(), fileName, content);
@@ -128,7 +127,7 @@ class FileUtil {
      * @param {String} scriptName name of script for which file is updated
      * @param {String} fileName name of resource file
      * @param {String} content file content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async updateFile(scriptName, fileName, content) {
         await this.#updateFileInternal(scriptName, fileName, content, this.#getResourcesDirectory());
@@ -143,7 +142,7 @@ class FileUtil {
      * @param {String} fileName name of file that should be updated
      * @param {String} content file content
      * @param {String} directory path on which file should be created
-     * @memberof FileUtil
+     * @memberof Files
      */
     static async #updateFileInternal(scriptName, fileName, content, directory) {
         
@@ -167,7 +166,7 @@ class FileUtil {
      * @static
      * @param {String} scriptName name of script
      * @return {Boolean} true if feature file exists otherwise false
-     * @memberof FileUtil
+     * @memberof Files
      */
     static featureFileExists(scriptName) {
         return this.#fileExistsInternal(
@@ -183,11 +182,15 @@ class FileUtil {
      * @param {String} scriptName name of script
      * @param {String} languageCode language code
      * @return {Boolean} True if locale exists otherwise false
-     * @memberof FileUtil
+     * @memberof Files
      */
     static localeExists(scriptName, languageCode) {
-        const localeFileName = `locale_${languageCode}.json`;
-        return this.#fileExistsInternal(scriptName, localeFileName, this.#getLocalesDirectory());
+
+        return this.#fileExistsInternal(
+            scriptName, 
+            this.#getLocaleFileName(languageCode), 
+            this.#getLocalesDirectory()
+        );
     }
 
     /**
@@ -198,7 +201,7 @@ class FileUtil {
      * @param {String} scriptName name of script
      * @param {String} fileName name of file
      * @return {Boolean} True if file exists otherwise false
-     * @memberof FileUtil
+     * @memberof Files
      */
     static fileExists(scriptName, fileName) {
         return this.#fileExistsInternal(scriptName, fileName, this.#getResourcesDirectory());
@@ -213,7 +216,7 @@ class FileUtil {
      * @param {String} fileName name of file
      * @param {String} directory path where script name directory is located
      * @return {Boolean} True if file exists otherwise false
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #fileExistsInternal(scriptName, fileName, directory) {
 
@@ -232,7 +235,7 @@ class FileUtil {
      *
      * @static
      * @return {Object} feature configuration
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readLocalFeatureFile() {
         return this.readFeatureFile(Script.name());
@@ -245,7 +248,7 @@ class FileUtil {
      * @static
      * @param {String} scriptName name of script
      * @return {Object} feature configuration
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readFeatureFile(scriptName) {
 
@@ -271,7 +274,7 @@ class FileUtil {
      * @static
      * @param {String} scriptName name of script
      * @return {String} script content
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readScript(scriptName) {
 
@@ -289,14 +292,13 @@ class FileUtil {
      * @param {String} scriptName name of script
      * @param {String} languageCode language code
      * @return {Object} locale object
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readLocale(scriptName, languageCode) {
 
-        const localeFileName = `locale_${languageCode}.json`;
         const content = this.#readFileInternal(
             scriptName,
-            localeFileName,
+            this.#getLocaleFileName(languageCode),
             {},
             this.#getLocalesDirectory()
         );
@@ -312,7 +314,7 @@ class FileUtil {
      * @param {String} fileName name of JSON file
      * @param {Object} defautlValue default value, would be returned when file doens't exist
      * @return {Object} content of JSON file if exists otherwise default value
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readLocalJson(fileName, defautlValue) {
         return this.readJson(Script.name(), fileName, defautlValue);
@@ -327,7 +329,7 @@ class FileUtil {
      * @param {String} fileName name of JSON file
      * @param {Object} defautlValue default value, would be returned when file doens't exist
      * @return {Object} content of JSON file if exists otherwise default value
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readJson(scriptName, fileName, defaultValue) {
         const content = this.readFile(scriptName, fileName, defaultValue);
@@ -342,7 +344,7 @@ class FileUtil {
      * @param {String} fileName file name
      * @param {Object} defaultValue, would be returned when file doens't exist
      * @return {Object} content of file if exists otherwise default value
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readLocalFile(fileName, defaultValue) {
         return this.readFile(Script.name(), fileName, defaultValue);
@@ -357,7 +359,7 @@ class FileUtil {
      * @param {String} fileName file name
      * @param {Object} defaultValue, would be returned when file doens't exist
      * @return {Object} content of file if exists otherwise default value
-     * @memberof FileUtil
+     * @memberof Files
      */
     static readFile(scriptName, fileName, defaultValue) {
         return this.#readFileInternal(scriptName, fileName, defaultValue, this.#getResourcesDirectory());
@@ -373,7 +375,7 @@ class FileUtil {
      * @param {String} defaultValue default value
      * @param {String} directory path where file is located
      * @return {Object} content of file if exists otherwise default value
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #readFileInternal(scriptName, fileName, defaultValue, directory) {
 
@@ -397,7 +399,7 @@ class FileUtil {
      *
      * @static
      * @return {List<String>} list of script names
-     * @memberof FileUtil
+     * @memberof Files
      */
     static findFeatureDirectories() {
         return this.#manager.listContents(this.#getFeaturesDirectory());
@@ -409,7 +411,7 @@ class FileUtil {
      *
      * @static
      * @return {List<String>} list of locale directory names
-     * @memberof FileUtil
+     * @memberof Files
      */
     static findLocaleDirectories() {
         return this.#manager.listContents(this.#getLocalesDirectory());
@@ -420,7 +422,7 @@ class FileUtil {
      *
      * @static
      * @return {List<String>} list of script names
-     * @memberof FileUtil
+     * @memberof Files
      */
     static findScripts() {
         return this.#manager.listContents(this.#getScriptableDirectory())
@@ -434,7 +436,7 @@ class FileUtil {
      * @static
      * @param {List<String>} segments file path segments that should be composed
      * @return {String} file path
-     * @memberof FileUtil
+     * @memberof Files
      */
     static joinPaths(...segments) {
         
@@ -453,7 +455,7 @@ class FileUtil {
      * are stored.
      *
      * @return {String} Debug directory path
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #getFeaturesDirectory() {
         return this.joinPaths(
@@ -469,7 +471,7 @@ class FileUtil {
      *
      * @static
      * @return {String} Resources directory path
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #getResourcesDirectory() {
         return this.joinPaths(
@@ -485,7 +487,7 @@ class FileUtil {
      *
      * @static
      * @return {String} locales directory path
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #getLocalesDirectory() {
         return this.joinPaths(
@@ -500,7 +502,7 @@ class FileUtil {
      *
      * @static
      * @return {String} Scriptable root directory path
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #getScriptableDirectory() {
         return this.#manager.documentsDirectory();
@@ -512,7 +514,7 @@ class FileUtil {
      *
      * @param {String|Object} content JSON like string object
      * @return {Object} JSON value
-     * @memberof FileUtil
+     * @memberof Files
      */
     static #toJSON(content) {
 
@@ -522,9 +524,20 @@ class FileUtil {
 
         return content;
     }
+
+    /**
+     * Used to get name of locale file
+     * for provided language code.
+     * 
+     * @param {String} languageCode language code
+     * @returns Name of locale file
+     */
+    static #getLocaleFileName(languageCode) {
+        return `locale_${languageCode}.json`;
+    }
 }
 
 
 module.exports = {
-    FileUtil
+    Files
 };

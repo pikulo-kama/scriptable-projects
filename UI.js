@@ -7,7 +7,7 @@ const {
     addToState, 
     getFromState, 
     getState 
-} = importModule("Core");
+} = importModule("Util");
 
 
 /**

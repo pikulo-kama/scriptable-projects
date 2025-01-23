@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: language;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 
 
 /**
@@ -75,19 +75,19 @@ class Locale {
 
         let translations = {};
         const languageCode = this.#getLanguageCode();
-        const localeDirectories = FileUtil.findLocaleDirectories();
+        const localeDirectories = Files.findLocaleDirectories();
         
         for (const directory of localeDirectories) {
 
             let localeContent = {};
-            const customLocaleExists = FileUtil.localeExists(directory, languageCode);
-            const defaultLocaleExists = FileUtil.localeExists(directory, Locale.#DEFAULT_LOCALE);
+            const customLocaleExists = Files.localeExists(directory, languageCode);
+            const defaultLocaleExists = Files.localeExists(directory, Locale.#DEFAULT_LOCALE);
 
             if (customLocaleExists) {
-                localeContent = FileUtil.readLocale(directory, languageCode);
+                localeContent = Files.readLocale(directory, languageCode);
             
             } else if (defaultLocaleExists) {
-                localeContent = FileUtil.readLocale(directory, Locale.#DEFAULT_LOCALE);
+                localeContent = Files.readLocale(directory, Locale.#DEFAULT_LOCALE);
             }
 
             translations = {

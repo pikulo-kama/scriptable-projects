@@ -4,7 +4,7 @@
 
 const { debugFeatureEnabled, getFeature } = importModule("Feature");
 const { metadata, cacheRequest } = importModule("Cache");
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { tr } = importModule("Localization");
 
 const {
@@ -97,7 +97,7 @@ class StopWatcherRepository {
     async getData() {
 
         const processedRecords = [];
-        const stopWatcherData = FileUtil.readJson("Stop Watcher", "watchlist.user.json", [])
+        const stopWatcherData = Files.readJson("Stop Watcher", "watchlist.user.json", [])
             // Only get those that have 'episodate' API field
             // populated.
             .filter(seriesRecord => seriesRecord.serieId);

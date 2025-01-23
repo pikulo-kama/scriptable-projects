@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: database;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { tr } = importModule("Localization");
 const { modal } = importModule("Modal");
 
@@ -1642,10 +1642,10 @@ class UIDataTable {
      */
     async #nextSequenceValue() {
 
-        const sequence = FileUtil.readLocalJson(this.sequenceFileName, {next: 0});
+        const sequence = Files.readLocalJson(this.sequenceFileName, {next: 0});
         sequence.next += 1
         
-        await FileUtil.updateLocalJson(this.sequenceFileName, sequence);
+        await Files.updateLocalJson(this.sequenceFileName, sequence);
         return sequence.next;
     }
 
@@ -1742,7 +1742,7 @@ class UIDataTable {
      * @memberof UIDataTable
      */
     #loadFilters() {
-        this.#appliedFilters = FileUtil.readLocalJson(this.filtersFileName, {});
+        this.#appliedFilters = Files.readLocalJson(this.filtersFileName, {});
     }
 
     /**
@@ -1765,7 +1765,7 @@ class UIDataTable {
      */
     async __upsertFilter(fieldName, filter) {
         this.#appliedFilters[fieldName] = filter;
-        await FileUtil.updateLocalJson(this.filtersFileName, this.#appliedFilters);
+        await Files.updateLocalJson(this.filtersFileName, this.#appliedFilters);
     }
 
     /**
@@ -1777,7 +1777,7 @@ class UIDataTable {
      */
     async __deleteFilter(fieldName) {
         delete this.#appliedFilters[fieldName];
-        await FileUtil.updateLocalJson(this.filtersFileName, this.#appliedFilters);
+        await Files.updateLocalJson(this.filtersFileName, this.#appliedFilters);
     }
 
     /**
@@ -1788,7 +1788,7 @@ class UIDataTable {
      */
     async #clearFilters() {
         this.#appliedFilters = {};
-        await FileUtil.updateLocalJson(this.filtersFileName, {});
+        await Files.updateLocalJson(this.filtersFileName, {});
     }
 }
 

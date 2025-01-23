@@ -3,7 +3,7 @@
 // icon-color: teal; icon-glyph: check-circle;
 
 const { modal, ModalRule, showWarning, showError } = importModule("Modal");
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { tr } = importModule("Localization");
 const {
     BoolDataField,
@@ -91,11 +91,11 @@ class ScriptSelector {
     static async selectScript() {
 
         const actions = [];
-        const debugDirectories = FileUtil.findFeatureDirectories().sort();
+        const debugDirectories = Files.findFeatureDirectories().sort();
 
         for (const directoryName of debugDirectories) {
 
-            if (!FileUtil.featureFileExists(directoryName)) {
+            if (!Files.featureFileExists(directoryName)) {
                 console.warn(`Script ${directoryName} doesn't have debug configuration.`);
                 continue;
             }
@@ -397,7 +397,7 @@ class FeaturesTable {
     #retrieveDebugConfiguration() {
 
         const formattedData = [];
-        const debugConfiguration = FileUtil.readFeatureFile(this.#selectedScript);
+        const debugConfiguration = Files.readFeatureFile(this.#selectedScript);
         let id = 1;
 
         for (const featureName of Object.keys(debugConfiguration)) {
@@ -457,7 +457,7 @@ class FeaturesTable {
                 };
             }
 
-            FileUtil.updateFeatureFile(this.#selectedScript, featuresObject);
+            Files.updateFeatureFile(this.#selectedScript, featuresObject);
         };
 
         return callback.bind(this);

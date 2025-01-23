@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: pink; icon-glyph: stopwatch;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { ModalRule } = importModule("Modal");
 const { tr } = importModule("Localization");
 
@@ -40,7 +40,7 @@ const STORAGE_FILE_NAME = "watchlist.user.json";
  */
 async function main() {
 
-    const seriesList = FileUtil.readLocalJson(STORAGE_FILE_NAME, [])
+    const seriesList = Files.readLocalJson(STORAGE_FILE_NAME, [])
 
     if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         
@@ -377,7 +377,7 @@ class SeriesTableView {
         table.allowCreation();
         table.setTableData(this.#seriesList);
         table.onDataModification(tableData =>
-            FileUtil.updateLocalJson(STORAGE_FILE_NAME, tableData)
+            Files.updateLocalJson(STORAGE_FILE_NAME, tableData)
         );
         table.onFieldChange(this.#onFieldChange);
 

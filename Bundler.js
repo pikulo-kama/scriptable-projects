@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-archive;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { tr } = importModule("Localization");
 const { modal } = importModule("Modal");
 
@@ -42,7 +42,7 @@ class ScriptSelector {
      */
     static async selectScript() {
 
-        const scriptList = FileUtil.findScripts()
+        const scriptList = Files.findScripts()
             .map((script) => script.replace(JS_EXTENSION, EMPTY_STRING))
             .sort();
 
@@ -115,7 +115,7 @@ class Bundler {
         scriptBody += mainScriptBody;
 
         const targetFileName = tr("bundler_bundledScriptName", this.#scriptName);
-        await FileUtil.updateScript(targetFileName + JS_EXTENSION, scriptBody)
+        await Files.updateScript(targetFileName + JS_EXTENSION, scriptBody)
     }
 
     /**
@@ -130,7 +130,7 @@ class Bundler {
      */
     #processDependencies(scriptName) {
 
-        let scriptBody = FileUtil.readScript(scriptName + JS_EXTENSION);
+        let scriptBody = Files.readScript(scriptName + JS_EXTENSION);
         scriptBody = this.#extractMetadataAndGet(scriptName, scriptBody);
 
         const scriptDependencies = this.#getScriptDependencies(scriptBody);

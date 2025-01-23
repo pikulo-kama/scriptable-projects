@@ -3,7 +3,7 @@
 // icon-color: orange; icon-glyph: film;
 
 const { cacheRequest, metadata } = importModule("Cache");
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 const { Logger } = importModule("Logger");
 
 const {
@@ -24,7 +24,7 @@ const {
 } = importModule("UI");
 
 
-const GOOGLE_VISION_API_KEY = FileUtil.readLocalFile("google_vision_api_key.user.txt", "<your API key>");
+const GOOGLE_VISION_API_KEY = Files.readLocalFile("google_vision_api_key.user.txt", "<your API key>");
 const seriesNameParameter = getSeriesName();
 
 /**
@@ -583,7 +583,7 @@ class Series {
             return;
         }
 
-        const colorMap = FileUtil.readLocalJson(fileName, {});
+        const colorMap = Files.readLocalJson(fileName, {});
         let colorFromFile = colorMap[imageURI];
 
         if (!colorFromFile || featureEnabled("rerollColor")) {
@@ -592,7 +592,7 @@ class Series {
             colorFromFile = {color: dominantColor};
             colorMap[imageURI] = colorFromFile;
 
-            FileUtil.updateLocalJson(fileName, colorMap);
+            Files.updateLocalJson(fileName, colorMap);
         }
 
         this.#dominantColor = new Color(colorFromFile.color);

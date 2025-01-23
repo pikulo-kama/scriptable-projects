@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: toggle-off;
 
-const { FileUtil } = importModule("File Util");
+const { Files } = importModule("Files");
 
 
 /**
@@ -21,7 +21,7 @@ class FeatureUtil {
     #featureConfig;
 
     constructor() {
-        this.#featureConfig = FileUtil.readLocalFeatureFile();
+        this.#featureConfig = Files.readLocalFeatureFile();
     }
 
     /**
