@@ -17,7 +17,7 @@ const {
     text,
     image,
     rootWidget,
-    present
+    presentSmall
 } = importModule("UI");
 
 const {
@@ -49,8 +49,9 @@ async function main() {
     
         if (seriesInfo) {
     
-            const builder = new WidgetBuilder(seriesInfo);
-            present(builder.build());
+            const widgetBuilder = new WidgetBuilder(seriesInfo);
+            const widget = widgetBuilder.build();
+            presentSmall(widget);
         }
         return;
     }
@@ -108,7 +109,7 @@ function pad(text) {
 
 
 /**
- * Used to build widget for provided user name.
+ * Used to build widget for provided series.
  *
  * @class WidgetBuilder
  */

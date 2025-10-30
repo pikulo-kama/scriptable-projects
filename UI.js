@@ -928,12 +928,34 @@ function rootWidget() {
 
 
 /**
-* Used to present root widget.
+* Used to present small widget.
 * 
 * @param {ListWidget} rootWidget root widget.
 */
-function present(rootWidget) {
-    QuickLook.present(rootWidget);
+function presentSmall(rootWidget) {
+    rootWidget.presentSmall();
+    Script.setWidget(rootWidget);
+}
+
+
+/**
+* Used to present medium widget.
+* 
+* @param {ListWidget} rootWidget root widget.
+*/
+function presentMedium(rootWidget) {
+    rootWidget.presentMedium();
+    Script.setWidget(rootWidget);
+}
+
+
+/**
+* Used to present large widget.
+* 
+* @param {ListWidget} rootWidget root widget.
+*/
+function presentLarge(rootWidget) {
+    rootWidget.presentLarge();
     Script.setWidget(rootWidget);
 }
 
@@ -945,6 +967,8 @@ module.exports = {
     image,
     date,
     rootWidget,
-    present
+    presentSmall,
+    presentMedium,
+    presentLarge
 };
  

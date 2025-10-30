@@ -7,7 +7,7 @@ const { themed, ColorMode } = importModule("Config Util");
 const { LinearChart } = importModule("Linear Chart");
 const { Logger, getLogger } = importModule("Logger");
 const { tr } = importModule("Localization");
-const { present } = importModule("UI");
+const { presentMedium } = importModule("UI");
 
 
 const parameters = getArguments();
@@ -32,12 +32,7 @@ async function main() {
         }
     }, parameters.mode);
 
-    if (debugEnabled()) {
-        chart.getWidget().presentMedium();
-
-    } else {
-        present(chart.getWidget());
-    }
+    presentMedium(chart.getWidget());
 }
 
 

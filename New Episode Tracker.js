@@ -20,7 +20,7 @@ const {
     image,
     date,
     rootWidget,
-    present
+    presentMedium
 } = importModule("UI");
 
 
@@ -39,13 +39,7 @@ async function main() {
     await seriesObject.obtainDominantColor();
 
     const renderedWidget = widget.create(seriesObject);
-
-    if (debugEnabled()) {
-        renderedWidget.presentMedium();
-
-    } else {
-        present(renderedWidget);
-    }
+    presentMedium(renderedWidget);
 }
 
 
@@ -105,7 +99,7 @@ class EpisodateApiResource extends ApiResource {
 
     async download() {
 
-        const request = cacheRequest(this.#getMetadata());
+        const request = cacheRequest(this.#getMetadata(), 0.5);
         const seriesData = await request.get(this.#getSeriesUrl());
 
         const seriesInfo = new SeriesInfo(
@@ -872,10 +866,12 @@ class SeriesWidget {
         const root = this.#createRootWidget(series);
         let episodeTagToDisplay = series.getLastEpisode();
         let episodeDateToDisplay = series.getLastEpisodeDate();
+        let isReleasedEpisode = true;
 
         if (series.hasCountdown()) {
             episodeTagToDisplay = series.getNextEpisode();
             episodeDateToDisplay = series.getNextEpisodeDate();
+            isReleasedEpisode = false;
         }
 
         const rootStack = stack()
@@ -916,7 +912,8 @@ class SeriesWidget {
                 contentStack,
                 series,
                 episodeTagToDisplay,
-                episodeDateToDisplay
+                episodeDateToDisplay,
+                isReleasedEpisode
             );
         }
         
@@ -983,11 +980,27 @@ class SeriesWidget {
      * @param {Series} series series
      * @param {String} episodeTag season/episode string of episode (e.g. s3e2)
      * @param {Date} episodeDate date when displayed episode will be/was released
+     * @param {Boolean} isReleased whether episode has been already released
      */
-    #renderEpisodeInformation(root, series, episodeTag, episodeDate) {
+    #renderEpisodeInformation(root, series, episodeTag, episodeDate, isReleased) {
+        
         const releaseInfoStack = stack()
             .rightAlign()
             .renderFor(root);
+            
+        const episodeStatusImage = image()
+            .icon("hourglass")
+            .color(Color.white())
+            .size(10)
+            .opacity(0.8);
+        
+        if (isReleased) {
+            episodeStatusImage.icon("circle.fill");
+        }
+        
+        episodeStatusImage.renderFor(releaseInfoStack);
+            
+        spacer().renderFor(releaseInfoStack, 4);
         
         // Season / episode 
         text()

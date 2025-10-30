@@ -17,7 +17,7 @@ const {
     spacer,
     text,
     rootWidget,
-    present
+    presentSmall
 } = importModule("UI");
 
 
@@ -31,7 +31,7 @@ async function main() {
 
     if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
         const widget = WidgetBuilder.build(seriesData);
-        present(widget);
+        presentSmall(widget);
         return;
     }
 
