@@ -14,7 +14,7 @@ const {
     text,
     image,
     rootWidget,
-    present
+    presentSmall
 } = importModule("UI");
 
 
@@ -28,10 +28,12 @@ async function main() {
     const webView = ScheduleWebViewFactory.getWebView();
 
     if (config.runsInWidget || debugFeatureEnabled("forceWidget")) {
-        const widget = new ScheduleWidget();
+        const widgetBuilder = new ScheduleWidgetBuilder();
         
         await webView.downloadSchedules();
-        await widget.render(webView);
+        const widget = widgetBuilder.build(webView);
+        
+        presentSmall(widget);
         return;
     }
 
@@ -64,20 +66,30 @@ function getAddress() {
 
     const addressComponents = address.split(",");
 
-    if (addressComponents.length !== 3) {
+    if (addressComponents.length < 3) {
         throw new Error("Address should contain city, street and building number separated by comma.");
     }
+    
+    const getParameter = (position) => {
+        if (addressComponents.length < position) {
+            return null;
+        }
+        
+        return addressComponents[position - 1];
+    }
 
-    const city = addressComponents[0];
-    const street = addressComponents[1];
-    const buildingNumber = addressComponents[2];
+    const city = getParameter(1);
+    const street = getParameter(2);
+    const buildingNumber = getParameter(3);
+    const queue = getParameter(4);
     const shortAddress = `${buildingNumber}, ${street}`;
-
+    
     return {
         address,
         city,
         street,
         buildingNumber,
+        queue,
         shortAddress
     };
 }
@@ -247,39 +259,59 @@ class OeIfScheduleWebView extends ScheduleWebView {
         let today;
         let tomorrow;
 
-        const queue = await this.#getQueueNumber();
+        const webView = await this.#getWebView();
+        let queueList = [];
+        const outagesByDate = {}
         
-        if (!queue) {
+        // In case address relates to
+        // multiple queues and only wants
+        // to see certain one.
+        if (parameters.queue) {
+            queueList = [parameters.queue]
+            
+        } else {
+            queueList = await this.#getApplicableQueues();
+        }
+        
+        if (queueList.length == 0) {
             return null;
         }
+        
+        // Collect outage data from all queues.
+        for (const queue of queueList) {
+            const scheduleList = await webView.evaluateJavaScript(this.#getDownloadSchedulesByQueueJSPayload(queue), true);
 
-        const webView = await this.#getWebView();
-        const scheduleList = await webView.evaluateJavaScript(this.#getDownloadSchedulesByQueueJSPayload());
+            if (!scheduleList) {
+                continue;
+            }
 
-        const first = scheduleList[0];
-        const second = scheduleList[1];
+            for (const schedule of scheduleList) {
 
-        if (first) {
-            
-            const info = this.#createOutageRecords(first.queues[queue]);
+                const outageDate = schedule.eventDate;
+                const outages = schedule.queues[queue];
 
-            if (this.#isFutureSchedule(first)) {
-                tomorrow = info;
+                if (!outagesByDate[outageDate]) {
+                    outagesByDate[outageDate] = [];
+                }
 
-            } else {
-                today = info;
+                outagesByDate[outageDate].push(...outages);
             }
         }
 
-        if (second) {
+        // Format collected data.
+        for (const outageDate in outagesByDate) {
+            const outageDateIdentifier = this.#getDayDifference(outageDate);
+            const outages = outagesByDate[outageDate];
 
-            const info = this.#createOutageRecords(second.queues[queue]);
+            outages.sort((a, b) => a.from.localeCompare(b.from));
 
-            if (this.#isFutureSchedule(second)) {
-                tomorrow = info;
+            // Today.
+            if (outageDateIdentifier == 0) {
+                today = this.#createOutageRecords(outages);
 
-            } else {
-                today = info;
+            // Tomorrow.
+            } else if (outageDateIdentifier == 1) {
+                tomorrow = this.#createOutageRecords[outages];
             }
         }
 
@@ -325,41 +357,53 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * 
      * @returns formatted queue number (i.e. 3.1, 5.2, etc)
      */
-    async #getQueueNumber() {
+    async #getApplicableQueues() {
 
         const webView = await this.#getWebView();
-        const response = await webView.evaluateJavaScript(this.#getDownloadScheduleJSPayload());
+        const response = await webView.evaluateJavaScript(this.#getDownloadScheduleJSPayload(), true);
         
         if (!response) {
-            return null;
+            return [];
+        }
+
+        if (response.current.possibleQueues) {
+            return response.current.possibleQueues;
         }
 
         const queue = response.current.queue;
-        const subQueue = response.current.subqueue;
+        const subQueue = response.current.subQueue;
 
-        return `${queue}.${subQueue}`;
+        return [`${queue}.${subQueue}`];
     }
 
     /**
-     * Checks if schedule is planned for today or tomorrow.
+     * Used to parse text date of format dd-mm-YYYY
+     * and return an integer value that represents amount
+     * of days provided date is off from today.
      * 
-     * @param {Object} schedule JSON object of schedule
-     * @returns {Boolean} True if for tomorrow otherwise False
+     * e.g. if date is today's date -> 0
+     *      if date is tomorrow's date -> 1
+     *      etc.
+     * 
+     * @param {String} outageDateStr 
+     * @returns date offset from current date
      */
-    #isFutureSchedule(schedule) {
+    #getDayDifference(outageDateStr) {
 
-        if (!schedule) {
-            return false;
-        }
-
-        const dateParts = schedule.eventDate.split(".");
+        const dateParts = outageDateStr.split(".");
         
         const day = dateParts[0];
         const month = dateParts[1];
         const year = dateParts[2];
 
-        const scheduleDate = new Date(`${year}-${month}-${day}`);
-        return scheduleDate > new Date();
+        const outageDate = new Date(`${year}-${month}-${day}`);
+        const today = new Date()
+
+        outageDate.setHours(0, 0, 0, 0)
+        today.setHours(0, 0, 0, 0)
+
+        const millisInDay = 1000 * 60 * 60 * 24;
+        return (outageDate - today) / millisInDay;
     }
 
     /**
@@ -384,17 +428,23 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * @returns {String} JS script as text.
      */
     #getDownloadScheduleJSPayload() {
-        return "" +
-            "$.ajax({" +
-            "   url: 'https://be-svitlo.oe.if.ua/GavGroupByAccountNumber'," +
-            "   type: 'POST'," +
-            "   data: {" +
-            "      accountNumber: ''," +
-            "      userSearchChoice: 'pob'," +
-            "      address: '" + parameters.address + "'" +
-            "   }," +
-            "   async: false" +
-            "}).responseJSON;";
+        return `
+            fetch('https://be-svitlo.oe.if.ua/schedule-by-search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    accountNumber: '',
+                    userSearchChoice: 'pob',
+                    address: '${parameters.address}'
+                })
+            })
+            .then(res => res.json())
+            .then(data => completion(data))
+            
+            null
+        `
     }
 
     /**
@@ -405,36 +455,76 @@ class OeIfScheduleWebView extends ScheduleWebView {
      * @returns {String} JS script as text.
      */
     #getLoadScheduleReportJSPayload() {
-        return "" +
-            "let cityField = document.getElementById('searchCityAdress');" +
-            "let streetField = document.getElementById('searchStreetAdress');" +
-            "let buildingField = document.getElementById('searchBuildingAdress');" +
-            "let submitButton = document.getElementById('adressReport');" +
-
-            "cityField.value = '" + parameters.city + "';" +
-            "streetField.value = '" + parameters.street + "';" +
-            "buildingField.value = '" + parameters.buildingNumber + "';" +
-
-            "submitButton.click();";
+        return `
+            (async () => {
+              // Helper: wait for element to appear
+              const waitFor = (selector) => new Promise(resolve => {
+                const el = document.querySelector(selector);
+                if (el) return resolve(el);
+                const obs = new MutationObserver(() => {
+                  const el = document.querySelector(selector);
+                  if (el) {
+                    obs.disconnect();
+                    resolve(el);
+                  }
+                });
+                obs.observe(document.body, { childList: true, subtree: true });
+              });
+            
+              // Helper: set React input value properly
+              const setReactValue = (el, value) => {
+                const lastValue = el.value;
+                el.value = value;
+                const event = new Event('input', { bubbles: true });
+                const tracker = el._valueTracker;
+                if (tracker) tracker.setValue(lastValue);
+                el.dispatchEvent(event);
+              };
+              
+              // Wait for fields (youâll need to customize selectors below)
+              const cityField = await waitFor('input[name="city"]');
+              const streetField = await waitFor('input[name="street"]');
+              const buildingField = await waitFor('input[name="building"]');
+              const searchButton = await waitFor('button[type="submit"]');
+              
+              // Fill values
+              setReactValue(cityField, '${parameters.city}');
+              setReactValue(streetField, '${parameters.street}');
+              setReactValue(buildingField, '${parameters.buildingNumber}');
+            
+              // Click the generate report button.
+              searchButton.click();
+            
+              const queueButton = await waitFor('button[data-testid="submitSearchQueue-${parameters.queue}"]');
+              
+              // If there is queue specified explicitly
+              // and address has this queue assigned then use it.
+              if (queueButton) {
+                 queueButton.click();
+              }
+              
+              completion();
+            })();
+            
+            null
+        `;
     }
 
     /**
      * JS script that will send request 
      * to get outages JSON data.
      * 
+     * @param {String} queue queue number
      * @returns {String} JS script as text.
      */
-    #getDownloadSchedulesByQueueJSPayload() {
-        return "" +
-            "$.ajax({" +
-            "   url: 'https://be-svitlo.oe.if.ua/schedule-by-queue'," +
-            "   data: {" +
-            "      accountNumber: ''," +
-            "      userSearchChoice: 'pob'," +
-            "      address: '" + parameters.address + "'" +
-            "   }," +
-            "   async: false" +
-            "}).responseJSON;";
+    #getDownloadSchedulesByQueueJSPayload(queue) {
+        return `
+            fetch('https://be-svitlo.oe.if.ua/schedule-by-queue?queue=${queue}')
+                .then(res => res.json())
+                .then(data => completion(data))
+            
+            null
+        `
     }
 }
 
@@ -542,17 +632,24 @@ class OutageRecord {
      * otherwise False.
      */
     isPassed() {
-
+        
+        // This is edge case for scenarios
+        // where outage ends on midnight,
+        // since we're storing only time
+        // without date we can't do regular
+        // comparison.
+        if (this.#endTime.isMidnight()) {
+            return false;
+        }
+        
         const now = new Date();
-
-        const finishTime = this.#endTime;
         let currentTime = Time.of(now.getHours() , now.getMinutes());
         
         if (debugFeatureEnabled("mockCurrentHour")) {
             currentTime = Time.of(getFeature("mockCurrentHour"));
         }
-
-        return currentTime.getTime() >= finishTime.getTime();
+        
+        return currentTime.getTime() >= this.#endTime.getTime();
     }
 
     /**
@@ -574,20 +671,19 @@ class OutageRecord {
  * Helper class used to render
  * widget with schedule information.
  */
-class ScheduleWidget {
+class ScheduleWidgetBuilder {
 
     /**
      * Entrypoint. Used to render schedule widget.
      * 
      * @param {ScheduleWebView} webView 
      */
-    async render(webView) {
+    build(webView) {
 
         // This is triggered when schedule data was
         // not loaded due to connection issues.
         if (!webView.isAvailable()) {
-            present(this.#getNotAvailableRootWidget());
-            return;
+            return this.#getNotAvailableRootWidget();
         }
 
         const root = this.#createRootWidget();
@@ -640,7 +736,7 @@ class ScheduleWidget {
             }
         }
 
-        present(root);
+        return root;
     }
 
     /**
@@ -834,6 +930,16 @@ class Time {
      */
     getMinutes() {
         return this.#minutes;
+    }
+    
+    /**
+     * Used to check if time 
+     * represents midnight.
+     * 
+     * @returns {Number} True if midnight otherwise False.
+     */
+    isMidnight() {
+        return this.#hours == 0 && this.#minutes == 0
     }
 
     /**
