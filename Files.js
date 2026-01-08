@@ -2,6 +2,9 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: deep-purple; icon-glyph: copy;
 
+const { JS_EXTENSION } = importModule("Constants");
+
+
 /**
  * Helper class.
  * Used to simplify work with file system.
@@ -15,12 +18,23 @@ class Files {
 
     static #manager = FileManager.iCloud();
     
-    static #FEATURES_DIR = "Features";
-    static #RESOURCES_DIR = "Resources";
-    static #LOCALES_DIR = "i18n";
+    static FeaturesDirectory = "Features";
+    static ResourcesDirectory = "Resources";
+    static LocalesDirectory = "i18n";
 
     static #FEATURE_FILE_NAME = "feature.json";
-    static #JS_EXTENSION = ".js";
+
+    static manager() {
+        return this.#manager;
+    }
+
+    static rootDirectory() {
+        return this.#manager.documentsDirectory();
+    }
+
+    static updateScriptableFile(filePath, content) {
+        this.#manager.write(filePath, Data.fromString(content));
+    }
 
     /**
      * Used to update features object
@@ -37,7 +51,7 @@ class Files {
             scriptName,
             this.#FEATURE_FILE_NAME,
             JSON.stringify(content, null, 4),
-            this.#getFeaturesDirectory()
+            this.getFeaturesDirectory()
         );
     }
 
@@ -52,7 +66,7 @@ class Files {
     static async updateScript(scriptName, script) {
 
         const scriptPath = this.joinPaths(
-            this.#getScriptableDirectory(),
+            this.getScriptableDirectory(),
             scriptName
         );
 
@@ -75,7 +89,7 @@ class Files {
             scriptName,
             this.#getLocaleFileName(languageCode),
             JSON.stringify(content, null, 4),
-            this.#getLocalesDirectory()
+            this.getLocalesDirectory()
         );
     }
 
@@ -130,7 +144,7 @@ class Files {
      * @memberof Files
      */
     static async updateFile(scriptName, fileName, content) {
-        await this.#updateFileInternal(scriptName, fileName, content, this.#getResourcesDirectory());
+        await this.#updateFileInternal(scriptName, fileName, content, this.getResourcesDirectory());
     }
     
     /**
@@ -170,7 +184,7 @@ class Files {
      */
     static featureFileExists(scriptName) {
         return this.#fileExistsInternal(
-            scriptName, this.#FEATURE_FILE_NAME, this.#getFeaturesDirectory()
+            scriptName, this.#FEATURE_FILE_NAME, this.getFeaturesDirectory()
         );
     }
 
@@ -189,7 +203,7 @@ class Files {
         return this.#fileExistsInternal(
             scriptName, 
             this.#getLocaleFileName(languageCode), 
-            this.#getLocalesDirectory()
+            this.getLocalesDirectory()
         );
     }
 
@@ -204,7 +218,7 @@ class Files {
      * @memberof Files
      */
     static fileExists(scriptName, fileName) {
-        return this.#fileExistsInternal(scriptName, fileName, this.#getResourcesDirectory());
+        return this.#fileExistsInternal(scriptName, fileName, this.getResourcesDirectory());
     }
 
     /**
@@ -227,6 +241,10 @@ class Files {
         );
         
         return this.#manager.fileExists(targetFile);
+    }
+
+    static readScriptableFile(filePath) {
+        return this.#manager.readString(filePath);
     }
 
     /**
@@ -262,7 +280,7 @@ class Files {
             scriptName, 
             this.#FEATURE_FILE_NAME, 
             defaultValue, 
-            this.#getFeaturesDirectory()
+            this.getFeaturesDirectory()
         );
 
         return this.#toJSON(content);
@@ -278,7 +296,7 @@ class Files {
      */
     static readScript(scriptName) {
 
-        const scriptPath = this.joinPaths(this.#getScriptableDirectory(), scriptName);
+        const scriptPath = this.joinPaths(this.getScriptableDirectory(), scriptName);
         return this.#manager.readString(scriptPath);
     }
 
@@ -300,7 +318,7 @@ class Files {
             scriptName,
             this.#getLocaleFileName(languageCode),
             {},
-            this.#getLocalesDirectory()
+            this.getLocalesDirectory()
         );
 
         return this.#toJSON(content);
@@ -362,7 +380,7 @@ class Files {
      * @memberof Files
      */
     static readFile(scriptName, fileName, defaultValue) {
-        return this.#readFileInternal(scriptName, fileName, defaultValue, this.#getResourcesDirectory());
+        return this.#readFileInternal(scriptName, fileName, defaultValue, this.getResourcesDirectory());
     }
     
     /**
@@ -402,7 +420,7 @@ class Files {
      * @memberof Files
      */
     static findFeatureDirectories() {
-        return this.#manager.listContents(this.#getFeaturesDirectory());
+        return this.#manager.listContents(this.getFeaturesDirectory());
     }
 
     /**
@@ -414,7 +432,7 @@ class Files {
      * @memberof Files
      */
     static findLocaleDirectories() {
-        return this.#manager.listContents(this.#getLocalesDirectory());
+        return this.#manager.listContents(this.getLocalesDirectory());
     }
 
     /**
@@ -424,9 +442,106 @@ class Files {
      * @return {List<String>} list of script names
      * @memberof Files
      */
-    static findScripts() {
-        return this.#manager.listContents(this.#getScriptableDirectory())
-            .filter((script) => script.endsWith(this.#JS_EXTENSION));
+    static findScripts(targetDirectory = null) {
+
+        if (targetDirectory === null) {
+            targetDirectory = this.getScriptableDirectory();
+        }
+
+        return this.#manager.listContents(targetDirectory)
+            .filter((script) => script.endsWith(JS_EXTENSION));
+    }
+
+    /**
+     * Used to get full path to the provided directory.
+     * Files is being searched in Resources directory of
+     * current script.
+     *
+     * @static
+     * @param {String} fileName name of file for which path should be given
+     * @return {String} full path to the file
+     * @memberof Files
+     */
+    static resolveLocalResource(fileName) {
+        return this.resolveResource(Script.name(), fileName);
+    }
+
+    /**
+     * Used to get full path to the provided directory.
+     * Files is being searched in Resources directory of
+     * provided script.
+     *
+     * @static
+     * @param {String} fileName name of file for which path should be given
+     * @return {String} full path to the file
+     * @memberof Files
+     */
+    static resolveResource(scriptName, fileName) {
+
+        return this.joinPaths(
+            this.getResourcesDirectory(),
+            scriptName,
+            fileName
+        );
+    }
+
+    /**
+     * Used to get 'Debug' directory
+     * where all runnable script configurations
+     * are stored.
+     *
+     * @return {String} Debug directory path
+     * @memberof Files
+     */
+    static getFeaturesDirectory() {
+        return this.joinPaths(
+            this.getScriptableDirectory(),
+            this.FeaturesDirectory
+        );
+    }
+
+    /**
+     * Used to get 'Resources' directory path.
+     * In this directory all script internal data
+     * is being stored.
+     *
+     * @static
+     * @return {String} Resources directory path
+     * @memberof Files
+     */
+    static getResourcesDirectory() {
+        return this.joinPaths(
+            this.getScriptableDirectory(),
+            this.ResourcesDirectory
+        );
+    }
+
+    /**
+     * Used to get locales 'i18n' directory path.
+     * In this directory all labels and translations
+     * used by widgets and UI tables are being stored.
+     *
+     * @static
+     * @return {String} locales directory path
+     * @memberof Files
+     */
+    static getLocalesDirectory() {
+        return this.joinPaths(
+            this.getScriptableDirectory(),
+            this.LocalesDirectory
+        );
+    }
+
+    /**
+     * Used to get main scriptable directory.
+     * This is Scriptable file system root.
+     *
+     * @static
+     * @return {String} Scriptable root directory path
+     * @memberof Files
+     */
+    static getScriptableDirectory() {
+        return this.#manager.documentsDirectory();
     }
 
     /**
@@ -447,65 +562,6 @@ class Files {
         }
         
         return filePath;
-    }
-
-    /**
-     * Used to get 'Debug' directory
-     * where all runnable script configurations
-     * are stored.
-     *
-     * @return {String} Debug directory path
-     * @memberof Files
-     */
-    static #getFeaturesDirectory() {
-        return this.joinPaths(
-            this.#getScriptableDirectory(),
-            this.#FEATURES_DIR
-        );
-    }
-
-    /**
-     * Used to get 'Resources' directory path.
-     * In this directory all script internal data
-     * is being stored.
-     *
-     * @static
-     * @return {String} Resources directory path
-     * @memberof Files
-     */
-    static #getResourcesDirectory() {
-        return this.joinPaths(
-            this.#getScriptableDirectory(),
-            this.#RESOURCES_DIR
-        );
-    }
-
-    /**
-     * Used to get locales 'i18n' directory path.
-     * In this directory all labels and translations
-     * used by widgets and UI tables are being stored.
-     *
-     * @static
-     * @return {String} locales directory path
-     * @memberof Files
-     */
-    static #getLocalesDirectory() {
-        return this.joinPaths(
-            this.#getScriptableDirectory(),
-            this.#LOCALES_DIR
-        );
-    }
-
-    /**
-     * Used to get main scriptable directory.
-     * This is Scriptable file system root.
-     *
-     * @static
-     * @return {String} Scriptable root directory path
-     * @memberof Files
-     */
-    static #getScriptableDirectory() {
-        return this.#manager.documentsDirectory();
     }
 
     /**
