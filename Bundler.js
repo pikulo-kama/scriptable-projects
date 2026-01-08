@@ -1,64 +1,33 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: purple; icon-glyph: file-archive;
+// icon-color: deep-purple; icon-glyph: file-archive;
 
 const { Files } = importModule("Files");
-const { tr } = importModule("Localization");
-const { modal } = importModule("Modal");
+const { JS_EXTENSION, EMPTY_STRING } = importModule("Constants");
 
 
-const JS_EXTENSION = ".js";
-const EMPTY_STRING = "";
-
-/**
- * ENTRY POINT
- */
-async function main() {
-
-    const scriptName = await ScriptSelector.selectScript();
-
-    if (scriptName) {
-        const bundler = new Bundler(scriptName);
-        await bundler.bundle();
+class FileInfo {
+    
+    #name;
+    #directory;
+    
+    constructor(name, directory) {
+        this.#name = name;
+        this.#directory = directory;
+    }
+    
+    name() {
+        return this.#name;
+    }
+    
+    directory() {
+        return this.#directory;
+    }
+    
+    path() {
+        return Files.joinPaths(this.directory(), this.name());
     }
 }
-
-
-/**
- * Used to select script that
- * should be bundled.
- *
- * @class ScriptSelector
- */
-class ScriptSelector {
-
-    /**
-     * Used to select script that
-     * should be bundled.
-     * 
-     * @static
-     * @return {String} script name
-     * @memberof ScriptSelector
-     */
-    static async selectScript() {
-
-        const scriptList = Files.findScripts()
-            .map((script) => script.replace(JS_EXTENSION, EMPTY_STRING))
-            .sort();
-
-        const result = await modal()
-            .title(tr("bundler_scriptSelectionModalTitle"))
-            .actions(scriptList)
-            .present();
-        
-        if (result.isCancelled()) {
-            return null;
-        }
-        
-        return result.choice();
-    }
-}
-
 
 /**
  * Used to compose script and all of its 
@@ -73,6 +42,7 @@ class Bundler {
     static #MODULE_EXPORTS_REGEXP = new RegExp(/module\.exports\s*=\s*{[^}]+};?/g);
 
     #scriptName;
+    #scriptsDirectory;
     #scriptMetadata = new Map();
     #dependencyScripts = new Map();
 
@@ -81,8 +51,9 @@ class Bundler {
      * @param {String} scriptName script that should be bundled
      * @memberof Bundler
      */
-    constructor(scriptName) {
+    constructor(scriptName, scriptsDirectory) {
         this.#scriptName = scriptName;
+        this.#scriptsDirectory = scriptsDirectory;
     }
 
     /**
@@ -114,8 +85,11 @@ class Bundler {
         // Add main script.
         scriptBody += mainScriptBody;
 
-        const targetFileName = tr("bundler_bundledScriptName", this.#scriptName);
-        await Files.updateScript(targetFileName + JS_EXTENSION, scriptBody)
+        const targetFileName = `${this.#scriptName} (Bundled)${JS_EXTENSION}`;
+        const targetFilePath = Files.joinPaths(this.#scriptsDirectory, targetFileName);
+        await Files.updateScriptableFile(targetFilePath, scriptBody);
+
+        return new FileInfo(targetFileName, this.#scriptsDirectory);
     }
 
     /**
@@ -129,13 +103,12 @@ class Bundler {
      * @memberof Bundler
      */
     #processDependencies(scriptName) {
-
-        let scriptBody = Files.readScript(scriptName + JS_EXTENSION);
+        const scriptPath = Files.joinPaths(this.#scriptsDirectory, scriptName + JS_EXTENSION);
+        let scriptBody = Files.readScriptableFile(scriptPath);
         scriptBody = this.#extractMetadataAndGet(scriptName, scriptBody);
 
         const scriptDependencies = this.#getScriptDependencies(scriptBody);
         scriptBody = this.#removeDependenciesAndGet(scriptBody);
-        this.#dependencyScripts.set(scriptName, scriptBody);
 
         for (const dependencyName of scriptDependencies) {
 
@@ -144,9 +117,11 @@ class Bundler {
             if (this.#dependencyScripts.has(dependencyName)) {
                 continue;
             }
-
+            
             this.#processDependencies(dependencyName);
         }
+        
+        this.#dependencyScripts.set(scriptName, scriptBody);
     }
 
     /**
@@ -216,5 +191,12 @@ class Bundler {
 }
 
 
-await main();
-Script.complete();
+async function bundleScript(scriptName, scriptDirectory) {
+    const bundler = new Bundler(scriptName, scriptDirectory);
+    return bundler.bundle();
+}
+
+
+module.exports = {
+    bundleScript
+};

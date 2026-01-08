@@ -1,6 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: teal; icon-glyph: check-circle;
+// icon-color: purple; icon-glyph: check-circle;
 
 const { modal, ModalRule, showWarning, showError } = importModule("Modal");
 const { Files } = importModule("Files");
