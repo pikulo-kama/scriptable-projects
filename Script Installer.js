@@ -103,37 +103,48 @@ class ScriptInstaller {
      * @async
      * @param {string} scriptName - The name of the script whose resources are being installed.
      */
-    async installScriptResources(scriptName) {
+    async installScriptResources(scriptName, dependencies = null) {
 
-        const fm = Files.manager();
-        const repositoryDirectory = this.repositoryDirectory();
+        if (dependencies === null) {
+            dependencies = new Array();
+        }
+
         const directoriesToSync = [
             Files.FeaturesDirectory,
             Files.ResourcesDirectory,
             Files.LocalesDirectory
         ];
+        
+        dependencies.push(scriptName);
 
         // Move script data if available.
         for (const directory of directoriesToSync) {
+            for (const script of dependencies) {
+                this.#syncDirectory(directory, script);
+            }
+        }
+    }
 
-            const sourceDirectoryPath = Files.joinPaths(repositoryDirectory, directory, scriptName);
-            const targetDirectoryPath = Files.joinPaths(Files.getScriptableDirectory(), directory, scriptName);
+    #syncDirectory(directory, scriptName) {
+        const fm = Files.manager();
+        const repositoryDirectory = this.repositoryDirectory();
+        const sourceDirectoryPath = Files.joinPaths(repositoryDirectory, directory, scriptName);
+        const targetDirectoryPath = Files.joinPaths(Files.getScriptableDirectory(), directory, scriptName);
 
-            // Script doesn't have related files in directory.
-            if (!fm.isDirectory(sourceDirectoryPath)) {
-                continue;
+        // Script doesn't have files in repository directory.
+        if (!fm.isDirectory(sourceDirectoryPath)) {
+            return;
+        }
+
+        for (const directoryFile of fm.listContents(sourceDirectoryPath)) {
+            const sourceFilePath = Files.joinPaths(sourceDirectoryPath, directoryFile);
+            const targetFilePath = Files.joinPaths(targetDirectoryPath, directoryFile);
+
+            if (!fm.isDirectory(targetDirectoryPath)) {
+                fm.createDirectory(targetDirectoryPath, true);
             }
 
-            for (const directoryFile of fm.listContents(sourceDirectoryPath)) {
-                const sourceFilePath = Files.joinPaths(sourceDirectoryPath, directoryFile);
-                const targetFilePath = Files.joinPaths(targetDirectoryPath, directoryFile);
-
-                if (!fm.isDirectory(targetDirectoryPath)) {
-                    fm.createDirectory(targetDirectoryPath, true);
-                }
-
-                Files.forceMove(sourceFilePath, targetFilePath);
-            }
+            Files.forceMove(sourceFilePath, targetFilePath);
         }
     }
 

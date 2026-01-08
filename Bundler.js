@@ -25,15 +25,18 @@ class FileInfo {
      * @private
      */
     #directory;
+
+    #dependencies;
     
     /**
      * Creates an instance of FileInfo.
      * @param {string} name - The name of the file.
      * @param {string} directory - The directory path.
      */
-    constructor(name, directory) {
+    constructor(name, directory, dependencies) {
         this.#name = name;
         this.#directory = directory;
+        this.#dependencies = dependencies
     }
     
     /**
@@ -58,6 +61,10 @@ class FileInfo {
      */
     path() {
         return Files.joinPaths(this.directory(), this.name());
+    }
+
+    dependencies() {
+        return this.#dependencies;
     }
 }
 
@@ -122,7 +129,11 @@ class Bundler {
         const targetFilePath = Files.joinPaths(this.#scriptsDirectory, targetFileName);
         await Files.updateScriptableFile(targetFilePath, scriptBody);
 
-        return new FileInfo(targetFileName, this.#scriptsDirectory);
+        return new FileInfo(
+            targetFileName, 
+            this.#scriptsDirectory, 
+            this.#dependencyScripts.keys()
+        );
     }
 
     /**
