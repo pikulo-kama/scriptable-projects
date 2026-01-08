@@ -6,28 +6,61 @@ const { Files } = importModule("Files");
 const { JS_EXTENSION, EMPTY_STRING } = importModule("Constants");
 
 
+/**
+ * Represents metadata for a specific file, including its name and location.
+ * Provides utility methods to resolve full system paths.
+ */
 class FileInfo {
     
+    /**
+     * The name of the file (including extension).
+     * @type {string}
+     * @private
+     */
     #name;
+
+    /**
+     * The directory path where the file is located.
+     * @type {string}
+     * @private
+     */
     #directory;
     
+    /**
+     * Creates an instance of FileInfo.
+     * @param {string} name - The name of the file.
+     * @param {string} directory - The directory path.
+     */
     constructor(name, directory) {
         this.#name = name;
         this.#directory = directory;
     }
     
+    /**
+     * Gets the name of the file.
+     * @returns {string} The filename.
+     */
     name() {
         return this.#name;
     }
     
+    /**
+     * Gets the directory path of the file.
+     * @returns {string} The directory path.
+     */
     directory() {
         return this.#directory;
     }
     
+    /**
+     * Resolves the full path of the file by joining the directory and name.
+     * @returns {string} The full file path.
+     */
     path() {
         return Files.joinPaths(this.directory(), this.name());
     }
 }
+
 
 /**
  * Used to compose script and all of its 

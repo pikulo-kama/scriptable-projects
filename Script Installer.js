@@ -10,152 +10,189 @@ const { JS_EXTENSION, EMPTY_STRING } = importModule("Constants");
 const { bundleScript } = importModule("Bundler");
 
 
+/**
+ * Main entry point for the Script Installer.
+ * Orchestrates repository downloading, user selection via modal, and script installation.
+ */
 async function main() {
-	const installer = new ScriptInstaller();
-	await installer.downloadRepository();
+    const installer = new ScriptInstaller();
+    await installer.downloadRepository();
 
-	// Make sure script installer is up-to-date.
-	installer.installScriptResources("Script Installer");
+    // Make sure script installer is up-to-date.
+    installer.installScriptResources("Script Installer");
 
-	const result = await modal()
-		.title(tr("installer_scriptSelectionModalTitle"))
-		.actions(installer.getScriptList())
-		.present();
+    const result = await modal()
+        .title(tr("installer_scriptSelectionModalTitle"))
+        .actions(installer.getScriptList())
+        .present();
 
-	if (!result.isCancelled()) {
-		await installer.installScript(result.choice());
-		await installer.installScriptResources(result.choice());
-	}
+    if (!result.isCancelled()) {
+        await installer.installScript(result.choice());
+        await installer.installScriptResources(result.choice());
+    }
 
-	installer.cleanup();
+    installer.cleanup();
 }
 
-
+/**
+ * Handles the downloading and installation of scripts from a remote GitHub repository.
+ * Manages caching, file system operations, and asset synchronization.
+ */
 class ScriptInstaller {
-  
-  #REPO_URL = "https://api.github.com/repos/pikulo-kama/scriptable-projects/git/trees/main?recursive=1"
 
-  async downloadRepository() {
-    
-    const fm = Files.manager();
-    
-    // Due to GitHub API limitations we are caching responses for 24 hours
-    // before fetching new data.
-    const treeRequest = cacheRequest(this.#treeRequestMetadata(), 24);
-    const fileRequest = cacheRequest(this.#fileRequestMetadata(), 24);
+    /**
+     * The GitHub API endpoint for the repository tree.
+     * @type {string}
+     * @private
+     */
+    #REPO_URL = "https://api.github.com/repos/pikulo-kama/scriptable-projects/git/trees/main?recursive=1"
 
-    const treeData = await treeRequest.get(this.#REPO_URL);
-    
-    for (const item of treeData.tree) {
-      const itemPath = Files.joinPaths(this.repositoryDirectory(), item.path);
-      
-      if (!fm.isDirectory(this.repositoryDirectory())) {
-        fm.createDirectory(this.repositoryDirectory());
-      }
-      
-      if (item.type === "tree") {
-        fm.createDirectory(itemPath, true);
-      
-      } else if (item.type === "blob") {
-        const fileInfo = await fileRequest.get(item.url);
-        const content = fileInfo.content.replace(/\s/g, "");
-        const fileData = Data.fromBase64String(content);
-        
-        fm.write(itemPath, fileData);
-      }
+    /**
+     * Downloads the entire repository structure to a local temporary directory.
+     * Utilizes caching to respect GitHub API rate limits.
+     * @async
+     */
+    async downloadRepository() {
+
+        const fm = Files.manager();
+
+        // Due to GitHub API limitations we are caching responses for 24 hours
+        // before fetching new data.
+        const treeRequest = cacheRequest(this.#treeRequestMetadata(), 24);
+        const fileRequest = cacheRequest(this.#fileRequestMetadata(), 24);
+
+        const treeData = await treeRequest.get(this.#REPO_URL);
+
+        for (const item of treeData.tree) {
+            const itemPath = Files.joinPaths(this.repositoryDirectory(), item.path);
+
+            if (!fm.isDirectory(this.repositoryDirectory())) {
+                fm.createDirectory(this.repositoryDirectory());
+            }
+
+            if (item.type === "tree") {
+                fm.createDirectory(itemPath, true);
+
+            } else if (item.type === "blob") {
+                const fileInfo = await fileRequest.get(item.url);
+                const content = fileInfo.content.replace(/\s/g, "");
+                const fileData = Data.fromBase64String(content);
+
+                fm.write(itemPath, fileData);
+            }
+        }
     }
-  }
 
-  async installScript(scriptName) {
-		const fm = Files.manager();
-		const repositoryDirectory = this.repositoryDirectory();
+    /**
+     * Bundles a specific script and moves it to the Scriptable documents folder.
+     * @async
+     * @param {string} scriptName - The name of the script to install.
+     */
+    async installScript(scriptName) {
+        const fm = Files.manager();
+        const repositoryDirectory = this.repositoryDirectory();
 
-		// Bundle script and move it to scriptable folder.
-		const bundledFileInfo = await bundleScript(scriptName, repositoryDirectory);
-		const targetScriptPath = Files.joinPaths(Files.getScriptableDirectory(), bundledFileInfo.name());
-		
-		if (fm.fileExists(targetScriptPath)) {
-			fm.remove(targetScriptPath);
-		}
-		
-		fm.move(bundledFileInfo.path(), targetScriptPath);
-	}
+        // Bundle script and move it to scriptable folder.
+        const bundledFileInfo = await bundleScript(scriptName, repositoryDirectory);
+        const targetScriptPath = Files.joinPaths(Files.getScriptableDirectory(), bundledFileInfo.name());
 
-  async installScriptResources(scriptName) {
+        if (fm.fileExists(targetScriptPath)) {
+            fm.remove(targetScriptPath);
+        }
 
-		const fm = Files.manager();
-		const repositoryDirectory = this.repositoryDirectory();
-		const directoriesToSync = [
-			Files.FeaturesDirectory,
-			Files.ResourcesDirectory,
-			Files.LocalesDirectory
-		];
+        fm.move(bundledFileInfo.path(), targetScriptPath);
+    }
 
-		// Move script data if available.
-		for (const directory of directoriesToSync) {
+    /**
+     * Synchronizes associated resources (Features, i18n, Resources) for a given script.
+     * @async
+     * @param {string} scriptName - The name of the script whose resources are being installed.
+     */
+    async installScriptResources(scriptName) {
 
-			const sourceDirectoryPath = Files.joinPaths(repositoryDirectory, directory, scriptName);
-			const targetDirectoryPath = Files.joinPaths(Files.getScriptableDirectory(), directory, scriptName);
+        const fm = Files.manager();
+        const repositoryDirectory = this.repositoryDirectory();
+        const directoriesToSync = [
+            Files.FeaturesDirectory,
+            Files.ResourcesDirectory,
+            Files.LocalesDirectory
+        ];
 
-			// Script doesn't have related files in directory.
-			if (!fm.isDirectory(sourceDirectoryPath)) {
-				continue;
-			}
+        // Move script data if available.
+        for (const directory of directoriesToSync) {
 
-			for (const directoryFile of fm.listContents(sourceDirectoryPath)) {
-				const sourceFilePath = Files.joinPaths(sourceDirectoryPath, directoryFile);
-				const targetFilePath = Files.joinPaths(targetDirectoryPath, directoryFile);
+            const sourceDirectoryPath = Files.joinPaths(repositoryDirectory, directory, scriptName);
+            const targetDirectoryPath = Files.joinPaths(Files.getScriptableDirectory(), directory, scriptName);
 
-				if (!fm.isDirectory(targetDirectoryPath)) {
-					fm.createDirectory(targetDirectoryPath, true);
-				}
+            // Script doesn't have related files in directory.
+            if (!fm.isDirectory(sourceDirectoryPath)) {
+                continue;
+            }
 
-				fm.move(sourceFilePath, targetFilePath);
-			}
-		}
-  }
+            for (const directoryFile of fm.listContents(sourceDirectoryPath)) {
+                const sourceFilePath = Files.joinPaths(sourceDirectoryPath, directoryFile);
+                const targetFilePath = Files.joinPaths(targetDirectoryPath, directoryFile);
 
-  getScriptList() {
-    return Files.findScripts(this.repositoryDirectory())
-        .map((script) => script.replace(JS_EXTENSION, EMPTY_STRING))
-        .sort();
-  }
+                if (!fm.isDirectory(targetDirectoryPath)) {
+                    fm.createDirectory(targetDirectoryPath, true);
+                }
 
-  cleanup() {
-	const fm = Files.manager();
-	fm.remove(this.repositoryDirectory());
-  }
+                fm.move(sourceFilePath, targetFilePath);
+            }
+        }
+    }
 
-  repositoryDirectory() {
-	return Files.resolveLocalResource("Repository");
-  }
+    /**
+     * Retrieves a list of available scripts from the downloaded repository.
+     * @returns {string[]} Sorted list of script names without extensions.
+     */
+    getScriptList() {
+        return Files.findScripts(this.repositoryDirectory())
+            .map((script) => script.replace(JS_EXTENSION, EMPTY_STRING))
+            .sort();
+    }
 
-  #treeRequestMetadata() {
-    return metadata()
-      	.list()
-			.property("tree")
-			.data()
-				.property("path")
-				.add()
-			.data()
-				.property("type")
-				.add()
-			.data()
-				.property("url")
-				.add()
-		.add()
-    .create();
-  }
+    /**
+     * Removes the temporary repository directory after installation.
+     */
+    cleanup() {
+        const fm = Files.manager();
+        fm.remove(this.repositoryDirectory());
+    }
 
-  #fileRequestMetadata() {
-    return metadata()
-		.data()
-			.property("content")
-			.add()
-		.create();
-  }
+    /**
+     * Resolves the path to the temporary repository storage.
+     * @returns {string} Path to the Repository directory.
+     */
+    repositoryDirectory() {
+        return Files.resolveLocalResource("Repository");
+    }
+
+    /**
+     * Internal metadata schema for repository tree requests.
+     * @private
+     */
+    #treeRequestMetadata() {
+        return metadata()
+            .list().property("tree")
+                .data().property("path").add()
+                .data().property("type").add()
+                .data().property("url").add()
+            .add()
+        .create();
+    }
+
+    /**
+     * Internal metadata schema for file content requests.
+     * @private
+     */
+    #fileRequestMetadata() {
+        return metadata()
+            .data().property("content").add()
+        .create();
+    }
 }
 
 
 await main();
-Script.complete()
+Script.complete();

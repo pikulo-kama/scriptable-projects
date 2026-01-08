@@ -4,49 +4,82 @@
 
 const { JS_EXTENSION } = importModule("Constants");
 
-
 /**
  * Helper class.
- * Used to simplify work with file system.
+ * Used to simplify work with the Scriptable file system.
  *
- * Files only operates in iCloud no
- * changes to device file system is being made.
- * 
- * @class Files
+ * Files only operates in iCloud; no changes to the local 
+ * device file system are being made.
+ * * @class Files
  */
 class Files {
 
+    /**
+     * Internal iCloud File Manager instance.
+     * @type {FileManager}
+     * @private
+     */
     static #manager = FileManager.iCloud();
     
+    /**
+     * Name of the directory where feature configurations are stored.
+     * @type {string}
+     */
     static FeaturesDirectory = "Features";
+
+    /**
+     * Name of the directory where script resources are stored.
+     * @type {string}
+     */
     static ResourcesDirectory = "Resources";
+
+    /**
+     * Name of the directory where localization files are stored.
+     * @type {string}
+     */
     static LocalesDirectory = "i18n";
 
+    /**
+     * Default filename for feature configuration files.
+     * @type {string}
+     * @private
+     */
     static #FEATURE_FILE_NAME = "feature.json";
 
+    /**
+     * Returns the active file manager instance.
+     * @returns {FileManager} The iCloud file manager.
+     */
     static manager() {
         return this.#manager;
     }
 
+    /**
+     * Returns the root documents directory path.
+     * @returns {string} Path to documents.
+     */
     static rootDirectory() {
         return this.#manager.documentsDirectory();
     }
 
+    /**
+     * Writes raw content to a specific file path.
+     * @param {string} filePath - Full path to the file.
+     * @param {string} content - String content to write.
+     */
     static updateScriptableFile(filePath, content) {
         this.#manager.write(filePath, Data.fromString(content));
     }
 
     /**
-     * Used to update features object
-     * for provided script.
+     * Used to update features object for provided script.
      *
      * @static
-     * @param {String} scriptName name of script
-     * @param {Object} content features object
+     * @param {String} scriptName - Name of script.
+     * @param {Object} content - Features object to stringify.
      * @memberof Files
      */
     static async updateFeatureFile(scriptName, content) {
-
         await this.#updateFileInternal(
             scriptName,
             this.#FEATURE_FILE_NAME,
@@ -59,32 +92,29 @@ class Files {
      * Used to update Scriptable script content.
      *
      * @static
-     * @param {String} scriptName name of script
-     * @param {String} script script content
+     * @param {String} scriptName - Name of the script file.
+     * @param {String} script - The JavaScript source code.
      * @memberof Files
      */
     static async updateScript(scriptName, script) {
-
         const scriptPath = this.joinPaths(
             this.getScriptableDirectory(),
             scriptName
         );
-
+        
         await this.#manager.write(scriptPath, Data.fromString(script));
     }
 
     /**
-     * Used to update locale file
-     * associated with the script and provided language code.
+     * Used to update locale file associated with the script and provided language code.
      *
      * @static
-     * @param {String} scriptName script name for which locale is being updated
-     * @param {String} languageCode language code associated with locale
-     * @param {String} content locale file content
+     * @param {String} scriptName - Script name for which locale is being updated.
+     * @param {String} languageCode - Language code (e.g., 'en_US').
+     * @param {Object} content - Locale object content.
      * @memberof Files
      */
     static async updateLocale(scriptName, languageCode, content) {
-        
         await this.#updateFileInternal(
             scriptName,
             this.#getLocaleFileName(languageCode),
@@ -94,12 +124,11 @@ class Files {
     }
 
     /**
-     * Used to update JSON resource
-     * associated with current script.
+     * Used to update JSON resource associated with the current running script.
      *
      * @static
-     * @param {String} fileName name of resource file
-     * @param {String} content JSON file content
+     * @param {String} fileName - Name of resource file.
+     * @param {Object} content - JSON object to save.
      * @memberof Files
      */
     static async updateLocalJson(fileName, content) {
@@ -107,13 +136,12 @@ class Files {
     }
 
     /**
-     * Used to update JSON resource
-     * associated with provided script.
+     * Used to update JSON resource associated with a specific script.
      *
      * @static
-     * @param {String} scriptName name of script for which file is updated
-     * @param {String} fileName name of resource file
-     * @param {String} content JSON file content
+     * @param {String} scriptName - Name of script for which file is updated.
+     * @param {String} fileName - Name of resource file.
+     * @param {Object} content - JSON object to save.
      * @memberof Files
      */
     static async updateJson(scriptName, fileName, content) {
@@ -121,12 +149,11 @@ class Files {
     }
     
     /**
-     * Used to update file resource
-     * associated with current script.
+     * Used to update file resource associated with the current script.
      *
      * @static
-     * @param {String} fileName name of resource file
-     * @param {String} content file content
+     * @param {String} fileName - Name of resource file.
+     * @param {string} content - File content.
      * @memberof Files
      */
     static async updateLocalFile(fileName, content) {
@@ -134,13 +161,12 @@ class Files {
     }
 
     /**
-     * Used to update file resource
-     * associated with provided script.
+     * Used to update file resource associated with a provided script.
      *
      * @static
-     * @param {String} scriptName name of script for which file is updated
-     * @param {String} fileName name of resource file
-     * @param {String} content file content
+     * @param {String} scriptName - Name of script for which file is updated.
+     * @param {String} fileName - Name of resource file.
+     * @param {string} content - File content.
      * @memberof Files
      */
     static async updateFile(scriptName, fileName, content) {
@@ -148,38 +174,32 @@ class Files {
     }
     
     /**
-     * Used to update files in general.
-     * Used only internally.
+     * Internal logic for handling directory creation and file writing.
      *
      * @static
-     * @param {String} scriptName name of script associated with file
-     * @param {String} fileName name of file that should be updated
-     * @param {String} content file content
-     * @param {String} directory path on which file should be created
-     * @memberof Files
+     * @private
+     * @param {String} scriptName - Name of script directory.
+     * @param {String} fileName - File name to write.
+     * @param {string} content - Raw content.
+     * @param {String} directory - Base directory path.
      */
     static async #updateFileInternal(scriptName, fileName, content, directory) {
-        
-        const targetDirectory = this.joinPaths(
-            directory,
-            scriptName
-        );
+        const targetDirectory = this.joinPaths(directory, scriptName);
         
         if (!this.#manager.isDirectory(targetDirectory)) {
             this.#manager.createDirectory(targetDirectory, true);
         }
-        
+
         const targetFile = this.joinPaths(targetDirectory, fileName); 
         await this.#manager.write(targetFile, Data.fromString(String(content)));
     }
 
     /**
-     * Checks whether feature file
-     * exists for provided script.
+     * Checks whether feature file exists for provided script.
      *
      * @static
-     * @param {String} scriptName name of script
-     * @return {Boolean} true if feature file exists otherwise false
+     * @param {String} scriptName - Name of script.
+     * @return {Boolean} True if feature file exists.
      * @memberof Files
      */
     static featureFileExists(scriptName) {
@@ -189,17 +209,15 @@ class Files {
     }
 
     /**
-     * Checks whether script has locale
-     * with provided language code.
+     * Checks whether script has locale with provided language code.
      *
      * @static
-     * @param {String} scriptName name of script
-     * @param {String} languageCode language code
-     * @return {Boolean} True if locale exists otherwise false
+     * @param {String} scriptName - Name of script.
+     * @param {String} languageCode - Language code.
+     * @return {Boolean} True if locale exists.
      * @memberof Files
      */
     static localeExists(scriptName, languageCode) {
-
         return this.#fileExistsInternal(
             scriptName, 
             this.#getLocaleFileName(languageCode), 
@@ -208,13 +226,12 @@ class Files {
     }
 
     /**
-     * Checks whether script has resource file
-     * with provided name.
+     * Checks whether script has resource file with provided name.
      *
      * @static
-     * @param {String} scriptName name of script
-     * @param {String} fileName name of file
-     * @return {Boolean} True if file exists otherwise false
+     * @param {String} scriptName - Name of script.
+     * @param {String} fileName - Name of file.
+     * @return {Boolean} True if file exists.
      * @memberof Files
      */
     static fileExists(scriptName, fileName) {
@@ -222,37 +239,26 @@ class Files {
     }
 
     /**
-     * Used to check whether file exists.
-     * Used internally.
-     *
-     * @static
-     * @param {String} scriptName name of script
-     * @param {String} fileName name of file
-     * @param {String} directory path where script name directory is located
-     * @return {Boolean} True if file exists otherwise false
-     * @memberof Files
+     * Internal existence check logic.
+     * @private
      */
     static #fileExistsInternal(scriptName, fileName, directory) {
-
-        const targetFile = this.joinPaths(
-            directory,
-            scriptName, 
-            fileName
-        );
-        
+        const targetFile = this.joinPaths(directory, scriptName, fileName);
         return this.#manager.fileExists(targetFile);
     }
 
+    /**
+     * Reads a string from a specific file path.
+     * @param {string} filePath - Path to the file.
+     * @returns {string} File content.
+     */
     static readScriptableFile(filePath) {
         return this.#manager.readString(filePath);
     }
 
     /**
-     * Used to read feature file for current
-     * script.
-     *
-     * @static
-     * @return {Object} feature configuration
+     * Reads feature file for the current script.
+     * @returns {Object} Feature configuration object.
      * @memberof Files
      */
     static readLocalFeatureFile() {
@@ -260,16 +266,12 @@ class Files {
     }
 
     /**
-     * Used to read feature file for
-     * provided script.
-     *
-     * @static
-     * @param {String} scriptName name of script
-     * @return {Object} feature configuration
+     * Reads feature file for a specific script.
+     * @param {String} scriptName - Name of script.
+     * @returns {Object} Feature configuration object.
      * @memberof Files
      */
     static readFeatureFile(scriptName) {
-
         const defaultValue = {
             __debug: {
                 __enabled: false
@@ -287,33 +289,24 @@ class Files {
     }
 
     /**
-     * Used to read content of Scriptable script.
-     *
-     * @static
-     * @param {String} scriptName name of script
-     * @return {String} script content
+     * Reads content of a Scriptable script.
+     * @param {String} scriptName - Name of script.
+     * @returns {String} script source.
      * @memberof Files
      */
     static readScript(scriptName) {
-
         const scriptPath = this.joinPaths(this.getScriptableDirectory(), scriptName);
         return this.#manager.readString(scriptPath);
     }
 
     /**
-     * Used to read locale object with provided 
-     * language code for provided script.
-     * 
-     * Will return empty locale object if it doesn't exist.
-     *
-     * @static
-     * @param {String} scriptName name of script
-     * @param {String} languageCode language code
-     * @return {Object} locale object
+     * Reads locale object for a script and language code.
+     * @param {String} scriptName - Name of script.
+     * @param {String} languageCode - Language code.
+     * @returns {Object} Locale object or empty object if not found.
      * @memberof Files
      */
     static readLocale(scriptName, languageCode) {
-
         const content = this.#readFileInternal(
             scriptName,
             this.#getLocaleFileName(languageCode),
@@ -325,28 +318,22 @@ class Files {
     }
 
     /**
-     * Used to read JSON file associated
-     * with current script.
-     *
-     * @static
-     * @param {String} fileName name of JSON file
-     * @param {Object} defautlValue default value, would be returned when file doens't exist
-     * @return {Object} content of JSON file if exists otherwise default value
+     * Reads JSON file associated with current script.
+     * @param {String} fileName - Name of JSON file.
+     * @param {Object} defaultValue - Fallback value.
+     * @returns {Object} Parsed JSON or default.
      * @memberof Files
      */
-    static readLocalJson(fileName, defautlValue) {
-        return this.readJson(Script.name(), fileName, defautlValue);
+    static readLocalJson(fileName, defaultValue) {
+        return this.readJson(Script.name(), fileName, defaultValue);
     }
     
     /**
-     * Used to read JSON file associated
-     * with provided script.
-     *
-     * @static
-     * @param {String} scriptName script name
-     * @param {String} fileName name of JSON file
-     * @param {Object} defautlValue default value, would be returned when file doens't exist
-     * @return {Object} content of JSON file if exists otherwise default value
+     * Reads JSON file associated with provided script.
+     * @param {String} scriptName - script name.
+     * @param {String} fileName - Name of JSON file.
+     * @param {Object} defaultValue - Fallback value.
+     * @returns {Object} Parsed JSON or default.
      * @memberof Files
      */
     static readJson(scriptName, fileName, defaultValue) {
@@ -355,13 +342,10 @@ class Files {
     }
     
     /**
-     * Used to read resource file associated
-     * with current script.
-     *
-     * @static
-     * @param {String} fileName file name
-     * @param {Object} defaultValue, would be returned when file doens't exist
-     * @return {Object} content of file if exists otherwise default value
+     * Reads resource file associated with current script.
+     * @param {String} fileName - file name.
+     * @param {any} defaultValue - Fallback value.
+     * @returns {string|any} content or default value.
      * @memberof Files
      */
     static readLocalFile(fileName, defaultValue) {
@@ -369,14 +353,11 @@ class Files {
     }
 
     /**
-     * Used to read resource file associated
-     * with provided script.
-     *
-     * @static
-     * @param {String} scriptName script name
-     * @param {String} fileName file name
-     * @param {Object} defaultValue, would be returned when file doens't exist
-     * @return {Object} content of file if exists otherwise default value
+     * Reads resource file associated with provided script.
+     * @param {String} scriptName - script name.
+     * @param {String} fileName - file name.
+     * @param {any} defaultValue - Fallback value.
+     * @returns {string|any} content or default value.
      * @memberof Files
      */
     static readFile(scriptName, fileName, defaultValue) {
@@ -384,100 +365,66 @@ class Files {
     }
     
     /**
-     * Used to read file.
-     * Used internally.
-     *
-     * @static
-     * @param {String} scriptName name of script
-     * @param {String} fileName name of file
-     * @param {String} defaultValue default value
-     * @param {String} directory path where file is located
-     * @return {Object} content of file if exists otherwise default value
-     * @memberof Files
+     * Internal read logic.
+     * @private
      */
     static #readFileInternal(scriptName, fileName, defaultValue, directory) {
+        const targetFile = this.joinPaths(directory, scriptName, fileName);
 
-        const targetFile = this.joinPaths(
-            directory, 
-            scriptName, 
-            fileName
-        );
-        
         if (!this.#manager.fileExists(targetFile)) {
             console.warn(`File does not exist: ${targetFile}`);
             return defaultValue;
         }
-        
+
         return this.#manager.readString(targetFile);
     }
 
     /**
-     * Used to get list of scripts
-     * that have feature file.
-     *
-     * @static
-     * @return {List<String>} list of script names
-     * @memberof Files
+     * List all directories within the Features folder.
+     * @returns {string[]} List of directory names.
      */
     static findFeatureDirectories() {
         return this.#manager.listContents(this.getFeaturesDirectory());
     }
 
     /**
-     * Used to get list of scripts
-     * that have locale directories created.
-     *
-     * @static
-     * @return {List<String>} list of locale directory names
-     * @memberof Files
+     * List all directories within the Locales folder.
+     * @returns {string[]} List of directory names.
      */
     static findLocaleDirectories() {
         return this.#manager.listContents(this.getLocalesDirectory());
     }
 
     /**
-     * Used to get list of Scriptable script names.
-     *
-     * @static
-     * @return {List<String>} list of script names
-     * @memberof Files
+     * Finds scripts in a directory filtering by JS extension.
+     * @param {string} [targetDirectory=null] - Directory to search. Defaults to Scriptable root.
+     * @returns {string[]} List of script filenames.
      */
     static findScripts(targetDirectory = null) {
-
         if (targetDirectory === null) {
             targetDirectory = this.getScriptableDirectory();
         }
-
+        
         return this.#manager.listContents(targetDirectory)
             .filter((script) => script.endsWith(JS_EXTENSION));
     }
 
     /**
-     * Used to get full path to the provided directory.
-     * Files is being searched in Resources directory of
-     * current script.
-     *
-     * @static
-     * @param {String} fileName name of file for which path should be given
-     * @return {String} full path to the file
-     * @memberof Files
+     * Resolves the full path for a resource in the current script's folder.
+     * @param {String} fileName - Resource name.
+     * @returns {String} Full path.
      */
     static resolveLocalResource(fileName) {
         return this.resolveResource(Script.name(), fileName);
     }
 
     /**
-     * Used to get full path to the provided directory.
-     * Files is being searched in Resources directory of
-     * provided script.
-     *
-     * @static
-     * @param {String} fileName name of file for which path should be given
-     * @return {String} full path to the file
-     * @memberof Files
+     * Resolves the full path for a resource in a specific script's folder.
+     * @param {String} scriptName - Script directory name.
+     * @param {String} fileName - Resource name.
+     * @returns {String} Full path.
      */
     static resolveResource(scriptName, fileName) {
-
         return this.joinPaths(
             this.getResourcesDirectory(),
             scriptName,
@@ -486,12 +433,8 @@ class Files {
     }
 
     /**
-     * Used to get 'Debug' directory
-     * where all runnable script configurations
-     * are stored.
-     *
-     * @return {String} Debug directory path
-     * @memberof Files
+     * Returns the full path to the Features directory.
+     * @returns {String} Path.
      */
     static getFeaturesDirectory() {
         return this.joinPaths(
@@ -501,13 +444,8 @@ class Files {
     }
 
     /**
-     * Used to get 'Resources' directory path.
-     * In this directory all script internal data
-     * is being stored.
-     *
-     * @static
-     * @return {String} Resources directory path
-     * @memberof Files
+     * Returns the full path to the Resources directory.
+     * @returns {String} Path.
      */
     static getResourcesDirectory() {
         return this.joinPaths(
@@ -517,13 +455,8 @@ class Files {
     }
 
     /**
-     * Used to get locales 'i18n' directory path.
-     * In this directory all labels and translations
-     * used by widgets and UI tables are being stored.
-     *
-     * @static
-     * @return {String} locales directory path
-     * @memberof Files
+     * Returns the full path to the Locales directory.
+     * @returns {String} Path.
      */
     static getLocalesDirectory() {
         return this.joinPaths(
@@ -533,30 +466,21 @@ class Files {
     }
 
     /**
-     * Used to get main scriptable directory.
-     * This is Scriptable file system root.
-     *
-     * @static
-     * @return {String} Scriptable root directory path
-     * @memberof Files
+     * Returns the root Scriptable documents directory.
+     * @returns {String} Path.
      */
     static getScriptableDirectory() {
         return this.#manager.documentsDirectory();
     }
 
     /**
-     * Used to join several string literals
-     * into file path.
-     *
-     * @static
-     * @param {List<String>} segments file path segments that should be composed
-     * @return {String} file path
-     * @memberof Files
+     * Combines multiple path segments into a single path string.
+     * @param {...string} segments - Path parts to join.
+     * @returns {String} Full joined path.
      */
     static joinPaths(...segments) {
-        
         let filePath = "";
-        
+
         for (const segment of segments) {
             filePath = this.#manager.joinPath(filePath, segment);
         }
@@ -565,15 +489,10 @@ class Files {
     }
 
     /**
-     * Used to transform object
-     * to JSON in case if it's string
-     *
-     * @param {String|Object} content JSON like string object
-     * @return {Object} JSON value
-     * @memberof Files
+     * Parses content into JSON if it is a string.
+     * @private
      */
     static #toJSON(content) {
-
         if (typeof content === 'string') {
             return JSON.parse(content);
         }
@@ -582,11 +501,10 @@ class Files {
     }
 
     /**
-     * Used to get name of locale file
-     * for provided language code.
-     * 
-     * @param {String} languageCode language code
-     * @returns Name of locale file
+     * Generates the filename for a locale JSON.
+     * @private
+     * @param {String} languageCode - e.g., 'en'.
+     * @returns {string} e.g., 'locale_en.json'.
      */
     static #getLocaleFileName(languageCode) {
         return `locale_${languageCode}.json`;

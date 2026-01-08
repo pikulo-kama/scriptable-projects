@@ -2,18 +2,22 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: purple; icon-glyph: file-archive;
 
+const { JS_EXTENSION, EMPTY_STRING } = importModule("Constants");
 const { Files } = importModule("Files");
 const { tr } = importModule("Localization");
 const { modal } = importModule("Modal");
 const { bundleScript } = importModule("Bundler");
 
 
-const JS_EXTENSION = ".js";
-const EMPTY_STRING = "";
-
-
 /**
- * ENTRY POINT
+ * Main entry point for the Bundler UI.
+ * This function:
+ * 1. Scans the Scriptable directory for existing scripts.
+ * 2. Filters and sorts the names for display.
+ * 3. Presents a modal for the user to select a script.
+ * 4. Triggers the bundling process for the selected script.
+ * @async
+ * @function main
  */
 async function main() {
 
