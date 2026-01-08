@@ -63,6 +63,25 @@ class Files {
     }
 
     /**
+     * Moves a file from the source path to the destination path.
+     * If a file already exists at the destination, it is deleted 
+     * before the move operation to prevent errors.
+     *
+     * @static
+     * @param {string} sourcePath - The current full path of the file.
+     * @param {string} destinationPath - The target full path for the file.
+     * @memberof Files
+     */
+    static forceMove(sourcePath, destinationPath) {
+
+        if (this.#manager.fileExists(destinationPath)) {
+            this.#manager.remove(destinationPath);
+        }
+
+        this.#manager.move(sourcePath, destinationPath);
+    }
+
+    /**
      * Writes raw content to a specific file path.
      * @param {string} filePath - Full path to the file.
      * @param {string} content - String content to write.
@@ -101,7 +120,7 @@ class Files {
             this.getScriptableDirectory(),
             scriptName
         );
-        
+
         await this.#manager.write(scriptPath, Data.fromString(script));
     }
 

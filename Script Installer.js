@@ -89,18 +89,13 @@ class ScriptInstaller {
      * @param {string} scriptName - The name of the script to install.
      */
     async installScript(scriptName) {
-        const fm = Files.manager();
         const repositoryDirectory = this.repositoryDirectory();
 
         // Bundle script and move it to scriptable folder.
         const bundledFileInfo = await bundleScript(scriptName, repositoryDirectory);
         const targetScriptPath = Files.joinPaths(Files.getScriptableDirectory(), bundledFileInfo.name());
 
-        if (fm.fileExists(targetScriptPath)) {
-            fm.remove(targetScriptPath);
-        }
-
-        fm.move(bundledFileInfo.path(), targetScriptPath);
+        Files.forceMove(bundledFileInfo.path(), targetScriptPath);
     }
 
     /**
@@ -137,7 +132,7 @@ class ScriptInstaller {
                     fm.createDirectory(targetDirectoryPath, true);
                 }
 
-                fm.move(sourceFilePath, targetFilePath);
+                Files.forceMove(sourceFilePath, targetFilePath);
             }
         }
     }
