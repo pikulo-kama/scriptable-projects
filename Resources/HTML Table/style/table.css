@@ -1,0 +1,17 @@
+/* TABLE ROW */
+.html-table tr {
+    width: 100vw;
+}
+
+.html-table tr:nth-child(odd) {
+    background-color: #d3d3d3;
+}
+
+.html-table tr:nth-child(even) {
+    background-color: #f0f0f0;
+}
+
+/* TABLE CELL */
+.html-table td {
+    padding: 0.8rem 0.3rem;
+}
