@@ -7,7 +7,6 @@ const { Files } = importModule("Files");
 const { Logger } = importModule("Logger");
 
 const {
-    debugEnabled,
     debugFeatureEnabled,
     featureEnabled,
     getFeature
