@@ -1,3 +1,5 @@
-**/*.user.*
 /Features
+/Resources/Script Installer/Repository/
+
+**/*.user.*
 **/*(Bundled).js
