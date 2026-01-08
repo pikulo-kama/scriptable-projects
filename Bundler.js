@@ -12,60 +12,36 @@ const { JS_EXTENSION, EMPTY_STRING } = importModule("Constants");
  */
 class FileInfo {
     
-    /**
-     * The name of the file (including extension).
-     * @type {string}
-     * @private
-     */
+    /** @type {string} @private */
     #name;
-
-    /**
-     * The directory path where the file is located.
-     * @type {string}
-     * @private
-     */
+    /** @type {string} @private */
     #directory;
-
+    /** @type {IterableIterator<string>|Array<string>} @private */
     #dependencies;
     
     /**
      * Creates an instance of FileInfo.
      * @param {string} name - The name of the file.
      * @param {string} directory - The directory path.
+     * @param {IterableIterator<string>} dependencies - List of dependency names.
      */
     constructor(name, directory, dependencies) {
         this.#name = name;
         this.#directory = directory;
-        this.#dependencies = dependencies
+        this.#dependencies = dependencies;
     }
     
-    /**
-     * Gets the name of the file.
-     * @returns {string} The filename.
-     */
-    name() {
-        return this.#name;
-    }
+    /** @returns {string} The filename. */
+    name() { return this.#name; }
     
-    /**
-     * Gets the directory path of the file.
-     * @returns {string} The directory path.
-     */
-    directory() {
-        return this.#directory;
-    }
+    /** @returns {string} The directory path. */
+    directory() { return this.#directory; }
     
-    /**
-     * Resolves the full path of the file by joining the directory and name.
-     * @returns {string} The full file path.
-     */
-    path() {
-        return Files.joinPaths(this.directory(), this.name());
-    }
+    /** @returns {string} The full file path. */
+    path() { return Files.joinPaths(this.directory(), this.name()); }
 
-    dependencies() {
-        return this.#dependencies;
-    }
+    /** @returns {IterableIterator<string>} The list of script dependencies. */
+    dependencies() { return this.#dependencies; }
 }
 
 
@@ -177,7 +153,6 @@ class Bundler {
      * @memberof Bundler
      */
     #getScriptDependencies(scriptBody) {
-
         const dependencyMatches = [...scriptBody.matchAll(Bundler.#DEPENDENCY_REGEXP)];
         return dependencyMatches.map(match => match[1]);
     }

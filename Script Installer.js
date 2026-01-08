@@ -125,6 +125,17 @@ class ScriptInstaller {
         }
     }
 
+    /**
+     * Synchronizes a specific directory for a script by moving files from 
+     * the downloaded repository to the local Scriptable environment.
+     * * It mirrors the source structure, creates target directories if they 
+     * are missing, and uses a force move to overwrite existing files.
+     *
+     * @private
+     * @param {string} directory - The base category directory (e.g., 'i18n' or 'Resources').
+     * @param {string} scriptName - The name of the script directory to sync.
+     * @memberof ScriptInstaller
+     */
     #syncDirectory(directory, scriptName) {
         const fm = Files.manager();
         const repositoryDirectory = this.repositoryDirectory();
