@@ -14,8 +14,10 @@ class FileInfo {
     
     /** @type {string} @private */
     #name;
+    
     /** @type {string} @private */
     #directory;
+
     /** @type {IterableIterator<string>|Array<string>} @private */
     #dependencies;
     
@@ -32,16 +34,24 @@ class FileInfo {
     }
     
     /** @returns {string} The filename. */
-    name() { return this.#name; }
+    name() { 
+        return this.#name; 
+    }
     
     /** @returns {string} The directory path. */
-    directory() { return this.#directory; }
+    directory() { 
+        return this.#directory; 
+    }
     
     /** @returns {string} The full file path. */
-    path() { return Files.joinPaths(this.directory(), this.name()); }
+    path() { 
+        return Files.joinPaths(this.directory(), this.name()); 
+    }
 
     /** @returns {IterableIterator<string>} The list of script dependencies. */
-    dependencies() { return this.#dependencies; }
+    dependencies() { 
+        return this.#dependencies; 
+    }
 }
 
 
@@ -108,7 +118,7 @@ class Bundler {
         return new FileInfo(
             targetFileName, 
             this.#scriptsDirectory, 
-            this.#dependencyScripts.keys()
+            [...this.#dependencyScripts.keys()]
         );
     }
 

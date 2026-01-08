@@ -27,8 +27,8 @@ async function main() {
         .present();
 
     if (!result.isCancelled()) {
-        await installer.installScript(result.choice());
-        await installer.installScriptResources(result.choice());
+        const fileInfo = await installer.installScript(result.choice());
+        await installer.installScriptResources(result.choice(), fileInfo.dependencies());
     }
 
     installer.cleanup();
@@ -96,6 +96,7 @@ class ScriptInstaller {
         const targetScriptPath = Files.joinPaths(Files.getScriptableDirectory(), bundledFileInfo.name());
 
         Files.forceMove(bundledFileInfo.path(), targetScriptPath);
+        return bundledFileInfo;
     }
 
     /**
@@ -105,21 +106,20 @@ class ScriptInstaller {
      */
     async installScriptResources(scriptName, dependencies = null) {
 
-        if (dependencies === null) {
-            dependencies = new Array();
-        }
-
+        const scripts = Array.of(scriptName);
         const directoriesToSync = [
             Files.FeaturesDirectory,
             Files.ResourcesDirectory,
             Files.LocalesDirectory
         ];
-        
-        dependencies.push(scriptName);
 
+        if (dependencies !== null) {
+            scripts.push(...dependencies);
+        }
+        
         // Move script data if available.
         for (const directory of directoriesToSync) {
-            for (const script of dependencies) {
+            for (const script of scripts) {
                 this.#syncDirectory(directory, script);
             }
         }
