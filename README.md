@@ -1,10 +1,12 @@
+![GitHub license](https://img.shields.io/badge/License-MIT-blue.svg)
+
 # pikulo-kama's Scriptable projects
 
 A collection of Scriptable scripts and modules for automating tasks, enhancing productivity, and customizing workflows on iOS devices.
 
 ## Overview
 
-This project includes a variety of **Scriptable** scripts and reusable modules, designed to integrate with the iOS ecosystem and perform different tasks, such as automating actions, fetching data, and manipulating iOS features. 
+This project includes a variety of **Scriptable** scripts and reusable modules, designed to integrate with the iOS ecosystem and perform different tasks, such as automating actions, fetching data, and manipulating iOS features.
 
 Whether you want to streamline your daily routine, create complex workflows, or explore the capabilities of Scriptable, this repository serves as a starting point.
 
@@ -32,7 +34,7 @@ To use the scripts in this project, you'll need the **Scriptable** app installed
 
 ### Usage
 
-Each script is designed to be simple to use. Some scripts may require additional permissions or configuration before running, such as setting up API keys or granting access to specific iOS features. Be sure to read the comments in the scripts to understand any setup requirements.
+Check out our [documentation](https://pikulo-kama.github.io/scriptable-projects/).
 
 ## Directory Structure
 
