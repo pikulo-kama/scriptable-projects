@@ -19,7 +19,7 @@ async function main() {
     await installer.downloadRepository();
 
     // Make sure script installer is up-to-date.
-    installer.installScriptResources("Script Installer");
+    await installer.installScript("Script Installer");
 
     const result = await modal()
         .title(tr("installer_scriptSelectionModalTitle"))
@@ -27,11 +27,14 @@ async function main() {
         .present();
 
     if (!result.isCancelled()) {
-        await installer.installScript(result.choice());
-        await installer.installScriptResources(result.choice());
+        const fileInfo = await installer.installScript(result.choice());
+        const targetScriptPath = Files.joinPaths(Files.getScriptableDirectory(), fileInfo.name());
+
+        // Move script requested by user to scriptable root directory.
+        Files.forceMove(fileInfo.path(), targetScriptPath);
     }
 
-    installer.cleanup();
+    installer.cleanupResources();
 }
 
 /**
@@ -63,12 +66,12 @@ class ScriptInstaller {
 
         const treeData = await treeRequest.get(this.#REPO_URL);
 
-        for (const item of treeData.tree) {
-            const itemPath = Files.joinPaths(this.repositoryDirectory(), item.path);
+        if (!fm.isDirectory(this.#repositoryDirectory())) {
+            fm.createDirectory(this.#repositoryDirectory());
+        }
 
-            if (!fm.isDirectory(this.repositoryDirectory())) {
-                fm.createDirectory(this.repositoryDirectory());
-            }
+        for (const item of treeData.tree) {
+            const itemPath = Files.joinPaths(this.#repositoryDirectory(), item.path);
 
             if (item.type === "tree") {
                 fm.createDirectory(itemPath, true);
@@ -89,25 +92,22 @@ class ScriptInstaller {
      * @param {string} scriptName - The name of the script to install.
      */
     async installScript(scriptName) {
-        const repositoryDirectory = this.repositoryDirectory();
+        const bundledFileInfo = await bundleScript(scriptName, this.#repositoryDirectory());
+        this.#installScriptResources(scriptName, bundledFileInfo.dependencies());
 
-        // Bundle script and move it to scriptable folder.
-        const bundledFileInfo = await bundleScript(scriptName, repositoryDirectory);
-        const targetScriptPath = Files.joinPaths(Files.getScriptableDirectory(), bundledFileInfo.name());
-
-        Files.forceMove(bundledFileInfo.path(), targetScriptPath);
+        return bundledFileInfo;
     }
 
     /**
      * Synchronizes associated resources (Features, i18n, Resources) for a given script.
      * @async
      * @param {string} scriptName - The name of the script whose resources are being installed.
+     * @param {Iterable<string>} dependencies - List of dependency script names.
      */
-    async installScriptResources(scriptName, dependencies = null) {
+    async #installScriptResources(scriptName, dependencies) {
 
-        if (dependencies === null) {
-            dependencies = new Array();
-        }
+        const scripts = Array.of(scriptName);
+        scripts.push(...dependencies);
 
         const directoriesToSync = [
             Files.FeaturesDirectory,
@@ -115,11 +115,9 @@ class ScriptInstaller {
             Files.LocalesDirectory
         ];
         
-        dependencies.push(scriptName);
-
         // Move script data if available.
         for (const directory of directoriesToSync) {
-            for (const script of dependencies) {
+            for (const script of scripts) {
                 this.#syncDirectory(directory, script);
             }
         }
@@ -138,8 +136,7 @@ class ScriptInstaller {
      */
     #syncDirectory(directory, scriptName) {
         const fm = Files.manager();
-        const repositoryDirectory = this.repositoryDirectory();
-        const sourceDirectoryPath = Files.joinPaths(repositoryDirectory, directory, scriptName);
+        const sourceDirectoryPath = Files.joinPaths(this.#repositoryDirectory(), directory, scriptName);
         const targetDirectoryPath = Files.joinPaths(Files.getScriptableDirectory(), directory, scriptName);
 
         // Script doesn't have files in repository directory.
@@ -164,7 +161,7 @@ class ScriptInstaller {
      * @returns {string[]} Sorted list of script names without extensions.
      */
     getScriptList() {
-        return Files.findScripts(this.repositoryDirectory())
+        return Files.findScripts(this.#repositoryDirectory())
             .map((script) => script.replace(JS_EXTENSION, EMPTY_STRING))
             .sort();
     }
@@ -172,16 +169,16 @@ class ScriptInstaller {
     /**
      * Removes the temporary repository directory after installation.
      */
-    cleanup() {
+    cleanupResources() {
         const fm = Files.manager();
-        fm.remove(this.repositoryDirectory());
+        fm.remove(this.#repositoryDirectory());
     }
 
     /**
      * Resolves the path to the temporary repository storage.
      * @returns {string} Path to the Repository directory.
      */
-    repositoryDirectory() {
+    #repositoryDirectory() {
         return Files.resolveLocalResource("Repository");
     }
 

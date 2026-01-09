@@ -1,10 +1,12 @@
+![GitHub license](https://img.shields.io/badge/License-MIT-blue.svg)
+
 # pikulo-kama's Scriptable projects
 
 A collection of Scriptable scripts and modules for automating tasks, enhancing productivity, and customizing workflows on iOS devices.
 
 ## Overview
 
-This project includes a variety of **Scriptable** scripts and reusable modules, designed to integrate with the iOS ecosystem and perform different tasks, such as automating actions, fetching data, and manipulating iOS features. 
+This project includes a variety of **Scriptable** scripts and reusable modules, designed to integrate with the iOS ecosystem and perform different tasks, such as automating actions, fetching data, and manipulating iOS features.
 
 Whether you want to streamline your daily routine, create complex workflows, or explore the capabilities of Scriptable, this repository serves as a starting point.
 
@@ -25,14 +27,32 @@ To use the scripts in this project, you'll need the **Scriptable** app installed
 
 ### Installation
 
-1. Download or clone this repository to your local machine.
-2. Make sure contents of the repository are in Scriptable root directory.
-3. Open the Scriptable app on your iOS device.
-4. Use already created scripts, or modules to create your own scripts.
+To set up the framework on your iOS device, you need to install the **Bootstrap Installer**. This standalone script will automatically configure your directories and download the necessary core modules.
+
+### 1. Download the Installer
+
+1. Navigate to the **[Latest Release](https://github.com/pikulo-kama/scriptable-projects/releases/latest)** of this repository.
+2. Scroll down to the **Assets** section at the bottom of the release notes.
+3. Locate the `Installer.js` binary file.
+4. Open the file and **copy its entire contents**.
+
+### 2. Create the Script in Scriptable
+
+1. Open the **Scriptable** app on your iPhone or iPad.
+2. Tap the **+** icon in the top right corner to create a new script.
+3. Paste the code you copied from the release into the editor.
+4. Tap on the script name at the top and rename it to `Script Installer`.
+5. Tap **Done** to save.
+
+### 3. Run and Initialize
+
+1. Tap the play icon (▶️) to run the `Script Installer`.
+2. The script will reach out to GitHub, create the required folder structure (`Modules/`, `i18n/`, `Features/`), and download the framework's core libraries.
+3. Once finished, you can start using widgets you've isntalled!
 
 ### Usage
 
-Each script is designed to be simple to use. Some scripts may require additional permissions or configuration before running, such as setting up API keys or granting access to specific iOS features. Be sure to read the comments in the scripts to understand any setup requirements.
+Check out our [documentation](https://pikulo-kama.github.io/scriptable-projects/).
 
 ## Directory Structure
 

@@ -2,7 +2,7 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: cyan; icon-glyph: users;
 
-const { debugEnabled, debugFeatureEnabled, getFeature } = importModule("Feature");
+const { debugFeatureEnabled, getFeature } = importModule("Feature");
 const { themed, ColorMode } = importModule("Config Util");
 const { LinearChart } = importModule("Linear Chart");
 const { Logger, getLogger } = importModule("Logger");
