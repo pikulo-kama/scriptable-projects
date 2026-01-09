@@ -14,12 +14,13 @@ The following section contains list of scripts that could be used directly by en
 Some scripts have only UI table functionality implemented, but some of them have both Widget and UI table.
 
 {% include script_doc.html
-    name="Blackout Notifier"
-    specificity="uk"
+name="Blackout Notifier"
+specificity="uk"
 
     widgetSupport=true
     widgetSize="small"
     widgetPreview="assets/img/blackout_notifier/schedule-preview.jpg"
+
 %}
 
 #### Script Description
@@ -38,8 +39,8 @@ If you wish new region to be supported raise an issue in [widgets repository](ht
 #### Widget Configuration
 
 1. When interacting - **Run Script**
-2. Parameter - *City*,*Street*,*Building* (e.g. Івано-Франківськ,Стуса,10)
-{: .pb-3 }
+2. Parameter - _City_,_Street_,_Building_ (e.g. Івано-Франківськ,Стуса,10)
+   {: .pb-3 }
 
 #### Running from widget
 
@@ -90,11 +91,12 @@ This state may also be triggered when OE website is not available.
 {: .pb-5 }
 
 {% include script_doc.html
-    name="Customer Chart"
+name="Customer Chart"
 
     widgetSupport=true
     widgetSize="medium"
     widgetPreview="assets/img/customer_chart/chart-preview.jpg"
+
 %}
 
 #### Script Description
@@ -105,31 +107,32 @@ It reads calendar events and plots them on linear chart widget.
 
 #### Widget Configuration
 
-1. When Interacting - *any*
+1. When Interacting - _any_
 2. Parameter - {"calendar": "Calendar", "period", 6, "mode": "dark", "trimBlank": true}
-    - *calendar* - name of calendar from which events should be read.
-    - *period* - amount of months that should be plotted.
-    - *mode* - theme, could be either **dark** or **light**.
-    - *trimBlank* - useful when plotting events from old calendars that didn't have any events in
-    recent months. When set to **true** will skip all latest months with no events.
+   - _calendar_ - name of calendar from which events should be read.
+   - _period_ - amount of months that should be plotted.
+   - _mode_ - theme, could be either **dark** or **light**.
+   - _trimBlank_ - useful when plotting events from old calendars that didn't have any events in
+     recent months. When set to **true** will skip all latest months with no events.
 
 {% include script_doc.html
-    name="New Episode Tracker"
+name="New Episode Tracker"
 
     widgetSupport=true
     widgetSize="medium"
     widgetPreview="assets/img/new_episode_tracker/series-countdown-preview.jpg"
+
 %}
 
 #### Script Description
 
-If you like to follow releases of new episodes of your favorite series 
+If you like to follow releases of new episodes of your favorite series
 then this widget is exactly what you need. Widget uses [Episodate Open API](https://www.episodate.com/)
 to obtain series information.
 
 #### Widget Configuration
 
-1. When Interacting - *Run Script*
+1. When Interacting - _Run Script_
 2. Parameter - series ID from Episodate API (e.g. round-six)
 
 #### How to obtain series ID
@@ -148,9 +151,9 @@ of countdown block. To be able to use the API you need to create a Google API ke
 Be aware that API is public but has limitations, you only have 1000 requests that you can send for free in month. After widget has obtained dominant
 color for the series it will store it in resources of the script for later use.
 
-> Be aware that developer of this widget doesn't take any responsibility for any financial 
-losses resulting from exceeding API usage limit.
-{: .prompt-warning }
+> Be aware that developer of this widget doesn't take any responsibility for any financial
+> losses resulting from exceeding API usage limit.
+> {: .prompt-warning }
 
 In case if you don't want to use Google Vision API you can just avoid this step, in cases when API key is
 invalid fallback dominant color would be used, which could be configured through `.fallbackDominantColor` feature.
@@ -186,7 +189,7 @@ is basically last episode of the series.
 {: .pb-5 }
 
 {% include script_doc.html
-    name="Stop Watcher"
+name="Stop Watcher"
 
     widgetSupport=true
     widgetSize="small"
@@ -198,6 +201,7 @@ is basically last episode of the series.
     uiTableAllowDeletion=true
     uiTableAllowFiltering=true
     uiTablePreview="assets/img/stop_watcher/table-preview.jpg"
+
 %}
 
 #### Script Description
@@ -210,34 +214,24 @@ you're watching currently.
 #### UI Table Structure
 
 - **Status**\
-*Whether you are still watching series or have already finished it and waiting for next season.*
-    - Could be either 'Done' or 'In-progress'
-    - If status is 'Done' then series/episode and timecode fields would be hidden
+  _Whether you are still watching series or have already finished it and waiting for next season._ - Could be either 'Done' or 'In-progress' - If status is 'Done' then series/episode and timecode fields would be hidden
 - **WatchQ Integration Field**\
-*This field should be used if you want to use WatchQ along with Stop Watcher*
-    - Has series ID field (see <a href="#how-to-obtain-series-id">how to obtain series ID section</a>)
-    - Has action to toggle visibility of series in WatchQ widget (would still be visible in UI table if toggle if OFF)
+  _This field should be used if you want to use WatchQ along with Stop Watcher_ - Has series ID field (see <a href="#how-to-obtain-series-id">how to obtain series ID section</a>) - Has action to toggle visibility of series in WatchQ widget (would still be visible in UI table if toggle if OFF)
 - **Series Name**\
-*Name of the series, you can put anything you want here*
-    - Value of this field is used to as parameter for the widget
+  _Name of the series, you can put anything you want here_ - Value of this field is used to as parameter for the widget
 - **Season/Episode**\
-*Used to update season and episode of the series*
-    - Has Season form field
-    - Has Episode form field
-    - Has action to update episode number by one
-    - Each time season or episode is updated - timecode would reset
+  _Used to update season and episode of the series_ - Has Season form field - Has Episode form field - Has action to update episode number by one - Each time season or episode is updated - timecode would reset
 - **Timecode**\
-*Used to update timecode where you left off watching*
-    - Contains hours and minutes sliders
+  _Used to update timecode where you left off watching_ - Contains hours and minutes sliders
 - **Delete field**\
-*Generic delete field used to remove series from table*
-{: .pb-3 }
+  _Generic delete field used to remove series from table_
+  {: .pb-3 }
 
 #### Widget Configuration
 
 1. When interacting - **Run Script**
-2. Parameter - *%Series Name from UI table%*
-{: .pb-3 }
+2. Parameter - _%Series Name from UI table%_
+   {: .pb-3 }
 
 #### Running from widget
 
@@ -265,7 +259,7 @@ In this state both timecode block and season/episode tag block contain question 
 {: .pb-5 }
 
 {% include script_doc.html
-    name="WatchQ"
+name="WatchQ"
 
     widgetSupport=true
     widgetSize="small"
@@ -274,6 +268,7 @@ In this state both timecode block and season/episode tag block contain question 
     uiTableSupport=true
     uiTableReadonly=true
     uiTablePreview="assets/img/watchq/table-preview.jpg"
+
 %}
 
 #### Script Description
@@ -285,16 +280,16 @@ datat from Scriptable API to calculate how many episodes is left for you to watc
 #### UI Table Structure
 
 - **Series Name**\
-*Name of the series that you haven't finished yet*
+  _Name of the series that you haven't finished yet_
 - **Episode Count**\
-*Amount of episodes that you still need to watch in order to catch up*
+  _Amount of episodes that you still need to watch in order to catch up_
 
 #### UI Table Notices
 
 - **Hidden Series Summary**\
-*This notice contains summary on how many series and episodes in total are not being shown in UI table
-and not being displayed in widget. Only series that have unwatched episodes but have **WatchQ visibility turned off**
-in Stop Watcher are not shown.*
+  _This notice contains summary on how many series and episodes in total are not being shown in UI table
+  and not being displayed in widget. Only series that have unwatched episodes but have **WatchQ visibility turned off**
+  in Stop Watcher are not shown._
 
 #### Widget Configuration
 
@@ -323,8 +318,23 @@ This state is triggered when there are no new episodes for the series from Stop 
 ## Internal Scripts
 
 {% include script_doc.html
-    name="Feature UI"
+  name="Script Installer"
+  optionSelectionSupport=true
+  optionSelectionPreview="assets/img/script_installer/dropdown-preview.jpg"
+%}
 
+#### Script Description
+
+The Script Installer acts as a bridge between the remote GitHub repository and your local Scriptable environment. It automates the process of fetching the latest project files, bundling dependencies on the fly, and synchronizing localized resources and feature flags. It effectively serves as a custom "package manager" for your private or public Scriptable tools.
+
+#### Limitations
+
+- **GitHub API Rate Limits**: The script uses a 24-hour cache for repository tree requests to avoid hitting GitHub's rate limits (60 requests per hour for unauthenticated users).
+- **Base64 Overhead**: Files are fetched as GitHub "blobs" in Base64 format. Large binary assets may take longer to process and convert.
+- **Temporary Storage**: The script requires enough local storage to hold a full clone of the repository metadata and files before it extracts the specific script you requested.
+
+{% include script_doc.html
+name="Feature UI"
     uiTableSupport=true
     uiTableAllowCreation=true
     uiTableAllowEditing=true
@@ -334,62 +344,78 @@ This state is triggered when there are no new episodes for the series from Stop 
 
 #### Script Description
 
+The Feature UI script is a management tool for Scriptable developers to toggle and configure feature flags (or "debug configurations") for other scripts within the project. It provides a visual CRUD (Create, Read, Update, Delete) interface to manage feature states without manually editing JSON files. It supports three data types: Boolean, String, and Number, and includes logic to handle "Config Features" (system-level flags) that cannot be disabled.
+
+If triggered from a widget, the script will attempt to present a Modal for script selection. However, for the best experience:
+
+1. Open the Scriptable App.
+2. Run Feature UI.
+3. Select the target script from the prompted list.
+4. Interact with the Data Table to modify features.
+
 #### Limitations
 
-#### Widget Configuration
-
-#### Running from widget
-
-#### Widget States
+- **Debug Feature**: Debug feature of a script should always have a name _\_\_debug_ and be of boolean type.
+- **Directory Dependency**: The script relies on the Files module to find directories that specifically contain feature configuration files.
+- **Number Validation**: Numeric features must be positive numbers; otherwise, they revert to a fallback value (123).
+- **Boolean Restrictions**: Boolean features cannot hold an additional string/number value; they only respect the Enabled/Disabled state.
+- **Protected Flags**: Features starting with a dot (.) are treated as configuration indicators and their "Enabled" state is locked to true.
 
 {% include script_doc.html
-    name="Localizator"
+name="Localizator"
 
     uiTableSupport=true
     uiTableAllowEditing=true
     uiTablePreview="assets/img/localizator/table-preview.jpg"
+
 %}
 
 #### Script Description
 
+The Localizator script is a utility designed to simplify the localization process for Scriptable projects. It automatically detects the user's system language and provides a tabular interface to translate keys from a primary script. It handles the synchronization between the default English (en) locale and the target language, ensuring that any missing keys in the target locale are populated from the default template.
+
+This script is intended for use within the Scriptable App to allow for keyboard input and modal interaction. It is not compatible with Home Screen widget execution.
+
 #### Limitations
 
-#### Widget Configuration
-
-#### Running from widget
-
-#### Widget States
+- **Language Detection**: It identifies the target language based on the primary language of the device (e.g., "fr" from "fr-FR").
+- **Key Format**: It assumes a specific naming convention (e.g., prefix_camelCaseKey) to accurately transform technical keys into readable labels.
+- **Template Dependency**: The script requires an existing en.json (or equivalent) in the script's locale directory to act as the source template.
 
 {% include script_doc.html
-    name="Bundler"
+  name="Bundler UI"
+  optionSelectionSupport=true
+  optionSelectionPreview="assets/img/bundler_ui/dropdown-preview.jpg"
 %}
 
 #### Script Description
 
+The Bundler UI is a distribution utility that converts modular development projects into single-file executables. It recursively scans a script for importModule calls, extracts the code from those dependencies, strips out Scriptable-specific metadata and module.exports blocks, and combines everything into a new file suffixed with` (Bundled)`. This is particularly useful for sharing scripts with users who do not have your entire library of modules installed.
+
 #### Limitations
 
-#### Widget Configuration
-
-#### Running from widget
-
-#### Widget States
+- **Regex-Based Parsing**: The bundler uses Regular Expressions to find dependencies. It expects standard formatting: `const { ... } = importModule("...");`.
+- **Metadata Stripping**: It assumes the first 3 lines of every script are the Scriptable metadata (icon, color, etc.). Only the metadata from the main script is preserved in the final bundle.
+- **Flat Scope**: Since it merges files into a single scope, you must ensure there are no variable name collisions between your main script and its dependencies.
 
 {% include script_doc.html
-    name="Logger UI"
+name="Logger UI"
 
-    uiTableSupport=true
-    uiTableAllowCreation=true
-    uiTableAllowEditing=true
-    uiTableAllowDeletion=true
-    uiTablePreview="assets/img/logger_ui/table-preview.jpg"
+uiTableSupport=true
+uiTableAllowCreation=true
+uiTableAllowEditing=true
+uiTableAllowDeletion=true
+uiTablePreview="assets/img/logger_ui/table-preview.jpg"
 %}
 
 #### Script Description
 
+The Logger UI script provides a centralized management console for controlling the verbosity of various services within your project. It allows you to define specific log levels (e.g., DEBUG, INFO, WARN) for individual services on the fly. This data is persisted in a levels.json file, which the main Logger module consumes to determine whether a specific log message should be suppressed or displayed.
+
+This script is designed for App Mode only. It utilizes complex table interactions and form actions that are not supported in a standard Home Screen widget.
+
 #### Limitations
 
-#### Widget Configuration
-
-#### Running from widget
-
-#### Widget States
+- **Global Persistence**: Unlike the <a href="#feature-ui">Feature UI</a>, which is script-specific, this script manages a global levels.json file specifically for the Logger script directory.
+- **Predefined Levels**: Users are restricted to the levels defined in the LogLevel enum (OFF, INFO, WARN, ERROR, DEBUG).
+- **Service Naming**: Service names are free-text; ensure they match the strings used in your Logger calls within other scripts.

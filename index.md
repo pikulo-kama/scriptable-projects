@@ -2,8 +2,45 @@
 layout: default
 ---
 
-# Placeholder
+# Scriptable Modular Framework
 
-Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.
+Welcome to the documentation for the **pikulo-kama's Scriptable Modular Framework**. This project provides a suite of professional tools and standards designed to transform [Scriptable for iOS](https://scriptable.app/) from a simple snippet tool into a robust development environment.
 
-The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham
+## 🚀 The Ecosystem
+
+This framework solves the biggest pain points of Scriptable development: code duplication, manual localization, difficult debugging, and complex distribution.
+
+### 🏗️ Core Architecture
+
+The project is built on a modular "Service-Oriented" architecture. Instead of monolithic scripts, we use reusable **Libraries** that are managed by **Internal Scripts**.
+
+- **Libraries**: Reusable code (e.g., `Files`, `Modal`, `CRUD Module`, `Cache`).
+- **Internal Scripts**: Manager tools used to maintain your environment (e.g., `Bundler UI`, `Localizator`).
+- **Resources**: Centralized storage for assets (`Resources/`), flags (`Features/`), and translations (`i18n/`).
+- **Widgets**: Ready to use widgets/UI Tables (e.g. `Blackout Notifier`, `WatchQ`, `StopWatcher`).
+
+---
+
+## 🛠️ Management Tools
+
+| Tool                                        | Purpose                                                                   |
+| :------------------------------------------ | :------------------------------------------------------------------------ |
+| **[Script Installer](./scripts/installer)** | 📥 Fetches projects from GitHub and auto-syncs all dependencies.          |
+| **[Bundler UI](./scripts/bundler)**         | 📦 Merges modular code into a single distribution-ready `.js` file.       |
+| **[Localizator](./scripts/localizator)**    | 🌐 A visual editor for managing multi-language translation files.         |
+| **[Feature UI](./scripts/feature_ui)**      | ⚙️ Manages feature flags and debug configurations without touching code.  |
+| **[Logger UI](./scripts/logger_ui)**        | 📝 Controls log verbosity for every service in your system independently. |
+
+---
+
+## 📖 Standard Directory Structure
+
+To ensure compatibility with the **Script Installer** and **Bundler**, your local Scriptable directory should follow this layout:
+
+```text
+Scriptable/
+├── i18n/              # JSON translation files
+├── Features/          # Script-specific flag configurations
+├── Resources/         # Images, fonts, and static assets
+└── [Scripts].js       # Libraries, Internal scripts and widgets
+```

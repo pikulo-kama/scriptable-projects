@@ -1,4 +1,3 @@
-
 <!-- 
     Represents script documentation header
     which contains summary of script capabilities.
@@ -7,126 +6,113 @@
 {%- assign script_id = include.name | replace: ' ', '-' | downcase -%}
 
 <div class="mb-5 mt-5">
-    <!-- Script name -->
-    <h3 id="{{ script_id }}">{{include.name}}</h3>
+  <!-- Script name -->
+  <h3 id="{{ script_id }}">{{include.name}}</h3>
 
-    <!-- Chips Section -->
-    <div class="d-flex gap-1">
-        <!-- Region Specific Chip -->
-        {% include doc_chip.html
-            controlValue=include.specificity
-            color="warning"
-            textColor="dark"
-            icon="flag"
-            content="Region Specific"
-        %}
-        
-        <!-- Widget Support Chip -->
-        {% include doc_chip.html
-            controlValue=include.widgetSupport
-            color="success"
-            icon="image"
-            content="Widget Support"
-        %}
+  <!-- Chips Section -->
+  <div class="d-flex gap-1">
+    <!-- Region Specific Chip -->
+    {% include doc_chip.html controlValue=include.specificity color="warning"
+    textColor="dark" icon="flag" content="Region Specific" %}
 
-        <!-- UI Table Support Chip -->
-        {% include doc_chip.html
-            controlValue=include.uiTableSupport
-            color="primary"
-            icon="table"
-            content="UI Table Support"
-        %}
+    <!-- Widget Support Chip -->
+    {% include doc_chip.html controlValue=include.widgetSupport color="success"
+    icon="image" content="Widget Support" %}
+
+    <!-- UI Table Support Chip -->
+    {% include doc_chip.html controlValue=include.uiTableSupport color="primary"
+    icon="table" content="UI Table Support" %}
+
+    <!-- Option Selection Chip -->
+    {% include doc_chip.html controlValue=include.optionSelectionSupport
+    color="primary" icon="list" content="Option Selection Support" %}
+  </div>
+
+  <!-- UI Table Information Block -->
+  {%- if include.uiTableSupport -%}
+  <div class="scriptable-doc mt-5 p-1">
+    <div class="d-flex flex-column align-items-start p-4">
+      <span class="mb-4 h4">UI Table</span>
+
+      <!-- UI Table Attributes -->
+      <div class="d-flex flex-row align-items-start gap-5">
+        {%- if include.uiTableAllowCreation or include.uiTableAllowEditing or
+        include.uiTableAllowDeletion -%}
+        <div class="d-flex flex-column gap-1">
+          {% include ui_table_attr.html
+          controlValue=include.uiTableAllowCreation content="Create"
+          icon="fa-plus" %} {% include ui_table_attr.html
+          controlValue=include.uiTableAllowEditing content="Edit"
+          icon="fa-pen-to-square" %} {% include ui_table_attr.html
+          controlValue=include.uiTableAllowDeletion content="Delete"
+          icon="fa-trash" %}
+        </div>
+        {%- endif -%}
+
+        <div class="d-flex flex-column gap-1">
+          {% include ui_table_attr.html
+          controlValue=include.uiTableAllowFiltering content="Filter"
+          icon="fa-filter" %} {% include ui_table_attr.html
+          controlValue=include.uiTableReadonly content="Readonly"
+          color="warning" icon="fa-book-open" %}
+        </div>
+      </div>
     </div>
 
-    <!-- UI Table Information Block -->
-    {%- if include.uiTableSupport -%}
-        <div class="scriptable-doc mt-5 p-1">
-            <div class="d-flex flex-column align-items-start p-4">
+    <!-- UI Table Image Preview -->
+    <div class="scriptable-doc__preview ui-table">
+      {%- if include.uiTablePreview != null -%}
+      <img
+        src="{{ include.uiTablePreview }}"
+        alt="Preview of {{ include.name }} UI Table"
+      />
+      {%- endif -%}
+    </div>
+  </div>
+  {%- endif -%}
 
-                <span class="mb-4 h4">UI Table</span>
+  <!-- Widget Information Block -->
+  {%- if include.widgetSupport -%}
 
-                <!-- UI Table Attributes -->
-                <div class="d-flex flex-row align-items-start gap-5">
-                    {%- 
-                        if include.uiTableAllowCreation 
-                        or include.uiTableAllowEditing 
-                        or include.uiTableAllowDeletion
-                    -%}
-                        <div class="d-flex flex-column gap-1">
-                            {% include ui_table_attr.html
-                                controlValue=include.uiTableAllowCreation
-                                content="Create"
-                                icon="fa-plus"
-                            %}
-                            {% include ui_table_attr.html
-                                controlValue=include.uiTableAllowEditing
-                                content="Edit"
-                                icon="fa-pen-to-square"
-                            %}
-                            {% include ui_table_attr.html
-                                controlValue=include.uiTableAllowDeletion
-                                content="Delete"
-                                icon="fa-trash"
-                            %}
-                        </div>
-                    {%- endif -%}
+  <div class="scriptable-doc mt-5 p-1">
+    <div class="d-flex flex-column align-items-start p-4">
+      <span class="mb-4 h4">Widget</span>
 
-                    <div class="d-flex flex-column gap-1">
-                        {% include ui_table_attr.html
-                            controlValue=include.uiTableAllowFiltering
-                            content="Filter"
-                            icon="fa-filter"
-                        %}
-                        {% include ui_table_attr.html
-                            controlValue=include.uiTableReadonly
-                            content="Readonly"
-                            color="warning"
-                            icon="fa-book-open"
-                        %}
-                    </div>
-                </div>
-            </div>
+      <!-- Widget Attributes -->
+      <div class="d-flex flex-column align-items-start">
+        {% include widget_size.html size=include.widgetSize %} {% include
+        widget_specificity.html specificity=include.specificity %}
+      </div>
+    </div>
 
-            <!-- UI Table Image Preview -->
-            <div class="scriptable-doc__preview ui-table">
-                {%- if include.uiTablePreview != null -%}
-                    <img
-                        src="{{ include.uiTablePreview }}" 
-                        alt="Preview of {{ include.name }} UI Table"
-                    >
-                {%- endif -%}
-            </div>
-        </div>
-    {%- endif -%}
+    <!-- Widget Image Preview -->
+    <div class="scriptable-doc__preview widget">
+      {%- if include.widgetPreview != null -%}
+      <img
+        src="{{ include.widgetPreview }}"
+        alt="Preview of {{ include.name }} widget"
+      />
+      {%- endif -%}
+    </div>
+  </div>
+  {%- endif -%}
 
-    <!-- Widget Information Block -->
-    {%- if include.widgetSupport -%}
+  <!--  Option Selection Block -->
+  {%- if include.optionSelectionSupport -%}
+  <div class="scriptable-doc mt-5 p-1">
+    <div class="d-flex flex-column align-items-start p-4">
+      <span class="mb-4 h4">Option Selection</span>
+    </div>
 
-        <div class="scriptable-doc mt-5 p-1">
-            <div class="d-flex flex-column align-items-start p-4">
-
-                <span class="mb-4 h4">Widget</span>
-
-                <!-- Widget Attributes -->
-                <div class="d-flex flex-column align-items-start">
-                    {% include widget_size.html 
-                        size=include.widgetSize 
-                    %}
-                    {% include widget_specificity.html 
-                        specificity=include.specificity
-                    %}
-                </div>
-            </div>
-
-            <!-- Widget Image Preview -->
-            <div class="scriptable-doc__preview widget">
-                {%- if include.widgetPreview != null -%}
-                    <img
-                        src="{{ include.widgetPreview }}" 
-                        alt="Preview of {{ include.name }} widget"
-                    >
-                {%- endif -%}
-            </div>
-        </div>
-    {%- endif -%}
+    <!-- Dropdown Preview -->
+    <div class="scriptable-doc__preview ui-table">
+      {%- if include.optionSelectionPreview != null -%}
+      <img
+        src="{{ include.optionSelectionPreview }}"
+        alt="Preview of {{ include.name }} option list"
+      />
+      {%- endif -%}
+    </div>
+  </div>
+  {%- endif -%}
 </div>

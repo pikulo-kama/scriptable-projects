@@ -2,6 +2,8 @@
 
 source "https://rubygems.org"
 
+gem "csv"
+gem "base64"
 gem "jekyll", "~> 4.3.4"
 gem "jekyll-theme-chirpy", "~> 7.2", ">= 7.2.4"
 # gem "github-pages", "~> 232", group: :jekyll_plugins
